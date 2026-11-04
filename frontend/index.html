@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>MedLens — Medical Report Explainer</title>
+<style>
+  :root {
+    --bg: #f5f7fb; --card: #fff; --ink: #1d2433; --muted: #5b6577; --line: #e3e8f0;
+    --brand: #2851e6; --factual: #2851e6; --general: #0f8b8d; --prof: #c26a00;
+    --out: #c62828; --out-bg: #fde8e8; --in: #1e7d3a; --in-bg: #e3f5e8;
+    --amb: #6d3fc0; --amb-bg: #efe7fd; --neutral-bg: #eef1f5; --unk: #e07b00; --interp-bg: #fff6dc;
+    --flash: #ffe066;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; font: 15px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; background: var(--bg); color: var(--ink); }
+  header { background: #0f1b3d; color: #fff; padding: 14px 24px; display: flex; align-items: center; gap: 14px; }
+  header h1 { margin: 0; font-size: 22px; letter-spacing: .3px; }
+  header .tag { color: #b9c6ff; font-size: 14px; }
+  .disclaimer { position: sticky; top: 0; z-index: 10; background: #fff4e5; border-bottom: 2px solid #f0b35a; color: #6b3d00;
+    padding: 8px 24px; font-size: 13.5px; }
+  .disclaimer strong { color: #8a4b00; }
+  main { max-width: 1500px; margin: 0 auto; padding: 18px 24px 60px; }
+  .card { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 16px 18px; box-shadow: 0 1px 2px rgba(20,30,60,.04); }
+  h2 { font-size: 16px; margin: 0 0 10px; }
+  h3 { font-size: 14px; margin: 0 0 8px; text-transform: uppercase; letter-spacing: .5px; color: var(--muted); }
+  textarea { width: 100%; min-height: 170px; font: 13px/1.45 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; padding: 10px;
+    border: 1px solid var(--line); border-radius: 8px; resize: vertical; }
+  .controls { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; margin-top: 10px; }
+  select, button { font: inherit; padding: 8px 14px; border-radius: 8px; border: 1px solid var(--line); background: #fff; cursor: pointer; }
+  button.primary { background: var(--brand); color: #fff; border-color: var(--brand); font-weight: 600; }
+  button.primary:hover { filter: brightness(1.08); }
+  .hint { color: var(--muted); font-size: 13px; }
+  .grid { display: grid; grid-template-columns: minmax(0, 46%) minmax(0, 54%); gap: 18px; margin-top: 18px; }
+  @media (max-width: 1000px) { .grid { grid-template-columns: 1fr; } .sticky { position: static !important; max-height: none !important; } }
+  .sticky { position: sticky; top: 52px; max-height: calc(100vh - 70px); overflow: auto; }
+  #report { white-space: pre-wrap; font: 13px/1.65 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; overflow-x: auto; }
+  #report span[data-seg] { cursor: pointer; border-radius: 3px; }
+  .h-term { text-decoration: underline dotted var(--general) 2px; text-underline-offset: 3px; }
+  .h-unk { text-decoration: underline wavy var(--unk) 1.5px; text-underline-offset: 3px; }
+  .h-interp { background: var(--interp-bg); }
+  .h-out { background: var(--out-bg); color: var(--out); font-weight: 700; outline: 1px solid #f3b4b4; }
+  .h-in { background: var(--in-bg); color: var(--in); font-weight: 600; }
+  .h-amb { background: var(--amb-bg); color: var(--amb); font-weight: 700; outline: 1px dashed var(--amb); }
+  .h-neutral { background: var(--neutral-bg); font-weight: 600; }
+  .h-range { box-shadow: inset 0 -2px 0 #9fb1d8; }
+  .h-flag { outline: 1px solid #888; }
+  .h-flagbad { outline: 2px solid var(--amb); }
+  .flash { animation: flash 1.6s ease-out; }
+  @keyframes flash { 0%, 40% { background: var(--flash); box-shadow: 0 0 0 3px var(--flash); } 100% { } }
+  .legend { display: flex; flex-wrap: wrap; gap: 8px 14px; font-size: 12.5px; color: var(--muted); margin: 8px 0 12px; }
+  .legend span.sw { display: inline-block; padding: 0 6px; border-radius: 3px; margin-right: 4px; font-family: ui-monospace, monospace; }
+  .summary { display: grid; grid-template-columns: repeat(auto-fit, minmax(110px, 1fr)); gap: 10px; margin-bottom: 14px; }
+  .stat { background: var(--card); border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px; }
+  .stat .n { font-size: 24px; font-weight: 700; }
+  .stat .l { font-size: 12px; color: var(--muted); }
+  .stat.out .n { color: var(--out); } .stat.amb .n { color: var(--amb); } .stat.in .n { color: var(--in); } .stat.prof .n { color: var(--prof); }
+  table { width: 100%; border-collapse: collapse; font-size: 13.5px; }
+  th, td { text-align: left; padding: 7px 8px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  th { font-size: 12px; text-transform: uppercase; letter-spacing: .4px; color: var(--muted); background: #fafbfd; position: sticky; top: 0; }
+  tbody tr { cursor: pointer; } tbody tr:hover { background: #f6f8ff; }
+  .badge { display: inline-block; padding: 2px 8px; border-radius: 999px; font-size: 12px; font-weight: 600; white-space: nowrap; }
+  .b-out { background: var(--out-bg); color: var(--out); } .b-in { background: var(--in-bg); color: var(--in); }
+  .b-amb { background: var(--amb-bg); color: var(--amb); } .b-neutral { background: var(--neutral-bg); color: #39445a; }
+  .b-FACTUAL_FROM_REPORT { background: #e6ecfd; color: var(--factual); }
+  .b-GENERAL_INFO { background: #e0f4f4; color: var(--general); }
+  .b-NEEDS_PROFESSIONAL_INTERPRETATION { background: #fff0db; color: var(--prof); }
+  .b-llm { background: #fde7f3; color: #a3175f; }
+  .warn { color: var(--amb); font-weight: 600; }
+  .groups { display: grid; gap: 16px; margin-top: 16px; }
+  .group { border-left: 4px solid var(--line); padding-left: 12px; }
+  .group.FACTUAL_FROM_REPORT { border-color: var(--factual); }
+  .group.GENERAL_INFO { border-color: var(--general); }
+  .group.NEEDS_PROFESSIONAL_INTERPRETATION { border-color: var(--prof); }
+  .group .desc { font-size: 13px; color: var(--muted); margin: -4px 0 10px; }
+  .xcard { background: var(--card); border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px; margin-bottom: 10px; cursor: pointer; scroll-margin: 80px; }
+  .xcard:hover { border-color: #b8c4e6; }
+  .xcard.active { box-shadow: 0 0 0 3px var(--flash); border-color: #e0b800; }
+  .xcard .t { font-weight: 650; margin: 4px 0 2px; }
+  .xcard .src { margin-top: 6px; font: 12px/1.4 ui-monospace, monospace; background: #f6f7fa; border-left: 3px solid #c7cfdf; padding: 4px 8px; color: #3c4658; white-space: pre-wrap; }
+  .xcard .src::before { content: "Source in report: "; font-family: system-ui, sans-serif; color: var(--muted); font-size: 11px; }
+  .xcard .note { font-size: 12.5px; color: var(--muted); margin-top: 4px; }
+  .empty { color: var(--muted); font-style: italic; padding: 30px 0; text-align: center; }
+  .warnings { color: #8a4b00; font-size: 13px; }
+  details summary { cursor: pointer; color: var(--muted); font-size: 13px; }
+  .collapse-toggle { margin-left: auto; }
+  footer { text-align: center; color: var(--muted); font-size: 12.5px; padding: 20px; }
+</style>
+</head>
+<body>
+<header>
+  <h1>🔎 MedLens</h1>
+  <span class="tag">Medical report explanation &amp; information navigator</span>
+</header>
+<div class="disclaimer" role="note">
+  <strong>Informational only — not a diagnosis or treatment advice.</strong>
+  Reference ranges come <em>only</em> from your report. Report text is processed in memory and never stored.
+  Always discuss your results with a qualified clinician. Demo uses <strong>synthetic sample data</strong>.
+</div>
+
+<main>
+  <section class="card" aria-labelledby="in-h">
+    <h2 id="in-h">1. Paste report text</h2>
+    <textarea id="input" aria-label="Report text" placeholder="Paste the text of a lab or radiology report here, or load a synthetic sample…"></textarea>
+    <div class="controls">
+      <label for="sample" class="hint">Load sample:</label>
+      <select id="sample"><option value="">— choose a synthetic sample —</option></select>
+      <button class="primary" id="analyze">Analyze report</button>
+      <span class="hint" id="status" aria-live="polite"></span>
+    </div>
+  </section>
+
+  <div class="grid">
+    <section class="card sticky" aria-labelledby="rep-h">
+      <h2 id="rep-h">2. Annotated report</h2>
+      <div class="legend" aria-label="Highlight legend">
+        <span><span class="sw h-out">11.2</span>outside printed range</span>
+        <span><span class="sw h-in">14.0</span>within printed range</span>
+        <span><span class="sw h-amb">1.1</span>ambiguous range</span>
+        <span><span class="sw h-neutral">18</span>not compared</span>
+        <span><span class="sw h-term">TSH</span>known term</span>
+        <span><span class="sw h-unk">XYZ</span>unrecognized term</span>
+        <span><span class="sw h-interp">Impression…</span>needs professional interpretation</span>
+      </div>
+      <div id="report"><div class="empty">Results will appear here. Click any highlight to see its explanation.</div></div>
+    </section>
+
+    <section aria-labelledby="res-h">
+      <div class="card">
+        <h2 id="res-h">3. What the report says</h2>
+        <div class="summary" id="summary"></div>
+        <div id="meta" class="hint"></div>
+        <div id="warnings" class="warnings"></div>
+        <div style="overflow-x:auto"><table id="table" aria-label="Parsed results">
+          <thead><tr><th>Test</th><th>Value</th><th>Unit</th><th>Reference range (from report)</th><th>Status</th><th>Report flag</th></tr></thead>
+          <tbody><tr><td colspan="6" class="empty">No results yet.</td></tr></tbody>
+        </table></div>
+      </div>
+      <div class="groups" id="groups"></div>
+    </section>
+  </div>
+</main>
+<footer>MedLens · rule-based, deterministic core · no built-in “normal” ranges · synthetic data only</footer>
+
+<script>
+const $ = (s) => document.querySelector(s);
+const esc = (s) => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+
+const STATUS = {
+  above_range:   {label: "▲ Above printed range", cls: "out"},
+  below_range:   {label: "▼ Below printed range", cls: "out"},
+  differs_from_reference: {label: "≠ Differs from reference", cls: "out"},
+  within_range:  {label: "✓ Within printed range", cls: "in"},
+  ambiguous_range: {label: "? Ambiguous range", cls: "amb"},
+  no_reference_range_supplied: {label: "— No range supplied", cls: "neutral"},
+  unit_mismatch: {label: "⚠ Unit mismatch", cls: "neutral"},
+  indeterminate: {label: "~ Indeterminate", cls: "neutral"},
+  unparseable:   {label: "⚠ Range unreadable", cls: "neutral"},
+};
+const TAGS = {
+  FACTUAL_FROM_REPORT: {label: "Factual — from your report", desc: "Exactly what is printed on the report, plus a mechanical comparison with the range the report itself prints."},
+  GENERAL_INFO: {label: "General information", desc: "What a test or word means in general. Not about you personally."},
+  NEEDS_PROFESSIONAL_INTERPRETATION: {label: "Needs professional interpretation", desc: "Clinical meaning, opinions, hedged wording and unknown terms. MedLens does not interpret these — ask your clinician."},
+};
+
+let result = null;
+
+async function loadSamples() {
+  const res = await fetch("/api/samples");
+  const samples = await res.json();
+  const sel = $("#sample");
+  samples.forEach(s => { const o = document.createElement("option"); o.value = s.id; o.textContent = s.title; o.dataset.text = s.text; sel.appendChild(o); });
+  sel.addEventListener("change", () => { const o = sel.selectedOptions[0]; if (o.dataset.text) { $("#input").value = o.dataset.text; run(); } });
+  const want = new URLSearchParams(location.search).get("sample");   // e.g. /?sample=01_cbc
+  if (want && [...sel.options].some(o => o.value === want)) { sel.value = want; sel.dispatchEvent(new Event("change")); }
+}
+
+async function run() {
+  const text = $("#input").value;
+  if (!text.trim()) { $("#status").textContent = "Paste some report text first."; return; }
+  $("#status").textContent = "Analyzing…";
+  try {
+    const res = await fetch("/api/analyze", {method: "POST", headers: {"Content-Type": "application/json"}, body: JSON.stringify({text})});
+    if (!res.ok) throw new Error((await res.json()).detail || res.statusText);
+    result = await res.json();
+    render();
+    $("#status").textContent = "Done. Click any highlight or card to link them.";
+  } catch (e) { $("#status").textContent = "Error: " + e.message; }
+}
+
+function buildSpans(r) {
+  // Each span: start, end, cls, target explanation id
+  const firstCard = {};
+  r.explanations.forEach(e => { if (e.related_id && !(e.related_id in firstCard)) firstCard[e.related_id] = e.id; });
+  const spans = [];
+  r.explanations.forEach(e => {
+    if (!e.span) return;
+    if (e.tag === "NEEDS_PROFESSIONAL_INTERPRETATION" && !e.related_id) spans.push({start: e.span.start, end: e.span.end, cls: "h-interp", eid: e.id, title: e.title});
+  });
+  r.terms.forEach(t => spans.push({start: t.span.start, end: t.span.end, cls: "h-term", eid: firstCard[t.term_id], title: t.term + " — click for explanation"}));
+  r.unrecognized.forEach(u => spans.push({start: u.span.start, end: u.span.end, cls: "h-unk", eid: firstCard[u.id], title: "Unrecognized term — ask your clinician"}));
+  r.values.forEach(v => {
+    const st = STATUS[v.status] || STATUS.indeterminate;
+    const eid = firstCard[v.id];
+    spans.push({start: v.value_span.start, end: v.value_span.end, cls: "h-" + st.cls, eid, title: `${v.test_name}: ${st.label}`});
+    if (v.reference_span) spans.push({start: v.reference_span.start, end: v.reference_span.end, cls: "h-range", eid, title: "Reference range printed on report"});
+    if (v.flag_span) spans.push({start: v.flag_span.start, end: v.flag_span.end, cls: v.flag_disagreement ? "h-flagbad" : "h-flag", eid,
+      title: v.flag_disagreement ? "Report flag disagrees with computed comparison" : "Flag printed by the lab"});
+  });
+  return spans.filter(s => s.end > s.start);
+}
+
+function renderReport(r, spans) {
+  const text = r.text;
+  const cuts = new Set([0, text.length]);
+  spans.forEach(s => { cuts.add(s.start); cuts.add(s.end); });
+  const pts = [...cuts].sort((a, b) => a - b);
+  let html = "";
+  for (let i = 0; i < pts.length - 1; i++) {
+    const a = pts[i], b = pts[i + 1];
+    const seg = text.slice(a, b);
+    const cover = spans.map((s, idx) => [s, idx]).filter(([s]) => s.start <= a && s.end >= b);
+    if (!cover.length) { html += esc(seg); continue; }
+    cover.sort((x, y) => (x[0].end - x[0].start) - (y[0].end - y[0].start));   // innermost first
+    const cls = [...new Set(cover.map(([s]) => s.cls))].join(" ");
+    const best = cover.find(([s]) => s.eid) || cover[0];
+    html += `<span data-seg data-a="${a}" data-b="${b}" data-eid="${best[0].eid || ""}" class="${cls}" title="${esc(best[0].title)}">${esc(seg)}</span>`;
+  }
+  const el = $("#report");
+  el.innerHTML = html;
+  el.querySelectorAll("span[data-seg]").forEach(sp => sp.addEventListener("click", () => {
+    if (sp.dataset.eid) focusCard(sp.dataset.eid);
+  }));
+}
+
+function flashRange(start, end) {
+  const segs = [...document.querySelectorAll("#report span[data-seg]")].filter(s => +s.dataset.a >= start && +s.dataset.b <= end);
+  if (!segs.length) return;
+  segs.forEach(s => { s.classList.remove("flash"); void s.offsetWidth; s.classList.add("flash"); });
+  segs[0].scrollIntoView({behavior: "smooth", block: "center"});
+}
+
+function focusCard(eid) {
+  document.querySelectorAll(".xcard.active").forEach(c => c.classList.remove("active"));
+  const card = document.getElementById("card-" + eid);
+  if (!card) return;
+  card.classList.add("active");
+  card.scrollIntoView({behavior: "smooth", block: "center"});
+  const e = result.explanations.find(x => x.id === eid);
+  if (e && e.span) flashRange(e.span.start, e.span.end);
+}
+
+function renderSummary(r) {
+  const s = r.summary;
+  const items = [
+    ["Terms explained", s.terms_found, ""], ["Values parsed", s.values_parsed, ""],
+    ["Outside printed range", s.out_of_range, "out"], ["Within printed range", s.within_range, "in"],
+    ["Ambiguous range", s.ambiguous, "amb"], ["No range supplied", s.no_range_supplied, ""],
+    ["Flag disagreements", s.flag_disagreements, "amb"], ["Need professional view", s.needs_professional, "prof"],
+  ];
+  $("#summary").innerHTML = items.map(([l, n, c]) => `<div class="stat ${c}"><div class="n">${n}</div><div class="l">${l}</div></div>`).join("");
+  $("#meta").textContent = r.patient_sex ? `Sex stated in report header: ${r.patient_sex} (used only to pick between sex-specific ranges printed on the report).`
+    : "No sex stated in report header — sex-specific ranges will be shown as ambiguous.";
+  $("#warnings").innerHTML = (r.warnings || []).map(w => "⚠ " + esc(w)).join("<br>");
+}
+
+function renderTable(r) {
+  const firstCard = {};
+  r.explanations.forEach(e => { if (e.related_id && !(e.related_id in firstCard)) firstCard[e.related_id] = e.id; });
+  const tb = $("#table tbody");
+  if (!r.values.length) { tb.innerHTML = `<tr><td colspan="6" class="empty">No lab values found (narrative report).</td></tr>`; return; }
+  tb.innerHTML = r.values.map(v => {
+    const st = STATUS[v.status] || STATUS.indeterminate;
+    const rng = v.reference_span ? esc(v.reference_span.text) : `<span class="hint">none printed</span>`;
+    const flag = v.flag_raw ? esc(v.flag_raw) + (v.flag_disagreement ? ` <span class="warn" title="Report flag disagrees with computed comparison">⚠ disagrees</span>` : "") : "";
+    return `<tr data-eid="${firstCard[v.id]}" tabindex="0"><td>${esc(v.test_name)}</td><td><b>${esc(v.value_raw)}</b></td><td>${esc(v.unit || "")}</td>
+      <td>${rng}</td><td><span class="badge b-${st.cls}">${st.label}</span></td><td>${flag}</td></tr>`;
+  }).join("");
+  tb.querySelectorAll("tr[data-eid]").forEach(tr => {
+    const go = () => focusCard(tr.dataset.eid);
+    tr.addEventListener("click", go); tr.addEventListener("keydown", e => { if (e.key === "Enter") go(); });
+  });
+}
+
+function renderCards(r) {
+  const byVal = Object.fromEntries(r.values.map(v => [v.id, v]));
+  const g = $("#groups");
+  g.innerHTML = Object.entries(TAGS).map(([tag, meta]) => {
+    const items = r.explanations.filter(e => e.tag === tag);
+    const cards = items.map(e => {
+      const v = byVal[e.related_id];
+      const notes = (tag === "FACTUAL_FROM_REPORT" && v && v.notes.length) ? v.notes.map(n => `<div class="note">ℹ ${esc(n)}</div>`).join("") : "";
+      const origin = e.origin === "llm" ? ` <span class="badge b-llm">AI-generated, unverified</span>` : "";
+      const filtered = e.safety_filtered ? ` <span class="badge b-neutral">safety-filtered</span>` : "";
+      return `<div class="xcard" id="card-${e.id}" tabindex="0" data-eid="${e.id}">
+        <span class="badge b-${tag}">${meta.label}</span>${origin}${filtered}
+        <div class="t">${esc(e.title)}</div><div>${esc(e.text)}</div>${notes}
+        <div class="src">${esc(e.source_snippet)}</div></div>`;
+    }).join("") || `<div class="hint">Nothing in this category.</div>`;
+    return `<div class="group ${tag}"><h3>${meta.label} (${items.length})</h3><div class="desc">${meta.desc}</div>${cards}</div>`;
+  }).join("");
+  g.querySelectorAll(".xcard").forEach(c => {
+    const go = () => {
+      document.querySelectorAll(".xcard.active").forEach(x => x.classList.remove("active"));
+      c.classList.add("active");
+      const e = r.explanations.find(x => x.id === c.dataset.eid);
+      if (e && e.span) flashRange(e.span.start, e.span.end);
+    };
+    c.addEventListener("click", go); c.addEventListener("keydown", ev => { if (ev.key === "Enter") go(); });
+  });
+}
+
+function render() {
+  const spans = buildSpans(result);
+  renderReport(result, spans);
+  renderSummary(result);
+  renderTable(result);
+  renderCards(result);
+}
+
+$("#analyze").addEventListener("click", run);
+$("#input").addEventListener("keydown", e => { if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) run(); });
+loadSamples();
+</script>
+</body>
+</html>

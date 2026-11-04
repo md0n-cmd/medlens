@@ -61,6 +61,9 @@ def segment(text: str) -> tuple[list[Line], list[Section]]:
     sections: list[Section] = []
     current: Optional[Section] = None
     for ln in lines:
+        if re.match(r"^\s*(?:\*{2,}|={3,}|-{3,}).*$", ln.text) and current:
+            current = None      # banner / divider lines end the current section
+            continue
         h = header_name(ln.text)
         if h:
             name, _ = h

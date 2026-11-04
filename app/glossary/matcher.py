@@ -94,7 +94,7 @@ def find_terms(text: str) -> list[TermMatch]:
 # --------------------------------------------------------- unknown terms
 ABBREV_RE = re.compile(r"(?<![A-Za-z0-9])[A-Z][A-Z0-9]{1,4}(?![A-Za-z0-9])")  # 2-5 chars
 SUFFIX_RE = re.compile(
-    r"(?<![A-Za-z])[A-Za-z]{3,}(?:itis|aemia|emia|osis|megaly|ectomy|opathy|plasia|algia|ectasia|uria|penia|cytosis)(?![A-Za-z])",
+    r"(?<![A-Za-z])[A-Za-z]{3,}(?:itis|aemia|emia|osis|iasis|megaly|ectomy|opathy|plasia|algia|ectasia|uria|penia|cytosis)(?![A-Za-z])",
     re.I,
 )
 STOPWORDS = {
