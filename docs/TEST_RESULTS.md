@@ -10,8 +10,16 @@ rootdir: /home/d0n/medlens
 configfile: pytest.ini
 testpaths: tests
 plugins: anyio-4.16.0
-collecting ... collected 131 items
+collecting ... collected 145 items
 
+tests/test_age_bands.py::test_age_band_cell_parses_as_multi PASSED
+tests/test_age_bands.py::test_label_bands PASSED
+tests/test_age_bands.py::test_header_age_picks_band PASSED
+tests/test_age_bands.py::test_missing_sex_is_ambiguous_never_guessed PASSED
+tests/test_age_bands.py::test_missing_age_is_ambiguous PASSED
+tests/test_age_bands.py::test_overlapping_bands_are_ambiguous PASSED
+tests/test_age_bands.py::test_pregnancy_band_on_continuation_line_is_ambiguous PASSED
+tests/test_age_bands.py::test_age_and_sex_band PASSED
 tests/test_api.py::test_health PASSED
 tests/test_api.py::test_samples_listed_and_synthetic PASSED
 tests/test_api.py::test_analyze_endpoint PASSED
@@ -54,6 +62,7 @@ tests/test_end_to_end.py::test_all_spans_and_text_safe[02_lipid_diabetes.txt] PA
 tests/test_end_to_end.py::test_all_spans_and_text_safe[03_lft_kft.txt] PASSED
 tests/test_end_to_end.py::test_all_spans_and_text_safe[04_thyroid_urine.txt] PASSED
 tests/test_end_to_end.py::test_all_spans_and_text_safe[05_ultrasound.txt] PASSED
+tests/test_end_to_end.py::test_all_spans_and_text_safe[06_age_bands.txt] PASSED
 tests/test_end_to_end.py::test_empty_and_garbage_input PASSED
 tests/test_end_to_end.py::test_crlf_input_normalised PASSED
 tests/test_end_to_end.py::test_banner_line_produces_no_glossary_card[01_cbc.txt] PASSED
@@ -61,6 +70,7 @@ tests/test_end_to_end.py::test_banner_line_produces_no_glossary_card[02_lipid_di
 tests/test_end_to_end.py::test_banner_line_produces_no_glossary_card[03_lft_kft.txt] PASSED
 tests/test_end_to_end.py::test_banner_line_produces_no_glossary_card[04_thyroid_urine.txt] PASSED
 tests/test_end_to_end.py::test_banner_line_produces_no_glossary_card[05_ultrasound.txt] PASSED
+tests/test_end_to_end.py::test_banner_line_produces_no_glossary_card[06_age_bands.txt] PASSED
 tests/test_frontend_text.py::test_plain_words_phrases_exist PASSED
 tests/test_frontend_text.py::test_plain_words_phrases_pass_safety_filter PASSED
 tests/test_frontend_text.py::test_doctor_questions_are_questions PASSED
@@ -87,6 +97,10 @@ tests/test_ingest.py::test_api_rejects_too_large PASSED
 tests/test_ingest.py::test_api_corrupt_pdf_422 PASSED
 tests/test_ingest.py::test_health_reports_ocr PASSED
 tests/test_ingest.py::test_password_protected_pdf_friendly_message PASSED
+tests/test_ingest.py::test_phone_photo_recovers_cbc_rows PASSED
+tests/test_ingest.py::test_digit_confusion_is_suggested_not_applied PASSED
+tests/test_ingest.py::test_deskew_estimates_rotation PASSED
+tests/test_ingest.py::test_api_extract_reports_rows_found PASSED
 tests/test_llm_hook.py::test_llm_output_is_labelled_and_safety_filtered PASSED
 tests/test_llm_hook.py::test_llm_failure_never_breaks_pipeline PASSED
 tests/test_ranges.py::test_interval_formats[70-110-70-110] PASSED
@@ -144,5 +158,5 @@ tests/test_values.py::test_value_without_range PASSED
 tests/test_values.py::test_non_result_lines_ignored PASSED
 tests/test_values.py::test_sections_and_interpretive_flag PASSED
 
-============================= 131 passed in 14.47s =============================
+============================= 145 passed in 19.96s =============================
 ```

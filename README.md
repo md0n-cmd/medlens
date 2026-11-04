@@ -17,9 +17,11 @@ pip install -r requirements.txt
 uvicorn app.main:app --reload        # or: ./run.sh  (creates a venv for you)
 ```
 
+To open it on your phone (same Wi-Fi), run `./run.sh --lan`. It prints the laptop's LAN URL. Over plain http, the phone uses its native "take a photo" camera button, because browsers only allow a live camera preview on https or localhost.
+
 Open http://localhost:8000. Pick a sample from the dropdown, or open `http://localhost:8000/?sample=01_cbc` directly.
 
-Run the tests with `pytest -v` (131 tests; see [docs/TEST_RESULTS.md](docs/TEST_RESULTS.md)).
+Run the tests with `pytest -v` (145 tests; see [docs/TEST_RESULTS.md](docs/TEST_RESULTS.md)).
 
 ## Input options
 
@@ -145,6 +147,13 @@ curl -s -X POST localhost:8000/api/analyze -H 'Content-Type: application/json' \
 * **New hedge phrases or interpretive sections:** `classify.py::HEDGE_PATTERNS` and `parser/lines.py::INTERPRETIVE_SECTIONS`.
 * **New safety rules:** append to `safety.py::BLOCKED_PATTERNS`. They apply to every generated string automatically.
 * **Optional LLM fallback (`app/llm.py`):** a `UnknownTermExplainer` hook in `pipeline.analyze()`. It is **off by default**. To turn it on, run `pip install anthropic`, then `USE_LLM=1 ANTHROPIC_API_KEY=... ./run.sh`. Only the unknown term and its one source line are sent (model `claude-opus-5-5`, low effort, server-side refusal fallback). Output is labelled *AI-generated, unverified*, goes through the same safety filter, and any failure falls back to "unrecognized term: ask your clinician".
+
+## Roadmap
+
+* **Multilingual plain-words summary** (Tamil, Hindi first): translate the fixed, reviewed phrase set, not free text, so safety review stays possible.
+* **Compare with an earlier report:** match tests across two reports and show "changed since last report" as facts only, with no trend interpretation.
+* **FHIR / HL7 import:** read `Observation` resources (value, unit, `referenceRange`) directly, skipping text parsing entirely.
+* Higher OCR robustness on real-world photos (perspective correction, table-line removal).
 
 ## Docs
 
