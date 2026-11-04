@@ -113,6 +113,23 @@
   .review { border-radius: 10px; padding: 10px 14px; margin-bottom: 10px; background: #fff8d6; border: 1px solid #f0d36a; color: #5a4600; }
   .review.low { background: #ffe9d6; border-color: #f0a35a; color: #6b3000; }
   .review mark { background: #ffd54f; padding: 0 4px; border-radius: 3px; font-family: ui-monospace, monospace; }
+  @media (max-width: 600px) {
+    main { padding: 10px 10px 40px; }
+    header { flex-wrap: wrap; padding: 10px 12px; gap: 6px 12px; }
+    header .tag { flex-basis: 100%; }
+    .fs-ctl { margin-left: 0; flex-wrap: wrap; }
+    .disclaimer { padding: 8px 12px; }
+    .card { padding: 12px; }
+    button, select, .tabs button, .fs-ctl button, .plain a, .controls input[type=file] { min-height: 44px; }
+    .plain a { display: inline-flex; align-items: center; }
+    .controls { gap: 8px; }
+    .controls select, .controls button { flex: 1 1 100%; }
+    .tabs button { flex: 1 1 auto; }
+    .summary { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    #report { font-size: calc(12px * var(--fs)); }
+    table { min-width: 560px; }
+    .sticky { position: static !important; max-height: none !important; }
+  }
   @media print {
     header .fs-ctl, #input-card, .review, .controls, button, #rep-card, .group.FACTUAL_FROM_REPORT, .group.GENERAL_INFO, footer, .legend { display: none !important; }
     .disclaimer { position: static; }
@@ -165,7 +182,7 @@
         </div>
         <div class="hint">Tips: flat surface, good light, fill the frame.</div>
         <div id="camfallback" hidden>
-          <p class="hint">Camera not available here. You can still take a photo:</p>
+          <p class="hint" id="camhint">Camera not available here. You can still take a photo:</p>
           <input type="file" id="camfile" accept="image/*" capture="environment">
         </div>
       </div>
@@ -531,16 +548,22 @@ fileInput.addEventListener("change", () => { const f = fileInput.files[0]; if (f
 ["dragleave", "drop"].forEach(ev => drop.addEventListener(ev, e => { e.preventDefault(); drop.classList.remove("over"); }));
 drop.addEventListener("drop", e => { const f = e.dataTransfer.files[0]; if (f) extractFile(f, f.name); });
 
+function cameraFallback(msg) {
+  $("#camfallback").hidden = false; $("#cap").hidden = true; $("#video").hidden = true;
+  if (msg) $("#camhint").textContent = msg;
+}
 async function startCamera() {
   if (stream) return;
-  if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) { $("#camfallback").hidden = false; $("#cap").hidden = true; return; }
+  if (!window.isSecureContext) {
+    return cameraFallback("Live camera preview needs https or localhost. This button opens your phone's camera instead:");
+  }
+  if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) return cameraFallback();
   try {
     stream = await navigator.mediaDevices.getUserMedia({video: {facingMode: "environment"}});
     const v = $("#video"); v.srcObject = stream; v.hidden = false; $("#snap").hidden = true;
     $("#cap").hidden = false; $("#retake").hidden = true; $("#usephoto").hidden = true;
   } catch (e) {
-    $("#camfallback").hidden = false; $("#cap").hidden = true; $("#video").hidden = true;
-    $("#status").textContent = "Camera access was denied or is unavailable. Use the photo button instead.";
+    cameraFallback("Camera access was denied or is unavailable. You can still take a photo:");
   }
 }
 function stopCamera() { if (stream) { stream.getTracks().forEach(t => t.stop()); stream = null; } }
