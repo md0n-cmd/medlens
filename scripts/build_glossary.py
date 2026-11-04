@@ -3,9 +3,18 @@ import json, pathlib, re
 
 SRC = "General educational description written for MedLens (synthetic-data hackathon project), based on standard lab-medicine terminology. Not patient-specific."
 T = []
-def add(term, aliases, cat, expl, not_=None, possibilities=None):
+FINDING_IDS = {"hepatomegaly", "splenomegaly", "effusion", "lesion", "opacity", "benign", "malignant", "fatty_liver",
+               "calculus", "cyst", "nodule", "hydronephrosis", "ascites", "lymphadenopathy", "anaemia", "inflammation",
+               "infection", "jaundice"}
+KIND_BY_CAT = {"Ambiguous abbreviation": "abbreviation", "Report term": "report_word",
+               "Radiology / report language": "report_word", "Medical condition word": "finding"}
+
+
+def add(term, aliases, cat, expl, not_=None, possibilities=None, kind=None):
     tid = re.sub(r"[^a-z0-9]+", "_", term.lower()).strip("_")
-    e = {"id": tid, "term": term, "aliases": aliases, "category": cat, "plain_explanation": expl, "source_note": SRC}
+    kind = kind or ("finding" if tid in FINDING_IDS else KIND_BY_CAT.get(cat, "test"))
+    e = {"id": tid, "term": term, "aliases": aliases, "category": cat, "kind": kind, "plain_explanation": expl,
+         "source_note": SRC}
     if not_: e["what_it_is_not"] = not_
     if possibilities: e["possibilities"] = possibilities
     T.append(e)
@@ -130,7 +139,7 @@ add("Blood Group", ["ABO Group", "Rh Type", "Blood Group & Rh", "Rh Factor"], S,
 add("Prothrombin Time", ["PT", "PT/INR", "INR", "Prothrombin Time (PT)"], S, "Measures how long it takes blood to clot in a test tube; INR is a standardised way of reporting it.")
 
 R = "Radiology / report language"
-add("Impression", ["Impressions"], R, "The section where the reporting doctor writes their overall opinion about the findings.", "It is a professional opinion, not a final diagnosis; discuss it with your doctor.")
+add("Impression", ["Impressions"], R, "The section where the reporting doctor writes their overall opinion about the findings.", "It is a professional opinion, not a final conclusion; discuss it with your doctor.")
 add("Findings", ["Finding"], R, "The section that describes what was seen or measured during the test.")
 add("Unremarkable", ["Unremarkable Study"], R, "Nothing unusual was seen in that area.")
 add("Lesion", ["Lesions"], R, "A general word for an area of tissue that looks different from the tissue around it.", "The word alone does not say what the area is.")
@@ -160,8 +169,8 @@ add("Urinary Bladder", ["Bladder"], R, "The organ that stores urine before it le
 add("Prostate", [], R, "A small gland below the bladder in males.")
 add("Ascites", [], R, "A medical word for fluid collected inside the belly (abdominal cavity).")
 add("Lymphadenopathy", [], R, "A medical word for enlarged lymph nodes.")
-add("Clinical Correlation", ["Correlate Clinically", "Clinical Correlation Advised", "Clinically Correlate", "Suggested Clinical Correlation"], R, "A note from the reporting doctor asking your treating doctor to compare the test result with your symptoms and examination.", "It does not mean something is wrong by itself.")
-add("Reference Range", ["Reference Interval", "Biological Reference Interval", "Normal Range", "Bio. Ref. Interval", "Ref. Range"], "Report term", "The range of values the lab printed for comparison. MedLens only uses ranges printed on your report.", "A value outside the printed range is not, by itself, a diagnosis, and a value inside it is not, by itself, a clean bill of health.")
+add("Clinical Correlation", ["Correlate Clinically", "Clinical Correlation Advised", "Clinically Correlate", "Suggested Clinical Correlation"], R, "A note from the reporting doctor asking your own doctor to compare the test result with your symptoms and examination.", "It does not mean something is wrong by itself.")
+add("Reference Range", ["Reference Interval", "Biological Reference Interval", "Normal Range", "Bio. Ref. Interval", "Ref. Range"], "Report term", "The range of values the lab printed for comparison. MedLens only uses ranges printed on your report.", "A value outside the printed range is not, by itself, a medical conclusion, and a value inside it is not, by itself, a clean bill of health.")
 add("Specimen", ["Sample Type"], "Report term", "The material tested, such as blood, serum, plasma or urine.")
 add("Serum", [], "Report term", "The clear liquid part of blood left after the blood has clotted.")
 add("Plasma", [], "Report term", "The liquid part of blood, collected with an anti-clotting agent.")
@@ -173,8 +182,78 @@ add("Inflammation", ["Inflammatory"], "Medical condition word", "The body's resp
 add("Infection", [], "Medical condition word", "When germs such as bacteria or viruses enter the body and multiply.")
 add("Jaundice", ["Icterus"], "Medical condition word", "Yellowing of the skin or eyes, linked to bilirubin.")
 
+
+# ---------------------------------------------------------------- (a) radiology / report words + abbreviations
+F = "Finding word"
+add("Cholelithiasis", ["Gallstones", "Gall Stones", "Cholelithiasis (Gallstones)"], F, "A medical term for stones in the gallbladder.", kind="finding")
+add("Cholecystitis", [], F, "A medical term for inflammation of the gallbladder.", kind="finding")
+add("Consolidation", ["Consolidations", "Consolidated"], F, "A word used on chest images for an area of lung that looks filled in (solid) instead of filled with air.", kind="finding")
+add("Mass", ["Masses", "Mass Lesion"], F, "A general word for a lump or growth seen on a scan or felt on examination.", "The word alone does not say what the lump is.", kind="finding")
+add("Cardiomegaly", [], F, "A medical term meaning the heart looks larger than the usual size on an image.", kind="finding")
+add("Calcification", ["Calcifications", "Calcified"], F, "A word for small deposits of calcium seen in tissue on an image.", kind="finding")
+add("Atelectasis", [], F, "A medical term for a part of the lung that is not fully open (collapsed or partly collapsed).", kind="finding")
+add("Pneumothorax", [], F, "A medical term for air in the space between the lung and the chest wall.", kind="finding")
+add("Infiltrate", ["Infiltrates", "Infiltration"], F, "A word used on chest images for an area that looks hazier than normal lung.", kind="finding")
+add("Fibrosis", ["Fibrotic"], F, "A medical term for thickening or scarring of tissue.", kind="finding")
+add("Oedema", ["Edema"], F, "A medical term for swelling caused by extra fluid in tissue.", kind="finding")
+add("Hernia", [], F, "A medical term for a part of an organ or tissue pushing through a weak spot in the wall around it.", kind="finding")
+add("Space-Occupying Lesion", ["SOL", "Space Occupying Lesion"], F, "A general term for something seen on a scan that takes up space within an organ.", "The term alone does not say what it is.", kind="finding")
+add("Cholecystectomy", ["Post Cholecystectomy", "Post-Cholecystectomy"], F, "A medical term for an operation in which the gallbladder was removed.", kind="finding")
+add("Hepatitis", [], F, "A medical term for inflammation of the liver.", kind="finding")
+add("Nephrolithiasis", ["Renal Stones", "Kidney Stones"], F, "A medical term for stones in the kidney.", kind="finding")
+add("Sinus Rhythm", ["Normal Sinus Rhythm", "NSR"], "ECG word", "On an ECG, the heartbeat is starting from its usual natural pacemaker (the sinus node).", kind="report_word")
+add("Sinus Tachycardia", [], "ECG word", "On an ECG, a heartbeat that starts from the usual pacemaker but is faster than 100 beats per minute.", kind="finding")
+add("Sinus Bradycardia", [], "ECG word", "On an ECG, a heartbeat that starts from the usual pacemaker but is slower than 60 beats per minute.", kind="finding")
+add("Heart Rate", ["HR", "Ventricular Rate", "Pulse Rate"], "ECG word", "The number of heartbeats per minute.", kind="test")
+add("PR Interval", ["PR"], "ECG word", "On an ECG, the time from the start of the upper heart chambers' signal to the start of the lower chambers' signal.", kind="test")
+add("QRS Duration", ["QRS", "QRS Complex"], "ECG word", "On an ECG, how long the electrical signal takes to spread through the lower heart chambers.", kind="test")
+add("QT Interval", ["QTc", "QT", "Corrected QT"], "ECG word", "On an ECG, the time the lower heart chambers take to send and then reset their electrical signal.", kind="test")
+add("Axis", ["Cardiac Axis", "QRS Axis"], "ECG word", "On an ECG, the main direction in which the heart's electrical signal travels.", kind="report_word")
+add("ST Segment", ["ST Changes", "ST-T Changes"], "ECG word", "On an ECG, the flat part of the tracing between two parts of each heartbeat.", kind="report_word")
+add("T Wave", ["T Waves", "T-wave"], "ECG word", "On an ECG, the wave that shows the lower heart chambers resetting after each beat.", kind="report_word")
+add("Within Normal Limits", ["WNL", "Within Normal Limit"], R, "A phrase used by the reporting doctor meaning nothing outside the usual was seen.", kind="report_word")
+add("No Abnormality Detected", ["NAD", "No Abnormality Seen"], R, "A phrase used in reports meaning nothing unusual was seen.", kind="report_word")
+add("Anterior", [], R, "Toward the front of the body.", kind="report_word")
+add("Posterior", [], R, "Toward the back of the body.", kind="report_word")
+add("Proximal", [], R, "Closer to the centre of the body or to where a body part starts.", kind="report_word")
+add("Distal", [], R, "Farther from the centre of the body or from where a body part starts.", kind="report_word")
+add("Diffuse", ["Diffusely"], R, "Spread out over a wide area rather than in one spot.", kind="report_word")
+add("Focal", ["Focally"], R, "Limited to one spot or small area.", kind="report_word")
+add("Mild", [], R, "A word used to describe a small degree of a change.", kind="report_word")
+add("Moderate", [], R, "A word used to describe a medium degree of a change.", kind="report_word")
+add("Visualised", ["Visualized", "Not Visualised", "Not Visualized"], R, "A report word meaning seen (or not seen) on the image.", kind="report_word")
+add("Lung Fields", ["Lung Field", "Both Lung Fields"], R, "The parts of a chest X-ray that show the lungs.", kind="report_word")
+add("Costophrenic Angles", ["Costophrenic Angle", "CP Angles", "CP Angle"], R, "The corners at the bottom of each lung on a chest X-ray, where the ribs meet the diaphragm.", kind="report_word")
+add("Hilum", ["Hila", "Hilar", "Hilar Shadows"], R, "The area in the middle of the chest where blood vessels and airways enter each lung.", kind="report_word")
+add("Cardiothoracic Ratio", ["CTR", "Cardiac Silhouette"], R, "On a chest X-ray, a comparison of the width of the heart with the width of the chest.", kind="report_word")
+add("Diaphragm", ["Domes of Diaphragm", "Hemidiaphragm"], R, "The sheet of muscle under the lungs that helps with breathing.", kind="report_word")
+add("Mediastinum", ["Mediastinal"], R, "The central part of the chest between the lungs, which holds the heart and large blood vessels.", kind="report_word")
+add("Trachea", [], R, "The windpipe: the tube that carries air from the throat to the lungs.", kind="report_word")
+add("Bony Cage", ["Bony Thorax", "Bones"], R, "On a chest X-ray, the ribs, spine and other bones around the chest.", kind="report_word")
+add("Soft Tissues", ["Soft Tissue"], R, "Body parts that are not bone, such as skin, fat and muscle.", kind="report_word")
+add("Calibre", ["Caliber"], R, "The width of a tube, such as a blood vessel or duct.", kind="report_word")
+add("Dilated", ["Dilatation", "Dilation", "Not Dilated"], R, "A word meaning wider than usual (or, with 'not', of the usual width).", kind="report_word")
+add("Distended", ["Distension", "Well Distended"], R, "A word meaning stretched or filled out, such as a bladder or gallbladder filled with fluid.", kind="report_word")
+add("Wall Thickness", ["Wall Thickening", "Thickened Wall"], R, "How thick the wall of an organ, such as the gallbladder or bladder, looks on a scan.", kind="report_word")
+add("Echogenic Focus", ["Echogenic Foci"], R, "On ultrasound, a small bright spot.", "The phrase alone does not say what the spot is.", kind="report_word")
+add("Acoustic Shadow", ["Posterior Acoustic Shadowing", "Shadowing"], R, "On ultrasound, a dark band behind something dense that blocks the sound waves.", kind="report_word")
+add("Electrocardiogram", ["ECG", "EKG", "12-Lead ECG"], "Report abbreviation", "A test that records the heart's electrical signals as lines on paper or a screen.", kind="abbreviation")
+add("Ultrasonography", ["USG", "Ultrasound", "Sonography"], "Report abbreviation", "An imaging test that uses sound waves to make pictures of the inside of the body.", kind="abbreviation")
+add("Computed Tomography", ["CT", "CT Scan", "CAT Scan"], "Report abbreviation", "An imaging test that uses X-rays and a computer to make cross-section pictures of the body.", kind="abbreviation")
+add("Magnetic Resonance Imaging", ["MRI", "MRI Scan"], "Report abbreviation", "An imaging test that uses a strong magnet and radio waves to make detailed pictures of the body.", kind="abbreviation")
+add("X-ray", ["X-Ray", "Radiograph", "Chest X-ray", "CXR", "Chest PA View", "PA View"], "Report abbreviation", "An imaging test that uses a small amount of radiation to make a picture, often of the chest or bones.", kind="abbreviation")
+add("Bilateral (B/L)", ["B/L"], "Report abbreviation", "Short for bilateral: on both sides of the body.", kind="abbreviation")
+add("Low Power Field", ["LPF", "/lpf"], "Report abbreviation", "A unit for counting things seen under a microscope at low magnification.", kind="abbreviation")
+add("Quantity Sufficient", ["q.s.", "QS"], "Report abbreviation", "A note meaning enough sample was available for the test.", kind="abbreviation")
+add("Clinical Notes", ["C/O", "Complaints Of", "Clinical History"], "Report abbreviation", "The reason for the test or the symptoms written by the doctor who asked for it.", kind="abbreviation")
+
 out = pathlib.Path(__file__).resolve().parent.parent / "app" / "glossary" / "terms.json"
 ids = [t["id"] for t in T]
 assert len(ids) == len(set(ids)), "duplicate ids"
+owner = {}
+for t in T:
+    for a in {x.strip().lower() for x in [t["term"], *t["aliases"]]}:
+        assert a not in owner, f"alias {a!r} used by {owner[a]} and {t['id']}"
+        owner[a] = t["id"]
 out.write_text(json.dumps({"version": 1, "terms": T}, indent=2, ensure_ascii=False))
 print(len(T), "terms written to", out)

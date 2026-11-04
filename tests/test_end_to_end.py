@@ -72,7 +72,8 @@ def test_ultrasound_sample_interpretive_sections():
     prof = [e for e in r.explanations if e.tag == Tag.PROFESSIONAL]
     assert sum(e.title.startswith("IMPRESSION") for e in prof) == 3
     assert any(e.title == "Hedged language" for e in prof)
-    assert {"cholecystitis", "cholelithiasis"} <= {u.text for u in r.unrecognized}
+    assert r.unrecognized == []                                     # every word now in the glossary
+    assert {"cholecystitis", "cholelithiasis"} <= {t.term_id for t in r.terms}
     assert any(t.term_id == "hepatomegaly" for t in r.terms)
 
 

@@ -7,7 +7,7 @@ def ids(text):
 
 def test_glossary_size_and_schema():
     gl = load_glossary()
-    assert 120 <= len(gl) <= 160
+    assert 120 <= len(gl) <= 450
     for e in gl.values():
         assert e["term"] and e["category"] and e["plain_explanation"] and e["source_note"]
         assert isinstance(e["aliases"], list)
@@ -54,10 +54,10 @@ def test_spans_are_exact():
 
 
 def test_unrecognized_terms_are_listed_not_explained():
-    text = "Findings suggest cholecystitis. QZX level noted."
+    text = "Findings suggest osteomyelitis. QZX level noted."
     known = [(m.span.start, m.span.end) for m in find_terms(text)]
     u = {x.text for x in find_unrecognized(text, known)}
-    assert {"cholecystitis", "QZX"} <= u
+    assert {"osteomyelitis", "QZX"} <= u
     assert all("ask your clinician" in x.reason for x in find_unrecognized(text, known))
 
 
