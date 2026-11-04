@@ -233,11 +233,11 @@ function renderReport(r, spans) {
   }));
 }
 
-function flashRange(start, end) {
+function flashRange(start, end, scroll = true) {
   const segs = [...document.querySelectorAll("#report span[data-seg]")].filter(s => +s.dataset.a >= start && +s.dataset.b <= end);
   if (!segs.length) return;
   segs.forEach(s => { s.classList.remove("flash"); void s.offsetWidth; s.classList.add("flash"); });
-  segs[0].scrollIntoView({behavior: "smooth", block: "center"});
+  if (scroll) segs[0].scrollIntoView({behavior: "smooth", block: "center"});
 }
 
 function focusCard(eid) {
@@ -247,7 +247,7 @@ function focusCard(eid) {
   card.classList.add("active");
   card.scrollIntoView({behavior: "smooth", block: "center"});
   const e = result.explanations.find(x => x.id === eid);
-  if (e && e.span) flashRange(e.span.start, e.span.end);
+  if (e && e.span) flashRange(e.span.start, e.span.end, false);
 }
 
 function renderSummary(r) {

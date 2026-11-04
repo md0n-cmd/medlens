@@ -65,3 +65,8 @@ def test_known_terms_not_reported_as_unrecognized():
     text = "TSH 2.1 and hepatomegaly"
     known = [(m.span.start, m.span.end) for m in find_terms(text)]
     assert find_unrecognized(text, known) == []
+
+
+def test_synthetic_banner_word_sample_is_not_a_term():
+    assert ids("*** SYNTHETIC SAMPLE — not real patient data ***") == []
+    assert ids("Sample Type: Serum") == ["specimen", "serum"]

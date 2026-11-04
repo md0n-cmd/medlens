@@ -19,7 +19,7 @@ uvicorn app.main:app --reload        # or: ./run.sh  (creates a venv for you)
 
 Open http://localhost:8000. Pick a sample from the dropdown, or open `http://localhost:8000/?sample=01_cbc` directly.
 
-Run the tests with `pytest -v` (110 tests; see [docs/TEST_RESULTS.md](docs/TEST_RESULTS.md)).
+Run the tests with `pytest -v` (116 tests; see [docs/TEST_RESULTS.md](docs/TEST_RESULTS.md)).
 
 ## Screenshots
 

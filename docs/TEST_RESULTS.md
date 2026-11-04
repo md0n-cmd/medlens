@@ -10,7 +10,7 @@ rootdir: /home/d0n/medlens
 configfile: pytest.ini
 testpaths: tests
 plugins: anyio-4.16.0
-collecting ... collected 110 items
+collecting ... collected 116 items
 
 tests/test_api.py::test_health PASSED
 tests/test_api.py::test_samples_listed_and_synthetic PASSED
@@ -56,6 +56,11 @@ tests/test_end_to_end.py::test_all_spans_and_text_safe[04_thyroid_urine.txt] PAS
 tests/test_end_to_end.py::test_all_spans_and_text_safe[05_ultrasound.txt] PASSED
 tests/test_end_to_end.py::test_empty_and_garbage_input PASSED
 tests/test_end_to_end.py::test_crlf_input_normalised PASSED
+tests/test_end_to_end.py::test_banner_line_produces_no_glossary_card[01_cbc.txt] PASSED
+tests/test_end_to_end.py::test_banner_line_produces_no_glossary_card[02_lipid_diabetes.txt] PASSED
+tests/test_end_to_end.py::test_banner_line_produces_no_glossary_card[03_lft_kft.txt] PASSED
+tests/test_end_to_end.py::test_banner_line_produces_no_glossary_card[04_thyroid_urine.txt] PASSED
+tests/test_end_to_end.py::test_banner_line_produces_no_glossary_card[05_ultrasound.txt] PASSED
 tests/test_glossary.py::test_glossary_size_and_schema PASSED
 tests/test_glossary.py::test_longest_match_first PASSED
 tests/test_glossary.py::test_aliases_map_to_canonical PASSED
@@ -66,6 +71,7 @@ tests/test_glossary.py::test_ambiguous_abbreviation_resolved_by_context PASSED
 tests/test_glossary.py::test_spans_are_exact PASSED
 tests/test_glossary.py::test_unrecognized_terms_are_listed_not_explained PASSED
 tests/test_glossary.py::test_known_terms_not_reported_as_unrecognized PASSED
+tests/test_glossary.py::test_synthetic_banner_word_sample_is_not_a_term PASSED
 tests/test_llm_hook.py::test_llm_output_is_labelled_and_safety_filtered PASSED
 tests/test_llm_hook.py::test_llm_failure_never_breaks_pipeline PASSED
 tests/test_ranges.py::test_interval_formats[70-110-70-110] PASSED
@@ -123,5 +129,5 @@ tests/test_values.py::test_value_without_range PASSED
 tests/test_values.py::test_non_result_lines_ignored PASSED
 tests/test_values.py::test_sections_and_interpretive_flag PASSED
 
-============================= 110 passed in 1.05s ==============================
+============================= 116 passed in 1.43s ==============================
 ```

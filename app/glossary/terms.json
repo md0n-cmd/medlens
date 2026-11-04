@@ -1587,8 +1587,7 @@
       "id": "specimen",
       "term": "Specimen",
       "aliases": [
-        "Sample Type",
-        "Sample"
+        "Sample Type"
       ],
       "category": "Report term",
       "plain_explanation": "The material tested, such as blood, serum, plasma or urine.",

@@ -101,3 +101,10 @@ def test_crlf_input_normalised():
     r = analyze("Hemoglobin  11.2  g/dL  13-17\r\nTSH  2.0  uIU/mL  0.27-4.2\r\n")
     assert [v.status for v in r.values] == [Status.BELOW, Status.WITHIN]
     assert "\r" not in r.text
+
+
+@pytest.mark.parametrize("name", sorted(p.name for p in SAMPLES.glob("*.txt")))
+def test_banner_line_produces_no_glossary_card(name):
+    r = run(name)
+    banner_end = r.text.index("\n")
+    assert not any(t.span.start < banner_end for t in r.terms)

@@ -162,7 +162,7 @@ add("Ascites", [], R, "A medical word for fluid collected inside the belly (abdo
 add("Lymphadenopathy", [], R, "A medical word for enlarged lymph nodes.")
 add("Clinical Correlation", ["Correlate Clinically", "Clinical Correlation Advised", "Clinically Correlate", "Suggested Clinical Correlation"], R, "A note from the reporting doctor asking your treating doctor to compare the test result with your symptoms and examination.", "It does not mean something is wrong by itself.")
 add("Reference Range", ["Reference Interval", "Biological Reference Interval", "Normal Range", "Bio. Ref. Interval", "Ref. Range"], "Report term", "The range of values the lab printed for comparison. MedLens only uses ranges printed on your report.", "A value outside the printed range is not, by itself, a diagnosis, and a value inside it is not, by itself, a clean bill of health.")
-add("Specimen", ["Sample Type", "Sample"], "Report term", "The material tested, such as blood, serum, plasma or urine.")
+add("Specimen", ["Sample Type"], "Report term", "The material tested, such as blood, serum, plasma or urine.")
 add("Serum", [], "Report term", "The clear liquid part of blood left after the blood has clotted.")
 add("Plasma", [], "Report term", "The liquid part of blood, collected with an anti-clotting agent.")
 add("Whole Blood", ["EDTA Whole Blood", "EDTA Blood"], "Report term", "Blood tested without separating its parts.")
