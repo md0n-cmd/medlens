@@ -139,6 +139,14 @@
   .ssum table { font-size: calc(13px * var(--fs)); }
   .ssum blockquote { margin: 4px 0; padding: 4px 10px; border-left: 3px solid var(--prof); background: #fff8ee; font: calc(12.5px * var(--fs))/1.45 ui-monospace, monospace; white-space: pre-wrap; cursor: pointer; }
   .ssum .btns { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px; }
+  .tsearch { margin-bottom: 16px; }
+  .tsearch input { width: 100%; font: inherit; padding: 10px 12px; border: 1px solid var(--line); border-radius: 8px; }
+  .tsearch ul { list-style: none; margin: 8px 0 0; padding: 0; }
+  .tsearch li button { width: 100%; text-align: left; border: none; border-bottom: 1px solid var(--line); border-radius: 0; padding: 8px 6px; }
+  .tsearch li button:hover { background: #f6f8ff; }
+  .tsearch .inrep { color: var(--in); font-weight: 600; font-size: calc(12px * var(--fs)); }
+  .tsearch .def { margin-top: 10px; padding: 10px 12px; background: #e0f4f4; border-radius: 8px; }
+  .h-search { background: #ffe066 !important; box-shadow: 0 0 0 2px #e0b800; }
   @media print {
     header .fs-ctl, #input-card, .review, .controls, button, #rep-card, .group.FACTUAL_FROM_REPORT, .group.GENERAL_INFO, footer, .legend { display: none !important; }
     .disclaimer { position: static; }
@@ -224,6 +232,13 @@
     </section>
 
     <section aria-labelledby="res-h">
+      <div class="card tsearch" role="search">
+        <label for="tq"><h2 style="display:inline">Search a medical term</h2></label>
+        <input id="tq" type="search" placeholder="Search a medical term…" autocomplete="off" aria-describedby="tq-hint">
+        <div id="tq-hint" class="hint">Searches our 143-term glossary (typos are OK). We never make up definitions.</div>
+        <ul id="tres" aria-live="polite"></ul>
+        <div id="tdef"></div>
+      </div>
       <div class="card ssum" id="ssum" hidden></div>
       <div class="plain" id="plain" aria-live="polite" hidden></div>
       <div class="card">
@@ -636,6 +651,46 @@ fetch("/api/health").then(r => r.json()).then(h => {
     document.querySelectorAll("#sample option[data-file]").forEach(o => { if (!o.value.endsWith("01_cbc.pdf")) { o.disabled = true; o.title = why; } });
   }
 }).catch(() => {});
+
+// ---- term search (glossary only; occurrences stepped through in the annotated report)
+let tqTimer = null, occ = [], occIdx = 0;
+function occurrences(id) { return result ? result.terms.filter(t => t.term_id === id).map(t => t.span) : []; }
+function markOccurrences(spans) {
+  document.querySelectorAll("#report .h-search").forEach(x => x.classList.remove("h-search"));
+  document.querySelectorAll("#report span[data-seg]").forEach(seg => {
+    if (spans.some(sp => +seg.dataset.a >= sp.start && +seg.dataset.b <= sp.end)) seg.classList.add("h-search");
+  });
+}
+function stepOcc(d) {
+  if (!occ.length) return;
+  occIdx = (occIdx + d + occ.length) % occ.length;
+  $("#occn").textContent = `${occIdx + 1} of ${occ.length}`;
+  flashRange(occ[occIdx].start, occ[occIdx].end);
+}
+function showTerm(t) {
+  occ = occurrences(t.id); occIdx = 0;
+  markOccurrences(occ);
+  let html = `<div class="def"><strong>${esc(t.term)}</strong> <span class="badge b-GENERAL_INFO">General information</span><br>${esc(t.plain_explanation)}`;
+  if (t.aliases.length) html += `<div class="hint">Also written as: ${t.aliases.map(esc).join(", ")}</div>`;
+  if (occ.length) html += `<div class="controls" style="margin-top:6px"><button id="occp" aria-label="Previous occurrence">‹</button><span id="occn">1 of ${occ.length}</span><button id="occx" aria-label="Next occurrence">›</button> <span class="hint">in your report</span></div>`;
+  else if (result) html += `<div class="hint">This term does not appear in the loaded report.</div>`;
+  $("#tdef").innerHTML = html + "</div>";
+  if (occ.length) { $("#occp").onclick = () => stepOcc(-1); $("#occx").onclick = () => stepOcc(1); flashRange(occ[0].start, occ[0].end); }
+}
+async function searchTerms() {
+  const q = $("#tq").value.trim();
+  if (!q) { $("#tres").innerHTML = ""; $("#tdef").innerHTML = ""; markOccurrences([]); return; }
+  const res = await fetch("/api/terms?q=" + encodeURIComponent(q));
+  if (!res.ok) return;
+  const items = await res.json();
+  if (!items.length) { $("#tres").innerHTML = `<li class="hint">Not in our glossary. Ask your clinician or the lab.</li>`; $("#tdef").innerHTML = ""; return; }
+  $("#tres").innerHTML = items.map((t, i) => {
+    const n = occurrences(t.id).length;
+    return `<li><button data-i="${i}">${esc(t.term)} <span class="hint">· ${esc(t.category)}${t.match_type === "fuzzy" ? " · did you mean?" : ""}</span>${n ? ` <span class="inrep">✓ in your report (${n}×)</span>` : ""}</button></li>`;
+  }).join("");
+  $("#tres").querySelectorAll("button").forEach(b => b.addEventListener("click", () => showTerm(items[+b.dataset.i])));
+}
+$("#tq").addEventListener("input", () => { clearTimeout(tqTimer); tqTimer = setTimeout(searchTerms, 200); });
 
 $("#analyze").addEventListener("click", run);
 $("#input").addEventListener("keydown", e => { if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) run(); });

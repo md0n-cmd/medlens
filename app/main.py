@@ -44,6 +44,14 @@ def samples() -> list[dict]:
     return out
 
 
+@app.get("/api/terms")
+def terms(q: str = "") -> list[dict]:
+    from app.glossary.search import search_terms
+    if not q.strip():
+        raise HTTPException(status_code=400, detail="Type a term to search.")
+    return search_terms(q)
+
+
 @app.post("/api/analyze", response_model=AnalysisResult)
 def analyze_endpoint(req: AnalyzeRequest) -> AnalysisResult:
     if not req.text.strip():
