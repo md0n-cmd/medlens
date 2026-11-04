@@ -99,8 +99,22 @@
   .plain .foot { font-size: calc(13px * var(--fs)); color: var(--muted); border-top: 1px solid #d5e2f6; padding-top: 8px; margin-top: 8px; }
   details.group > summary { list-style: revert; }
   details.group > summary h3 { display: inline; }
+  .tabs { display: flex; gap: 4px; border-bottom: 2px solid var(--line); margin-bottom: 12px; flex-wrap: wrap; }
+  .tabs button { border: none; border-radius: 8px 8px 0 0; background: transparent; padding: 8px 14px; color: var(--muted); font-weight: 600; }
+  .tabs button[aria-selected="true"] { background: #e6ecfd; color: var(--brand); }
+  .tabs button:disabled { opacity: .45; cursor: not-allowed; }
+  .panel { margin-bottom: 12px; }
+  .drop { border: 2px dashed #9fb1d8; border-radius: 12px; padding: 28px; text-align: center; color: var(--muted); cursor: pointer; background: #fafbff; }
+  .drop.over { background: #e6ecfd; border-color: var(--brand); }
+  .spinner { display: inline-block; width: 14px; height: 14px; border: 2px solid #c7cfdf; border-top-color: var(--brand); border-radius: 50%; animation: spin .8s linear infinite; vertical-align: middle; margin-right: 6px; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .cam { display: grid; gap: 8px; max-width: 520px; }
+  .cam video, .cam canvas { width: 100%; border-radius: 10px; background: #111; }
+  .review { border-radius: 10px; padding: 10px 14px; margin-bottom: 10px; background: #fff8d6; border: 1px solid #f0d36a; color: #5a4600; }
+  .review.low { background: #ffe9d6; border-color: #f0a35a; color: #6b3000; }
+  .review mark { background: #ffd54f; padding: 0 4px; border-radius: 3px; font-family: ui-monospace, monospace; }
   @media print {
-    header .fs-ctl, #input-card, .controls, button, #rep-card, .group.FACTUAL_FROM_REPORT, .group.GENERAL_INFO, footer, .legend { display: none !important; }
+    header .fs-ctl, #input-card, .review, .controls, button, #rep-card, .group.FACTUAL_FROM_REPORT, .group.GENERAL_INFO, footer, .legend { display: none !important; }
     .disclaimer { position: static; }
     .grid { display: block; }
     body { background: #fff; }
@@ -128,8 +142,37 @@
 
 <main>
   <section class="card" id="input-card" aria-labelledby="in-h">
-    <h2 id="in-h">1. Paste report text</h2>
-    <textarea id="input" aria-label="Report text" placeholder="Paste the text of a lab or radiology report here, or load a synthetic sample…"></textarea>
+    <h2 id="in-h">1. Add your report</h2>
+    <div class="tabs" role="tablist" aria-label="Input method">
+      <button role="tab" id="tab-paste" aria-selected="true" aria-controls="panel-paste">Paste text</button>
+      <button role="tab" id="tab-upload" aria-selected="false" aria-controls="panel-upload">Upload PDF / image</button>
+      <button role="tab" id="tab-camera" aria-selected="false" aria-controls="panel-camera">Scan with camera</button>
+    </div>
+    <div class="panel" id="panel-paste" role="tabpanel"></div>
+    <div class="panel" id="panel-upload" role="tabpanel" hidden>
+      <div class="drop" id="drop" tabindex="0" role="button" aria-label="Upload a PDF or image">
+        <strong>Drop a PDF or photo here</strong><br>or click to choose a file (PDF, PNG, JPG, WEBP · max 10 MB)
+      </div>
+      <input type="file" id="file" accept=".pdf,image/*" hidden>
+    </div>
+    <div class="panel" id="panel-camera" role="tabpanel" hidden>
+      <div class="cam">
+        <video id="video" autoplay playsinline muted hidden></video>
+        <canvas id="snap" hidden></canvas>
+        <div class="controls" style="margin-top:0">
+          <button id="cap">Capture</button><button id="retake" hidden>Retake</button>
+          <button class="primary" id="usephoto" hidden>Use this photo</button>
+        </div>
+        <div class="hint">Tips: flat surface, good light, fill the frame.</div>
+        <div id="camfallback" hidden>
+          <p class="hint">Camera not available here. You can still take a photo:</p>
+          <input type="file" id="camfile" accept="image/*" capture="environment">
+        </div>
+      </div>
+    </div>
+    <div class="review" id="review" role="status" hidden></div>
+    <label for="input" class="hint">Report text (check and edit before analyzing):</label>
+    <textarea id="input" aria-label="Report text" placeholder="Paste the text of a lab or radiology report here, upload a file, or load a synthetic sample…"></textarea>
     <div class="controls">
       <label for="sample" class="hint">Load sample:</label>
       <select id="sample"><option value="">— choose a synthetic sample —</option></select>
@@ -200,7 +243,14 @@ async function loadSamples() {
   const samples = await res.json();
   const sel = $("#sample");
   samples.forEach(s => { const o = document.createElement("option"); o.value = s.id; o.textContent = s.title; o.dataset.text = s.text; sel.appendChild(o); });
-  sel.addEventListener("change", () => { const o = sel.selectedOptions[0]; if (o.dataset.text) { $("#input").value = o.dataset.text; run(); } });
+  const grp = document.createElement("optgroup"); grp.label = "Files (PDF / image, via text extraction)";
+  FILE_SAMPLES.forEach(([f, label]) => { const o = document.createElement("option"); o.value = "file:" + f; o.dataset.file = f; o.textContent = label; grp.appendChild(o); });
+  sel.appendChild(grp);
+  sel.addEventListener("change", () => {
+    const o = sel.selectedOptions[0];
+    if (o.dataset.file) { showTab("upload"); loadFileSample(o.dataset.file); }
+    else if (o.dataset.text) { $("#review").hidden = true; $("#input").value = o.dataset.text; run(); }
+  });
   const want = new URLSearchParams(location.search).get("sample");   // e.g. /?sample=01_cbc
   if (want && [...sel.options].some(o => o.value === want)) { sel.value = want; sel.dispatchEvent(new Event("change")); }
 }
@@ -424,6 +474,103 @@ function render() {
   renderTable(result);
   renderCards(result);
 }
+
+// ---- input tabs, upload, camera (extraction never auto-analyzes: user reviews text first)
+const FILE_SAMPLES = [
+  ["01_cbc.pdf", "Sample PDF"], ["01_cbc.png", "Sample image"],
+  ["01_cbc_scan.jpg", "Sample phone photo"], ["02_lipid_scan.pdf", "Sample scanned PDF"],
+];
+const SOURCE_LABEL = {pdf_text: "text PDF", pdf_ocr: "scanned PDF (OCR)", image_ocr: "photo / image (OCR)"};
+let stream = null, ocrOk = true;
+
+function showTab(name) {
+  ["paste", "upload", "camera"].forEach(t => {
+    $("#tab-" + t).setAttribute("aria-selected", String(t === name));
+    $("#panel-" + t).hidden = t !== name;
+  });
+  if (name === "camera") startCamera(); else stopCamera();
+}
+["paste", "upload", "camera"].forEach(t => $("#tab-" + t).addEventListener("click", () => showTab(t)));
+
+async function extractFile(blob, name) {
+  $("#status").innerHTML = `<span class="spinner"></span>Reading ${esc(name)}…`;
+  $("#review").hidden = true;
+  const fd = new FormData(); fd.append("file", blob, name);
+  try {
+    const res = await fetch("/api/extract", {method: "POST", body: fd});
+    const body = await res.json();
+    if (!res.ok) throw new Error(body.detail || res.statusText);
+    $("#input").value = body.text;
+    showReview(body, name);
+    $("#status").textContent = "Text extracted. Check it, then click Analyze.";
+  } catch (e) { $("#status").textContent = "Could not read file: " + e.message; }
+}
+
+function showReview(b, name) {
+  const el = $("#review");
+  const conf = b.ocr_confidence;
+  const low = conf !== null && conf !== undefined && conf < 70;
+  el.className = "review" + (low ? " low" : "");
+  let html = `<strong>Check the text before analyzing.</strong> Source: ${esc(name)} · ${esc(SOURCE_LABEL[b.source] || b.source)}`;
+  if (b.pages > 1) html += ` · ${b.pages} pages`;
+  if (conf !== null && conf !== undefined) html += ` · OCR confidence ${Math.round(conf)}%`;
+  if (low) html += `<br><strong>The scan quality is low. Please compare every number with your paper report.</strong>`;
+  else if (b.source !== "pdf_text") html += `<br>Scanned text can misread numbers (1.1 vs 11, O vs 0, a missing decimal point).`;
+  if (b.low_confidence_tokens && b.low_confidence_tokens.length)
+    html += `<br>We weren't sure about: ${b.low_confidence_tokens.map(t => `<mark>${esc(t)}</mark>`).join(" ")}`;
+  (b.warnings || []).filter(w => !low || !w.startsWith("The scan quality")).forEach(w => html += `<br>⚠ ${esc(w)}`);
+  el.innerHTML = html; el.hidden = false;
+}
+
+const drop = $("#drop"), fileInput = $("#file");
+drop.addEventListener("click", () => fileInput.click());
+drop.addEventListener("keydown", e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); fileInput.click(); } });
+fileInput.addEventListener("change", () => { const f = fileInput.files[0]; if (f) extractFile(f, f.name); fileInput.value = ""; });
+["dragenter", "dragover"].forEach(ev => drop.addEventListener(ev, e => { e.preventDefault(); drop.classList.add("over"); }));
+["dragleave", "drop"].forEach(ev => drop.addEventListener(ev, e => { e.preventDefault(); drop.classList.remove("over"); }));
+drop.addEventListener("drop", e => { const f = e.dataTransfer.files[0]; if (f) extractFile(f, f.name); });
+
+async function startCamera() {
+  if (stream) return;
+  if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) { $("#camfallback").hidden = false; $("#cap").hidden = true; return; }
+  try {
+    stream = await navigator.mediaDevices.getUserMedia({video: {facingMode: "environment"}});
+    const v = $("#video"); v.srcObject = stream; v.hidden = false; $("#snap").hidden = true;
+    $("#cap").hidden = false; $("#retake").hidden = true; $("#usephoto").hidden = true;
+  } catch (e) {
+    $("#camfallback").hidden = false; $("#cap").hidden = true; $("#video").hidden = true;
+    $("#status").textContent = "Camera access was denied or is unavailable. Use the photo button instead.";
+  }
+}
+function stopCamera() { if (stream) { stream.getTracks().forEach(t => t.stop()); stream = null; } }
+$("#cap").addEventListener("click", () => {
+  const v = $("#video"), c = $("#snap");
+  if (!v.videoWidth) return;
+  c.width = v.videoWidth; c.height = v.videoHeight; c.getContext("2d").drawImage(v, 0, 0);
+  v.hidden = true; c.hidden = false; $("#cap").hidden = true; $("#retake").hidden = false; $("#usephoto").hidden = false;
+});
+$("#retake").addEventListener("click", () => {
+  $("#video").hidden = false; $("#snap").hidden = true; $("#cap").hidden = false; $("#retake").hidden = true; $("#usephoto").hidden = true;
+});
+$("#usephoto").addEventListener("click", () => $("#snap").toBlob(b => b && extractFile(b, "camera-photo.jpg"), "image/jpeg", 0.92));
+$("#camfile").addEventListener("change", e => { const f = e.target.files[0]; if (f) extractFile(f, f.name); });
+
+async function loadFileSample(name) {
+  const res = await fetch("/api/sample-files/" + encodeURIComponent(name));
+  if (!res.ok) { $("#status").textContent = "Sample file missing."; return; }
+  extractFile(await res.blob(), name);
+}
+
+fetch("/api/health").then(r => r.json()).then(h => {
+  ocrOk = !!h.ocr_available;
+  if (!ocrOk) {
+    const why = "Image reading (OCR) is not installed on this server: sudo apt install tesseract-ocr";
+    $("#tab-camera").disabled = true; $("#tab-camera").title = why;
+    $("#tab-upload").title = "PDF upload works. " + why;
+    fileInput.accept = ".pdf";
+    document.querySelectorAll("#sample option[data-file]").forEach(o => { if (!o.value.endsWith("01_cbc.pdf")) { o.disabled = true; o.title = why; } });
+  }
+}).catch(() => {});
 
 $("#analyze").addEventListener("click", run);
 $("#input").addEventListener("keydown", e => { if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) run(); });
