@@ -85,6 +85,7 @@ class LabValue(BaseModel):
     value_raw: str
     value_num: Optional[float] = None
     value_comparator: Optional[str] = None       # '<', '<=', '>', '>=' for censored values
+    value_high: Optional[float] = None           # upper end for range-valued results ("6-8 /hpf")
     value_qualitative: Optional[str] = None
     value_span: Span
     unit: Optional[str] = None

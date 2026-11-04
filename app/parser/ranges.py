@@ -229,8 +229,10 @@ def _entirely_below(v: Interval, r: Interval) -> bool:
     return v.hi < r.lo or (v.hi == r.lo and not (v.hi_inc and r.lo_inc))
 
 
-def compare_numeric(num: float, comparator: Optional[str], r: ReferenceRange) -> Status:
-    v, ri = value_interval(num, comparator), range_interval(r)
+def compare_numeric(num: float, comparator: Optional[str], r: ReferenceRange,
+                    num_high: Optional[float] = None) -> Status:
+    v = Interval(num, True, num_high, True) if num_high is not None else value_interval(num, comparator)
+    ri = range_interval(r)
     if _subset(v, ri):
         return Status.WITHIN
     if _entirely_above(v, ri):

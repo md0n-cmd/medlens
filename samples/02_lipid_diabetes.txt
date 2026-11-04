@@ -1,0 +1,22 @@
+*** SYNTHETIC SAMPLE — not real patient data ***
+GREENLEAF PATHOLOGY LAB (fictional)
+Patient Name: Test Patient B     Age: 52 Years     Sex: Female
+
+LIPID PROFILE
+Test                    Result    Unit     Reference Range
+Total Cholesterol       224 H     mg/dL    <200
+Triglycerides           150       mg/dL    < 150
+HDL Cholesterol         38        mg/dL    >40
+LDL Cholesterol         156       mg/dL    Less than 100
+VLDL Cholesterol        30        mg/dL    Up to 30
+Non-HDL Cholesterol     186       mg/dL
+Cholesterol/HDL Ratio   5.9                Upto 5.0
+
+DIABETES PANEL
+Fasting Blood Sugar     118       mg/dL    70 - 100
+Post Prandial Blood Sugar  165    mg/dL    70 to 140
+HbA1c                   6.4       %        < 5.7
+Estimated Average Glucose  137    mg/dL
+
+Note: Values to be interpreted along with clinical history.
+*** End of synthetic report ***

@@ -1,0 +1,23 @@
+*** SYNTHETIC SAMPLE — not real patient data ***
+CITYVIEW IMAGING (fictional)
+Patient: Test Patient E        Age/Sex: 41 Y / M
+Study: USG WHOLE ABDOMEN
+
+CLINICAL HISTORY: Abdominal discomfort.
+
+FINDINGS:
+Liver is enlarged in size (16.5 cm) with diffusely increased echogenicity. No focal lesion seen.
+Intrahepatic biliary radicles are not dilated. Portal vein is normal in calibre.
+Gallbladder is distended. A 6 mm echogenic focus is seen, likely a calculus.
+Common bile duct is normal.
+Pancreas and spleen are unremarkable.
+Both kidneys are normal in size with maintained cortico-medullary differentiation. No hydronephrosis.
+Urinary bladder is unremarkable. No ascites or pleural effusion.
+
+IMPRESSION:
+1. Hepatomegaly with grade I fatty liver.
+2. Findings suggestive of cholelithiasis; ?early cholecystitis cannot be ruled out.
+3. Correlate clinically and with LFT.
+
+Advice: Follow-up ultrasound as clinically indicated.
+*** End of synthetic report ***

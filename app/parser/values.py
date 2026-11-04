@@ -19,7 +19,7 @@ from app.parser.lines import Line
 from app.parser.ranges import NUM, is_qualitative_word, parse_range
 
 COL_SEP_RE = re.compile(r"\s{2,}|\s*\|\s*")
-VALUE_HEAD_RE = re.compile(rf"^(?P<cmp><=|>=|≤|≥|<|>)?\s*(?P<num>{NUM})(?![\d/])")
+VALUE_HEAD_RE = re.compile(rf"^(?P<cmp><=|>=|≤|≥|<|>)?\s*(?P<num>{NUM})(?:\s*[-–]\s*(?P<num2>{NUM}))?(?![\d/])")
 FLAG_TOKEN = r"(?:\(?(?:HH|LL|H|L|High|Low|Hi|Lo|Critical|Abnormal|A)\)?|\*{1,2}|↑|↓)"
 FLAG_ONLY_RE = re.compile(rf"^{FLAG_TOKEN}$", re.I)
 FLAG_PREFIX_RE = re.compile(rf"^(?P<flag>{FLAG_TOKEN})(?=\s|$)", re.I)
@@ -54,6 +54,7 @@ class RawRow:
     value_span: Span
     value_num: Optional[float] = None
     value_comparator: Optional[str] = None
+    value_high: Optional[float] = None          # for range-valued results like "6-8 /hpf"
     value_qualitative: Optional[str] = None
     unit: Optional[str] = None
     unit_span: Optional[Span] = None
@@ -87,7 +88,9 @@ def _parse_value_cell(cell: str) -> Optional[dict]:
     m = VALUE_HEAD_RE.match(stripped)
     if not m:
         return None
-    res = {"cmp": m["cmp"], "num": m["num"], "vs": 0, "ve": m.end()}
+    if m["num2"] and m["cmp"]:
+        return None
+    res = {"cmp": m["cmp"], "num": m["num"], "num2": m["num2"], "vs": 0, "ve": m.end()}
     pos = m.end()
 
     def skip_ws(p: int) -> int:
@@ -129,6 +132,8 @@ def _row_from_value(line: Line, name_s: int, name_e: int, val_s: int, cell: str,
     else:
         row.value_num = float(pv["num"].replace(",", ""))
         row.value_comparator = {"≤": "<=", "≥": ">="}.get(pv["cmp"], pv["cmp"])
+        if pv.get("num2"):
+            row.value_high = float(pv["num2"].replace(",", ""))
     if "flag" in pv:
         fs, fe = pv["flag"]
         row.flag_span = _span(base, val_s + fs, val_s + fe, t)

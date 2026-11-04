@@ -1,0 +1,28 @@
+*** SYNTHETIC SAMPLE — not real patient data ***
+RIVERSIDE CLINICAL LAB (fictional)
+Patient: Test Patient C          Age: 45
+
+LIVER FUNCTION TEST (LFT)
+Test Name                  Result     Unit     Reference Range
+Bilirubin, Total           1.6        mg/dL    0.3 - 1.2
+Bilirubin, Direct          0.4        mg/dL    Up to 0.3
+Bilirubin, Indirect        1.2        mg/dL    0.2 - 0.8
+SGPT (ALT)                 62         U/L      Up to 40
+SGOT (AST)                 40         U/L      Upto 40
+Alkaline Phosphatase       98         U/L      40 - 129
+GGT                        55         U/L      M: 10-71   F: 6-42
+Total Protein              7.1        g/dL     6.4 - 8.3
+Albumin                    4.2        g/dL     3.5 - 5.2
+Globulin                   2.9        g/dL     2.0 - 3.5
+A/G Ratio                  1.45                1.1 - 2.2
+
+KIDNEY FUNCTION TEST (KFT)
+Serum Creatinine           1.15       mg/dL    M: 0.7-1.3 F: 0.6-1.1
+Blood Urea                 32         mg/dL    15 – 40
+BUN                        15         mg/dL    7 - 20
+Uric Acid                  7.4        mg/dL    Male: 3.4-7.0; Female: 2.4-5.7
+eGFR                       78         mL/min/1.73m2   >= 90
+Sodium                     139        mmol/L   136 - 145
+Potassium                  4.1        mmol/L   3.5 - 5.1
+Chloride                   101        mEq/L    98 - 107 mmol/L
+*** End of synthetic report ***

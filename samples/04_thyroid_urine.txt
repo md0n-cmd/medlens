@@ -1,0 +1,25 @@
+*** SYNTHETIC SAMPLE — not real patient data ***
+HILLTOP DIAGNOSTIC CENTRE (fictional)
+Patient Name : Test Patient D        Age/Sex : 29 Y / F
+
+THYROID PROFILE
+Test                Result      Unit       Reference Range
+T3, Total           1.10        ng/mL      0.80 - 2.00
+T4, Total           9.8         µg/dL      5.1 - 14.1
+TSH                 <0.01       µIU/mL     0.27 - 4.20
+Free T4             2.1  H      ng/dL      0.93 - 1.70
+Vitamin D           18          ng/mL
+
+URINE ROUTINE EXAMINATION
+Colour              Pale Yellow             Pale Yellow
+Appearance          Clear                   Clear
+Specific Gravity    1.020                   1.005 - 1.030
+pH                  6.0                     4.6 - 8.0
+Urine Protein       Trace                   Negative
+Urine Glucose       Negative                Negative
+Ketones             Negative                Negative
+Pus Cells           6-8         /hpf        0 - 5
+Epithelial Cells    2-3         /hpf
+Casts               Absent                  Absent
+HBsAg               Non-reactive            Non-reactive
+*** End of synthetic report ***
