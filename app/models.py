@@ -98,6 +98,7 @@ class LabValue(BaseModel):
     status: Status = Status.NO_RANGE
     status_explanation: str = ""
     flag_disagreement: bool = False
+    missing_range_reason: Optional[str] = None
     notes: list[str] = Field(default_factory=list)
     glossary_term_id: Optional[str] = None
 
@@ -155,6 +156,51 @@ class Summary(BaseModel):
     needs_professional: int = 0
 
 
+class SummaryTest(BaseModel):
+    name: str
+    value: str
+    unit: Optional[str] = None
+    printed_range: Optional[str] = None
+    status: Status
+    lab_flag: Optional[str] = None
+    passage_span: Span
+
+
+class SummarySection(BaseModel):
+    title: str
+    tests: list[SummaryTest] = Field(default_factory=list)
+
+
+class SummaryLine(BaseModel):
+    text: str
+    reason: str
+    passage_span: Span
+
+
+class OutsideItem(BaseModel):
+    name: str
+    value: str
+    direction: Literal["higher", "lower", "differs"]
+    printed_range: Optional[str] = None
+
+
+class MissingItem(BaseModel):
+    name: str
+    value: str
+    reason: str
+
+
+class StructuredSummary(BaseModel):
+    """Built ONLY from facts already extracted. Never contains the patient's name."""
+    report: dict[str, Optional[str]]
+    sections: list[SummarySection]
+    counts: dict[str, int]
+    outside_printed_range: list[OutsideItem]
+    missing_range: list[MissingItem]
+    needs_professional_interpretation: list[SummaryLine]
+    unrecognized_terms: list[str]
+
+
 class AnalyzeRequest(BaseModel):
     text: str = Field(..., max_length=100_000)
 
@@ -170,6 +216,7 @@ class AnalysisResult(BaseModel):
     summary: Summary
     disclaimer: str
     warnings: list[str] = Field(default_factory=list)
+    structured_summary: Optional[StructuredSummary] = None
 
 
 LabeledRange.model_rebuild()

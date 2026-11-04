@@ -133,6 +133,12 @@
     table { min-width: 560px; }
     .sticky { position: static !important; max-height: none !important; }
   }
+  .ssum { margin-bottom: 16px; }
+  .ssum .hdr { font-weight: 600; color: var(--ink); margin-bottom: 8px; }
+  .ssum h3 { margin: 12px 0 4px; }
+  .ssum table { font-size: calc(13px * var(--fs)); }
+  .ssum blockquote { margin: 4px 0; padding: 4px 10px; border-left: 3px solid var(--prof); background: #fff8ee; font: calc(12.5px * var(--fs))/1.45 ui-monospace, monospace; white-space: pre-wrap; cursor: pointer; }
+  .ssum .btns { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px; }
   @media print {
     header .fs-ctl, #input-card, .review, .controls, button, #rep-card, .group.FACTUAL_FROM_REPORT, .group.GENERAL_INFO, footer, .legend { display: none !important; }
     .disclaimer { position: static; }
@@ -218,6 +224,7 @@
     </section>
 
     <section aria-labelledby="res-h">
+      <div class="card ssum" id="ssum" hidden></div>
       <div class="plain" id="plain" aria-live="polite" hidden></div>
       <div class="card">
         <h2 id="res-h">3. What the report says</h2>
@@ -485,8 +492,39 @@ $("#print").addEventListener("click", () => {
   window.print();
 });
 
+
+// ---- structured summary (facts only, re-arranged; never the patient's name)
+function renderStructured(r) {
+  const s = r.structured_summary, el = $("#ssum");
+  if (!s) { el.hidden = true; return; }
+  const h = s.report;
+  const hdr = [h.lab, h.date, h.specimen, [h.age, h.sex].filter(Boolean).join(" / ")].filter(Boolean).map(esc).join(" · ");
+  let html = `<h2>Structured summary</h2><div class="hdr">${hdr || "Report details not printed"}</div>`;
+  s.sections.forEach(sec => {
+    if (!sec.tests.length) return;
+    html += `<h3>${esc(sec.title)}</h3><div style="overflow-x:auto"><table><thead><tr><th>Test</th><th>Value</th><th>Printed range</th><th>Status</th><th>Lab flag</th></tr></thead><tbody>` +
+      sec.tests.map(t => { const st = STATUS[t.status] || STATUS.indeterminate;
+        return `<tr data-a="${t.passage_span.start}" data-b="${t.passage_span.end}"><td>${esc(t.name)}</td><td><b>${esc(t.value)}</b> ${esc(t.unit || "")}</td><td>${esc(t.printed_range || "—")}</td><td><span class="badge b-${st.cls}">${st.label}</span></td><td>${esc(t.lab_flag || "")}</td></tr>`; }).join("") +
+      `</tbody></table></div>`;
+  });
+  if (!s.sections.some(x => x.tests.length)) html += `<p class="hint">Written report: sections ${s.sections.map(x => esc(x.title)).join(" · ")}.</p>`;
+  if (s.needs_professional_interpretation.length) {
+    html += `<h3>Needs your doctor (quoted from the report)</h3>` +
+      s.needs_professional_interpretation.map(l => `<blockquote data-a="${l.passage_span.start}" data-b="${l.passage_span.end}">${esc(l.text)}</blockquote>`).join("");
+  }
+  html += `<div class="btns"><button id="dljson">Download JSON</button><button id="printsum">Print summary</button></div>`;
+  el.innerHTML = html; el.hidden = false;
+  el.querySelectorAll("[data-a]").forEach(x => { x.style.cursor = "pointer"; x.addEventListener("click", () => flashRange(+x.dataset.a, +x.dataset.b)); });
+  $("#dljson").addEventListener("click", () => {
+    const blob = new Blob([JSON.stringify(s, null, 2)], {type: "application/json"});
+    const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = "medlens-summary.json"; a.click();
+    setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+  });
+  $("#printsum").addEventListener("click", () => $("#print").click());
+}
 function render() {
   const spans = buildSpans(result);
+  renderStructured(result);
   renderPlain(result);
   $("#print").disabled = false; $("#print").title = "";
   renderReport(result, spans);

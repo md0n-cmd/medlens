@@ -291,6 +291,9 @@ def analyze(text: str, explain_unknown: Optional[UnknownTermExplainer] = None) -
     )
     if not values and not terms:
         warnings.append("No lab values or known medical terms were found in this text.")
-    return AnalysisResult(text=text, patient_sex=sex, sections=sections, values=values, terms=terms,
-                          unrecognized=unrecognized, explanations=ex, summary=summary, disclaimer=DISCLAIMER,
-                          warnings=warnings)
+    result = AnalysisResult(text=text, patient_sex=sex, sections=sections, values=values, terms=terms,
+                            unrecognized=unrecognized, explanations=ex, summary=summary, disclaimer=DISCLAIMER,
+                            warnings=warnings)
+    from app.summary import build_summary
+    result.structured_summary = build_summary(result, age)
+    return result
