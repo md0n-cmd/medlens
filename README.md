@@ -132,7 +132,7 @@ curl -s -X POST localhost:8000/api/analyze -H 'Content-Type: application/json' \
 ## Limitations
 
 * Plain text only (no OCR or PDF parsing yet). Tables must keep columns separated by 2+ spaces, tabs or `|`, or use the `Name: value unit (range)` form.
-* Age-banded ranges (`1-5 yrs: …`) and footnoted ranges are reported as `unparseable` and not compared.
+* Age- and sex-banded ranges are supported, but only when the header states the age/sex; pregnancy-specific and overlapping bands are always `ambiguous_range`. Footnoted ranges are reported as `unparseable` and not compared.
 * The glossary is curated and English-only. Terms outside it are listed, not explained.
 * Unit normalisation is cosmetic (`µ`/`u`, `cumm`/`mm3`). There is no numeric unit conversion, by design.
 * Detecting the patient's sex relies on a `Sex:` / `Age/Sex:` header in the first 25 lines.

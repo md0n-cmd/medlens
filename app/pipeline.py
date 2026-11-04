@@ -23,6 +23,15 @@ FLAG_DIRECTION = {"h": "above", "hh": "above", "high": "above", "hi": "above", "
                   "l": "below", "ll": "below", "low": "below", "lo": "below", "↓": "below"}
 
 
+AGE_RE = re.compile(r"\bage(?:\s*/\s*(?:sex|gender))?\s*[:\-]?\s*(?P<age>\d{1,3})\s*(?:y|yrs?|years?)?\b", re.I)
+
+
+def detect_age(text: str) -> Optional[float]:
+    head = "\n".join(text.split("\n")[:25])
+    m = AGE_RE.search(head)
+    return float(m["age"]) if m and int(m["age"]) <= 120 else None
+
+
 def detect_sex(text: str) -> Optional[str]:
     head = "\n".join(text.split("\n")[:25])
     m = SEX_RE.search(head)
@@ -35,7 +44,7 @@ def _fmt_value(v: LabValue) -> str:
     return f"{v.value_raw}{(' ' + v.unit) if v.unit else ''}"
 
 
-def compute_status(v: LabValue, patient_sex: Optional[str]) -> None:
+def compute_status(v: LabValue, patient_sex: Optional[str], patient_age: Optional[float] = None) -> None:
     """Fill status / status_explanation / applied_range in place."""
     r = v.reference
     if r is None:
@@ -50,7 +59,7 @@ def compute_status(v: LabValue, patient_sex: Optional[str]) -> None:
         return
     applied: Optional[ReferenceRange] = r
     if r.kind == "multi":
-        applied, note = select_alternative(r, patient_sex)
+        applied, note = select_alternative(r, patient_sex, patient_age)
         if applied is None:
             v.status = Status.AMBIGUOUS
             v.status_explanation = note
@@ -143,15 +152,37 @@ def analyze(text: str, explain_unknown: Optional[UnknownTermExplainer] = None) -
 
     # ---- values
     values: list[LabValue] = []
+    age = detect_age(text)
+    prev_was_value = False
     for ln in lines:
         if ln.interpretive:
+            prev_was_value = False
             continue    # never treat opinion text as a measured result
+        stripped = ln.text.strip()
+        # indented "Children 1-5 yrs: 0.7-6.0" under a result row continues that row's labelled ranges
+        if prev_was_value and values and stripped and re.match(r"^\s{4,}", ln.text):
+            cont = parse_range(stripped)
+            if cont.kind == "multi":
+                v = values[-1]
+                base = v.reference
+                if base is not None and base.kind in ("multi", "interval", "upper", "lower"):
+                    alts = list(base.alternatives) if base.kind == "multi" else []
+                    if base.kind != "multi":
+                        alts = []   # unlabelled first range + labelled continuation: keep as unparseable-safe multi
+                    merged = base.model_copy(update={"kind": "multi", "raw": base.raw + " | " + stripped,
+                                                     "alternatives": alts + cont.alternatives})
+                    if base.kind != "multi":
+                        merged = ReferenceRange(raw=merged.raw, kind="unparseable")
+                    v.reference = merged
+                    v.notes.append("The printed range continues on the next line of the report.")
+                continue
         raw = parse_line(ln)
+        prev_was_value = bool(raw)
         if raw:
-            v = _to_labvalue(len(values), ln, raw)
-            compute_status(v, sex)
-            check_flag(v)
-            values.append(v)
+            values.append(_to_labvalue(len(values), ln, raw))
+    for v in values:
+        compute_status(v, sex, age)
+        check_flag(v)
 
     # ---- terms
     terms = find_terms(text)

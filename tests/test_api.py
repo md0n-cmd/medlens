@@ -11,7 +11,7 @@ def test_health():
 
 def test_samples_listed_and_synthetic():
     s = client.get("/api/samples").json()
-    assert len(s) == 5
+    assert len(s) == 6
     assert all("SYNTHETIC SAMPLE" in x["text"] for x in s)
 
 

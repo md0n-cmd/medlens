@@ -50,3 +50,9 @@
 | 46 | File too large (> 10 MB) | 413 | `test_api_rejects_too_large` |
 | 47 | Tesseract not installed | 503 "OCR engine not installed: sudo apt install tesseract-ocr"; PDF text still works; image and camera tabs disabled in UI | `test_health_reports_ocr`, tests skip via `skipif` |
 | 48 | Camera permission denied / no camera | Falls back to `<input type="file" accept="image/*" capture="environment">` | frontend (manual) |
+| 49 | Age-banded ranges (`Adults: 0.4-4.0 \| Children 1-5 yrs: 0.7-6.0`, `18-60 years`, `>60 Y`) | Parsed as labelled alternatives; the header's `Age` picks the band and the card says so | `test_age_bands.py::test_age_band_cell_parses_as_multi`, `test_header_age_picks_band` |
+| 50 | Combined age + sex labels (`Adult male`) | Picked only when the header gives both age and sex | `test_age_and_sex_band` |
+| 51 | Header missing the age (or sex) the bands need | `ambiguous_range`, options listed, "ask your clinician" | `test_missing_age_is_ambiguous`, `test_missing_sex_is_ambiguous_never_guessed` |
+| 52 | Overlapping bands (`Adults` and `18-60 years` both match) | `ambiguous_range` (never pick one) | `test_overlapping_bands_are_ambiguous` |
+| 53 | Pregnancy / trimester ranges | Always `ambiguous_range`, since MedLens cannot know pregnancy status | `test_pregnancy_band_on_continuation_line_is_ambiguous` |
+| 54 | Labelled range continued on an indented next line | Merged into the row's range, with a note | `test_pregnancy_band_on_continuation_line_is_ambiguous` |

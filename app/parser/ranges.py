@@ -15,6 +15,7 @@ from __future__ import annotations
 
 import math
 import re
+from dataclasses import dataclass
 from typing import Optional
 
 from app.models import LabeledRange, ReferenceRange, Status
@@ -136,10 +137,38 @@ def _parse_single(s: str, raw: str) -> ReferenceRange:
     return ReferenceRange(raw=raw, kind="unparseable")
 
 
+_N = f"(?:{NUM})"
+_RANGE_BODY = (rf"(?:(?:<=|>=|≤|≥|<|>|up\s*to|upto|less\s+than|more\s+than)\s*{_N}"
+               rf"|{_N}\s*(?:-|–|—|to)\s*{_N}|{_N}\s*(?:and\s+above|\+))")
+COLON_SEG_RE = re.compile(
+    rf"\s*[|;,]?\s*(?P<label>(?:(?!\s{{2}})[^:|;])+?)\s*:\s*(?P<range>{_RANGE_BODY})(?P<unit>\s+[A-Za-zµμ%/][^\s|;]*)?\s*",
+    re.I,
+)
+
+
+def _parse_colon_segments(inner: str, raw: str) -> Optional[ReferenceRange]:
+    """'Label: range' segments that cover the whole cell; labels may contain numbers (1-5 yrs, >60 Y)."""
+    pos, alts = 0, []
+    while pos < len(inner):
+        m = COLON_SEG_RE.match(inner, pos)
+        if not m or m.end() == pos:
+            return None
+        r = _parse_single(m["range"] + (m["unit"] or ""), m["range"])
+        if r.kind in ("unparseable", "multi", "qualitative"):
+            return None
+        alts.append(LabeledRange(label=m["label"].strip(" ,;|/"), range=r))
+        pos = m.end()
+    return ReferenceRange(raw=raw, kind="multi", alternatives=alts) if alts else None
+
+
 def parse_range(text: str) -> ReferenceRange:
     """Parse a reference-range cell exactly as printed in the report."""
     raw = text.strip()
     inner = _strip_wrappers(raw)
+    if ":" in inner:
+        multi = _parse_colon_segments(inner, raw)
+        if multi:
+            return multi
     labels = list(LABEL_RE.finditer(inner))
     if labels:
         alts: list[LabeledRange] = []
@@ -252,14 +281,87 @@ def compare_qualitative(value: str, r: ReferenceRange) -> Status:
     return Status.INDETERMINATE
 
 
-def select_alternative(r: ReferenceRange, patient_sex: Optional[str]) -> tuple[Optional[ReferenceRange], str]:
-    """For a multi range, pick one only when the report itself tells us which applies."""
+@dataclass
+class Band:
+    sex: Optional[str] = None
+    age_min: Optional[float] = None          # inclusive
+    age_max: Optional[float] = None          # inclusive
+    pregnancy: bool = False
+
+
+def label_band(label: str) -> Band:
+    l = label.lower()
+    b = Band()
+    if re.search(r"pregnan|trimester", l):
+        b.pregnancy = True
+    if re.search(r"\b(?:males?|men|man|boys?|m)\b", l):
+        b.sex = "male"
+    if re.search(r"\b(?:females?|women|woman|girls?|f)\b", l):
+        b.sex = None if b.sex else "female"          # "M/F" -> no sex constraint
+    if re.search(r"\badults?\b", l):
+        b.age_min = 18
+    if re.search(r"\b(?:child(?:ren)?|paediatric|pediatric)\b", l):
+        b.age_min, b.age_max = 0, 17
+    if re.search(r"\b(?:newborns?|neonates?|infants?)\b", l):
+        b.age_min, b.age_max = 0, 1
+    yrs = r"\s*(?:y|yr|yrs|years?)\b"
+    if m := re.search(rf"(\d+)\s*(?:-|–|to)\s*(\d+){yrs}", l):
+        b.age_min, b.age_max = float(m[1]), float(m[2])
+    elif m := re.search(rf"(?:>=|≥|above|over)\s*(\d+){yrs}|(\d+)\s*(?:\+|and\s+above)(?:{yrs})?", l):
+        b.age_min, b.age_max = float(m[1] or m[2]), None
+    elif m := re.search(rf">\s*(\d+){yrs}", l):
+        b.age_min, b.age_max = float(m[1]) + 1e-9, None
+    elif m := re.search(rf"(?:<|below|under)\s*(\d+){yrs}", l):
+        b.age_min, b.age_max = 0, float(m[1]) - 1e-9
+    return b
+
+
+def _band_match(b: Band, sex: Optional[str], age: Optional[float]) -> Optional[bool]:
+    """True / False, or None when the header doesn't tell us."""
+    if b.sex is not None:
+        if sex is None:
+            return None
+        if b.sex != sex:
+            return False
+    if b.age_min is not None or b.age_max is not None:
+        if age is None:
+            return None
+        if b.age_min is not None and age < b.age_min:
+            return False
+        if b.age_max is not None and age > b.age_max:
+            return False
+    return True
+
+
+def _header_desc(sex: Optional[str], age: Optional[float]) -> str:
+    parts = []
+    if age is not None:
+        parts.append(f"Age {age:g} Y")
+    if sex:
+        parts.append(f"Sex: {sex.title()}")
+    return " / ".join(parts)
+
+
+def select_alternative(r: ReferenceRange, patient_sex: Optional[str],
+                       patient_age: Optional[float] = None) -> tuple[Optional[ReferenceRange], str]:
+    """Pick one labelled range only when the report header decides it. Never guess."""
     alts = r.alternatives
-    if patient_sex:
-        matches = [a for a in alts if SEX_LABELS.get(a.label.lower()) == patient_sex]
-        if len(matches) == 1:
-            return matches[0].range, (f"Report lists several ranges; the '{matches[0].label}' range was used "
-                                      f"because the report header states Sex: {patient_sex.title()}.")
-    if len(alts) == 1 and SEX_LABELS.get(alts[0].label.lower()) is None:
+    options = "; ".join(f"{a.label}: {a.range.display()}" for a in alts)
+    bands = [label_band(a.label) for a in alts]
+    if any(b.pregnancy for b in bands):
+        return None, (f"Report lists ranges that depend on pregnancy ({options}). "
+                      "MedLens cannot know which applies; ask your clinician which applies.")
+    if len(alts) == 1 and bands[0].sex is None and bands[0].age_min is None and bands[0].age_max is None:
         return alts[0].range, f"Only one range (labelled '{alts[0].label}') is printed; it was used."
-    return None, "Report lists multiple ranges; ask your clinician which applies."
+    matches = [_band_match(b, patient_sex, patient_age) for b in bands]
+    yes = [a for a, m in zip(alts, matches) if m is True]
+    if len(yes) == 1 and None not in matches:
+        return yes[0].range, (f"Using the '{yes[0].label}' range printed on the report because the header says "
+                              f"{_header_desc(patient_sex, patient_age)}.")
+    if len(yes) > 1:
+        return None, (f"Report lists overlapping ranges that could all apply ({options}); "
+                      "ask your clinician which applies.")
+    if len(alts) == 1 and None in matches:
+        return None, (f"The only printed range is for '{alts[0].label}', and the report header doesn't say whether "
+                      "that applies; ask your clinician which applies.")
+    return None, f"Report lists multiple ranges ({options}); ask your clinician which applies."
