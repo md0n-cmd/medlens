@@ -75,7 +75,7 @@ def test_synthetic_banner_word_sample_is_not_a_term():
 # ---------------------------------------------------------------- abbreviation safety
 def test_ct_is_case_sensitive():
     assert ids("CT scan of abdomen") == ["computed_tomography"]
-    assert ids("ct") == [] and ids("Ct value") == []
+    assert ids("ct") == [] and ids("Ct") == []
     assert ids("12 ct units") == []
 
 

@@ -247,6 +247,126 @@ add("Low Power Field", ["LPF", "/lpf"], "Report abbreviation", "A unit for count
 add("Quantity Sufficient", ["q.s.", "QS"], "Report abbreviation", "A note meaning enough sample was available for the test.", kind="abbreviation")
 add("Clinical Notes", ["C/O", "Complaints Of", "Clinical History"], "Report abbreviation", "The reason for the test or the symptoms written by the doctor who asked for it.", kind="abbreviation")
 
+
+# ---------------------------------------------------------------- (c) other groups
+C = "Coagulation"
+add("Activated Partial Thromboplastin Time", ["aPTT", "APTT", "PTT", "Partial Thromboplastin Time"], C, "Measures how long it takes blood to form a clot in a test tube using one of the body's clotting pathways.")
+add("D-dimer", ["D Dimer", "D-Dimer"], C, "Measures a small protein piece released when a blood clot breaks down.")
+add("Fibrinogen", ["Plasma Fibrinogen"], C, "Measures fibrinogen, a protein made by the liver that helps blood clot.")
+add("Bleeding Time", ["BT"], C, "Measures how long a small, standard skin prick takes to stop bleeding.")
+add("Clotting Time", ["CT (Clotting Time)", "Coagulation Time"], C, "Measures how long a blood sample takes to clot in a tube.")
+add("International Normalized Ratio", ["INR Value", "International Normalised Ratio"], C, "A standard way of reporting the prothrombin time so results from different labs can be compared.")
+add("Control", ["Control Value", "Control (Seconds)"], C, "In clotting tests, the result from a normal control sample that the lab runs alongside yours.", kind="report_word")
+
+CA = "Cardiac"
+add("Troponin", ["Troponin I", "Troponin T", "hs-Troponin", "Trop I", "Trop T", "hs-cTnI", "cTnI", "cTnT"], CA, "Measures troponin, a protein found in heart muscle cells.")
+add("Creatine Kinase", ["CK", "CPK", "Creatine Phosphokinase", "CK Total"], CA, "Measures creatine kinase, an enzyme found mainly in muscles, including the heart.")
+add("CK-MB", ["CKMB", "CK MB"], CA, "Measures the form of creatine kinase found mostly in heart muscle.")
+add("B-type Natriuretic Peptide", ["BNP", "NT-proBNP", "NT proBNP", "Pro-BNP"], CA, "Measures a hormone released by the heart's muscle walls when they are stretched.")
+add("Lactate Dehydrogenase", ["LDH", "LD"], CA, "Measures LDH, an enzyme found in many body tissues.")
+add("Homocysteine", ["Serum Homocysteine"], CA, "Measures homocysteine, an amino acid (protein building block) in the blood.")
+
+IV = "Iron & vitamins"
+add("Transferrin Saturation", ["TSAT", "% Saturation", "Iron Saturation"], IV, "A calculated percentage showing how much of the blood's iron-carrying protein (transferrin) is holding iron.")
+add("Transferrin", ["Serum Transferrin"], IV, "Measures transferrin, the main protein that carries iron in the blood.")
+add("UIBC", ["Unsaturated Iron Binding Capacity"], IV, "Measures how much more iron the blood's carrier proteins could still take up.")
+add("Folate", ["Folic Acid", "Serum Folate", "Vitamin B9"], IV, "Measures folate, a B vitamin needed to make new cells, including red blood cells.")
+add("Vitamin B1", ["Thiamine"], IV, "Measures thiamine, a B vitamin the body uses to turn food into energy.")
+
+E = "Electrolytes"
+add("Ionized Calcium", ["Ionised Calcium", "iCa", "Free Calcium"], E, "Measures the calcium in blood that is not attached to proteins (the 'free' part).")
+add("Magnesium", ["Serum Magnesium", "Mg"], E, "Measures magnesium, a mineral used by muscles, nerves and bones.")
+add("Anion Gap", [], E, "A calculated number from sodium, chloride and bicarbonate results.")
+add("Osmolality", ["Serum Osmolality"], E, "Measures how concentrated the blood is with dissolved particles.")
+add("Lactate", ["Lactic Acid", "Serum Lactate"], E, "Measures lactate, a substance made when cells use energy without enough oxygen.")
+add("Ammonia", ["Plasma Ammonia"], E, "Measures ammonia, a waste product the liver normally clears.")
+add("Amylase", ["Serum Amylase"], "Pancreas", "Measures amylase, an enzyme made mainly by the pancreas and salivary glands that helps digest starch.")
+add("Lipase", ["Serum Lipase"], "Pancreas", "Measures lipase, an enzyme made by the pancreas that helps digest fats.")
+
+HO = "Hormones"
+add("Follicle Stimulating Hormone", ["FSH"], HO, "Measures FSH, a hormone from the pituitary gland that helps control the ovaries and testes.")
+add("Luteinizing Hormone", ["LH", "Luteinising Hormone"], HO, "Measures LH, a hormone from the pituitary gland that helps control the ovaries and testes.")
+add("Prolactin", ["PRL", "Serum Prolactin"], HO, "Measures prolactin, a hormone from the pituitary gland involved in milk production.")
+add("Testosterone", ["Total Testosterone", "Free Testosterone"], HO, "Measures testosterone, a sex hormone found in both men and women.")
+add("Estradiol", ["E2", "Oestradiol"], HO, "Measures estradiol, the main form of the hormone estrogen.")
+add("Progesterone", [], HO, "Measures progesterone, a hormone involved in the menstrual cycle and pregnancy.")
+add("Cortisol", ["Serum Cortisol", "Morning Cortisol", "8 AM Cortisol"], HO, "Measures cortisol, a hormone made by the adrenal glands.")
+add("Parathyroid Hormone", ["PTH", "Intact PTH", "iPTH"], HO, "Measures PTH, a hormone from the parathyroid glands that helps control calcium levels.")
+add("Insulin", ["Fasting Insulin", "Serum Insulin"], HO, "Measures insulin, a hormone made by the pancreas that helps move sugar from the blood into cells.")
+add("C-Peptide", ["C Peptide"], HO, "Measures C-peptide, a substance released by the pancreas in equal amounts with insulin.")
+add("Beta hCG", ["β-hCG", "hCG", "Beta-hCG", "Serum Beta hCG"], HO, "Measures hCG, a hormone made during pregnancy.")
+add("AMH", ["Anti-Mullerian Hormone", "Anti Mullerian Hormone"], HO, "Measures anti-Müllerian hormone, made by cells in the ovaries.")
+add("Growth Hormone", ["GH", "HGH"], HO, "Measures growth hormone, made by the pituitary gland.")
+add("Thyroglobulin", ["Serum Thyroglobulin"], TH, "Measures thyroglobulin, a protein made by the thyroid gland.")
+add("Anti-Thyroglobulin Antibodies", ["Anti-Tg", "Anti TG", "Anti-TG Antibodies"], TH, "Measures antibodies against thyroglobulin, a thyroid protein.")
+
+IM = "Inflammation & immunity"
+add("Procalcitonin", ["PCT"], IM, "Measures procalcitonin, a protein whose blood level can change during some infections.")
+add("Rheumatoid Factor", ["RA Factor", "RF", "RA Test"], IM, "Measures rheumatoid factor, a type of antibody.")
+add("Anti-CCP", ["Anti CCP", "Anti-Cyclic Citrullinated Peptide"], IM, "Measures antibodies against cyclic citrullinated peptide.")
+add("Antinuclear Antibody", ["ANA", "ANA by IFA", "Antinuclear Antibodies"], IM, "Measures antibodies that react with parts of the body's own cell nuclei.")
+add("Antistreptolysin O", ["ASO", "ASO Titre", "ASO Titer"], IM, "Measures antibodies against a substance made by streptococcus bacteria.")
+add("Immunoglobulin E", ["IgE", "Total IgE"], IM, "Measures IgE, a type of antibody linked to allergic reactions.")
+add("Complement C3", ["C3"], IM, "Measures C3, a protein in the immune system's complement group.")
+add("Complement C4", ["C4"], IM, "Measures C4, a protein in the immune system's complement group.")
+
+SE = "Serology & infection"
+add("VDRL", ["RPR", "Syphilis Screen"], SE, "A blood test that checks for antibodies related to the bacteria that cause syphilis.")
+add("Dengue NS1 Antigen", ["NS1", "Dengue NS1", "NS1 Antigen"], SE, "Checks the blood for NS1, a protein from the dengue virus.")
+add("Dengue IgM", ["Dengue IgM Antibody"], SE, "Checks the blood for IgM antibodies against dengue virus, a type of antibody made early in an infection.")
+add("Dengue IgG", ["Dengue IgG Antibody"], SE, "Checks the blood for IgG antibodies against dengue virus, a type of antibody that can stay for a long time.")
+add("Malaria Antigen", ["Malaria Ag", "Malaria Parasite", "MP", "Rapid Malaria Test", "Plasmodium Vivax", "Plasmodium Falciparum"], SE, "Checks a blood sample for proteins or forms of the malaria parasite.")
+add("Culture and Sensitivity", ["Culture & Sensitivity", "C/S", "Culture", "Urine Culture", "Blood Culture", "Antibiotic Sensitivity"], SE, "A test that grows germs from a sample in the lab and checks which medicines stop them growing.")
+add("Colony Forming Units", ["CFU", "CFU/mL"], SE, "A unit for counting how many living bacteria grew from a sample.", kind="abbreviation")
+add("Typhidot", ["Typhoid IgM"], SE, "A blood test that looks for antibodies related to typhoid bacteria.")
+add("Gram Stain", ["Gram's Stain"], SE, "A lab stain that sorts bacteria into two broad groups by colour under the microscope.")
+add("COVID-19 RT-PCR", ["RT-PCR", "SARS-CoV-2 RT-PCR", "COVID RT-PCR"], SE, "A test that looks for the genetic material of the virus that causes COVID-19.")
+add("Ct Value", ["Cycle Threshold"], SE, "In PCR tests, the number of copying cycles needed before the test detects the target.", kind="report_word")
+add("Reactive", ["Non-Reactive", "Non Reactive", "Nonreactive"], "Report term", "Words used in screening tests: 'reactive' means the test reacted; 'non-reactive' means it did not.", kind="report_word")
+
+TM = "Tumour marker"
+add("Prostate Specific Antigen", ["PSA", "Total PSA", "Free PSA"], TM, "Measures PSA, a protein made by the prostate gland.")
+add("Carcinoembryonic Antigen", ["CEA"], TM, "Measures CEA, a protein that can be found in the blood.")
+add("CA-125", ["CA 125", "CA125", "Cancer Antigen 125"], TM, "Measures CA-125, a protein that can be found in the blood.")
+add("Alpha-Fetoprotein", ["AFP", "Alpha Fetoprotein"], TM, "Measures AFP, a protein made by the liver in unborn babies and in small amounts in adults.")
+add("CA 19-9", ["CA19-9", "Cancer Antigen 19-9"], TM, "Measures CA 19-9, a protein that can be found in the blood.")
+
+US = "Urine & stool"
+add("Albumin/Creatinine Ratio", ["ACR", "UACR", "Urine Albumin Creatinine Ratio", "Microalbumin/Creatinine Ratio"], US, "A calculated ratio comparing the small amount of albumin in urine with urine creatinine.")
+add("Microalbumin", ["Urine Microalbumin", "Microalbuminuria"], US, "Measures very small amounts of albumin (a protein) in urine.")
+add("24-hour Urine Protein", ["24 Hour Urine Protein", "24 Hr Urine Protein"], US, "Measures the total protein passed in urine over a whole day.")
+add("Urine Creatinine", ["Creatinine (Urine)"], US, "Measures creatinine in urine, often used to adjust other urine results.")
+add("Red Blood Cells (Urine)", ["RBC (Urine)", "Urine RBC", "Red Cells (Urine)"], US, "Red blood cells seen in urine under the microscope, counted per high-power field.")
+add("Bacteria (Urine)", ["Bacteria", "Urine Bacteria"], US, "Bacteria seen in a urine sample under the microscope.")
+add("Yeast Cells", ["Budding Yeast"], US, "Yeast (a type of fungus) seen in a sample under the microscope.")
+add("Mucus Threads", ["Mucus"], US, "Strands of mucus seen in a sample under the microscope.")
+add("Amorphous Deposits", ["Amorphous Phosphates", "Amorphous Urates"], US, "Shapeless mineral particles seen in urine under the microscope.")
+add("Calcium Oxalate Crystals", ["Calcium Oxalate"], US, "A type of mineral crystal that can be seen in urine under the microscope.")
+add("Bilirubin (Urine)", ["Urine Bilirubin"], US, "Checks urine for bilirubin, a yellow substance from red blood cell breakdown.")
+add("Volume", ["Urine Volume", "Quantity"], US, "The amount of sample collected.", kind="report_word")
+add("Stool Routine Examination", ["Stool Routine", "Stool R/E", "Stool Examination", "Stool Analysis"], US, "A set of checks on a stool (poo) sample: how it looks and what is seen under the microscope.")
+add("Ova and Cysts", ["Ova & Cysts", "Ova", "O&C", "Ova/Cyst"], US, "Checks a stool sample under the microscope for eggs (ova) or cysts of parasites.")
+add("Stool Occult Blood", ["Faecal Occult Blood", "Fecal Occult Blood", "FOBT"], US, "Checks a stool sample for small amounts of blood not visible to the eye.")
+add("Consistency", ["Stool Consistency"], US, "Describes how firm or soft a stool sample is.", kind="report_word")
+add("Reducing Substances", ["Stool Reducing Substances"], US, "A check on a stool sample for certain sugars.")
+
+PS = "Peripheral smear"
+add("Anisocytosis", [], PS, "A word for red blood cells of uneven sizes seen on a blood smear.", kind="finding")
+add("Poikilocytosis", [], PS, "A word for red blood cells of uneven shapes seen on a blood smear.", kind="finding")
+add("Microcytic", ["Microcytes", "Microcytosis"], PS, "A word describing red blood cells that look smaller than usual.", kind="finding")
+add("Macrocytic", ["Macrocytes", "Macrocytosis"], PS, "A word describing red blood cells that look larger than usual.", kind="finding")
+add("Normocytic", ["Normocytes"], PS, "A word describing red blood cells of usual size.", kind="report_word")
+add("Hypochromic", ["Hypochromia"], PS, "A word describing red blood cells that look paler than usual.", kind="finding")
+add("Normochromic", [], PS, "A word describing red blood cells of usual colour.", kind="report_word")
+add("Target Cells", ["Target Cell"], PS, "Red blood cells that look like a bull's-eye target on a blood smear.", kind="finding")
+add("Blasts", ["Blast Cells", "Blast"], PS, "Very young, immature blood cells seen on a smear.", kind="finding")
+add("Atypical Lymphocytes", ["Reactive Lymphocytes"], PS, "Lymphocytes (a white blood cell) with an unusual look on a smear.", kind="finding")
+add("Pencil Cells", ["Elliptocytes", "Pencil Forms"], PS, "Long, thin red blood cells seen on a smear.", kind="finding")
+add("Platelets Adequate", ["Platelets Adequate on Smear", "Adequate Platelets"], PS, "A smear note meaning the number of platelets seen looks enough.", kind="report_word")
+add("Toxic Granules", ["Toxic Granulation"], PS, "Dark granules seen inside some white blood cells on a smear.", kind="finding")
+add("Left Shift", ["Shift to Left"], PS, "A smear note that more young (immature) neutrophils are seen than usual.", kind="finding")
+add("Haemoparasites", ["Hemoparasites", "No Haemoparasites Seen", "No Hemoparasites Seen"], PS, "Parasites (such as malaria) looked for in blood on a smear.", kind="report_word")
+
 out = pathlib.Path(__file__).resolve().parent.parent / "app" / "glossary" / "terms.json"
 ids = [t["id"] for t in T]
 assert len(ids) == len(set(ids)), "duplicate ids"

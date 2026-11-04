@@ -2518,6 +2518,1177 @@
       "kind": "abbreviation",
       "plain_explanation": "The reason for the test or the symptoms written by the doctor who asked for it.",
       "source_note": "General educational description written for MedLens (synthetic-data hackathon project), based on standard lab-medicine terminology. Not patient-specific."
+    },
+    {
+      "id": "activated_partial_thromboplastin_time",
+      "term": "Activated Partial Thromboplastin Time",
+      "aliases": [
+        "aPTT",
+        "APTT",
+        "PTT",
+        "Partial Thromboplastin Time"
+      ],
+      "category": "Coagulation",
+      "kind": "test",
+      "plain_explanation": "Measures how long it takes blood to form a clot in a test tube using one of the body's clotting pathways.",
+      "source_note": "General educational description written for MedLens (synthetic-data hackathon project), based on standard lab-medicine terminology. Not patient-specific."
+    },
+    {
+      "id": "d_dimer",
+      "term": "D-dimer",
+      "aliases": [
+        "D Dimer",
+        "D-Dimer"
+      ],
+      "category": "Coagulation",
+      "kind": "test",
+      "plain_explanation": "Measures a small protein piece released when a blood clot breaks down.",
+      "source_note": "General educational description written for MedLens (synthetic-data hackathon project), based on standard lab-medicine terminology. Not patient-specific."
+    },
+    {
+      "id": "fibrinogen",
+      "term": "Fibrinogen",
+      "aliases": [
+        "Plasma Fibrinogen"
+      ],
+      "category": "Coagulation",
+      "kind": "test",
+      "plain_explanation": "Measures fibrinogen, a protein made by the liver that helps blood clot.",
+      "source_note": "General educational description written for MedLens (synthetic-data hackathon project), based on standard lab-medicine terminology. Not patient-specific."
+    },
+    {
+      "id": "bleeding_time",
+      "term": "Bleeding Time",
+      "aliases": [
+        "BT"
+      ],
+      "category": "Coagulation",
+      "kind": "test",
+      "plain_explanation": "Measures how long a small, standard skin prick takes to stop bleeding.",
+      "source_note": "General educational description written for MedLens (synthetic-data hackathon project), based on standard lab-medicine terminology. Not patient-specific."
+    },
+    {
+      "id": "clotting_time",
+      "term": "Clotting Time",
+      "aliases": [
+        "CT (Clotting Time)",
+        "Coagulation Time"
+      ],
+      "category": "Coagulation",
+      "kind": "test",
+      "plain_explanation": "Measures how long a blood sample takes to clot in a tube.",
+      "source_note": "General educational description written for MedLens (synthetic-data hackathon project), based on standard lab-medicine terminology. Not patient-specific."
+    },
+    {
+      "id": "international_normalized_ratio",
+      "term": "International Normalized Ratio",
+      "aliases": [
+        "INR Value",
+        "International Normalised Ratio"
+      ],
+      "category": "Coagulation",
+      "kind": "test",
+      "plain_explanation": "A standard way of reporting the prothrombin time so results from different labs can be compared.",
+      "source_note": "General educational description written for MedLens (synthetic-data hackathon project), based on standard lab-medicine terminology. Not patient-specific."
+    },
+    {
+      "id": "control",
+      "term": "Control",
+      "aliases": [
+        "Control Value",
+        "Control (Seconds)"
+      ],
+      "category": "Coagulation",
+      "kind": "report_word",
+      "plain_explanation": "In clotting tests, the result from a normal control sample that the lab runs alongside yours.",
+      "source_note": "General educational description written for MedLens (synthetic-data hackathon project), based on standard lab-medicine terminology. Not patient-specific."
+    },
+    {
+      "id": "troponin",
+      "term": "Troponin",
+      "aliases": [
+        "Troponin I",
+        "Troponin T",
+        "hs-Troponin",
+        "Trop I",
+        "Trop T",
+        "hs-cTnI",
+        "cTnI",
+        "cTnT"
+      ],
+      "category": "Cardiac",
+      "kind": "test",
+      "plain_explanation": "Measures troponin, a protein found in heart muscle cells.",
+      "source_note": "General educational description written for MedLens (synthetic-data hackathon project), based on standard lab-medicine terminology. Not patient-specific."
+    },
+    {
+      "id": "creatine_kinase",
+      "term": "Creatine Kinase",
+      "aliases": [
+        "CK",
+        "CPK",
+        "Creatine Phosphokinase",
+        "CK Total"
+      ],
+      "category": "Cardiac",
+      "kind": "test",
+      "plain_explanation": "Measures creatine kinase, an enzyme found mainly in muscles, including the heart.",
+      "source_note": "General educational description written for MedLens (synthetic-data hackathon project), based on standard lab-medicine terminology. Not patient-specific."
+    },
+    {
+      "id": "ck_mb",
+      "term": "CK-MB",
+      "aliases": [
+        "CKMB",
+        "CK MB"
+      ],
+      "category": "Cardiac",
+      "kind": "test",
+      "plain_explanation": "Measures the form of creatine kinase found mostly in heart muscle.",
+      "source_note": "General educational description written for MedLens (synthetic-data hackathon project), based on standard lab-medicine terminology. Not patient-specific."
+    },
+    {
+      "id": "b_type_natriuretic_peptide",
+      "term": "B-type Natriuretic Peptide",
+      "aliases": [
+        "BNP",
+        "NT-proBNP",
+        "NT proBNP",
+        "Pro-BNP"
+      ],
+      "category": "Cardiac",
+      "kind": "test",
+      "plain_explanation": "Measures a hormone released by the heart's muscle walls when they are stretched.",
+      "source_note": "General educational description written for MedLens (synthetic-data hackathon project), based on standard lab-medicine terminology. Not patient-specific."
+    },
+    {
+      "id": "lactate_dehydrogenase",
+      "term": "Lactate Dehydrogenase",
+      "aliases": [
+        "LDH",
+        "LD"
+      ],
+      "category": "Cardiac",
+      "kind": "test",
+      "plain_explanation": "Measures LDH, an enzyme found in many body tissues.",
+      "source_note": "General educational description written for MedLens (synthetic-data hackathon project), based on standard lab-medicine terminology. Not patient-specific."
+    },
+    {
+      "id": "homocysteine",
+      "term": "Homocysteine",
+      "aliases": [
+        "Serum Homocysteine"
+      ],
+      "category": "Cardiac",
+      "kind": "test",
+      "plain_explanation": "Measures homocysteine, an amino acid (protein building block) in the blood.",
+      "source_note": "General educational description written for MedLens (synthetic-data hackathon project), based on standard lab-medicine terminology. Not patient-specific."
+    },
+    {
+      "id": "transferrin_saturation",
+      "term": "Transferrin Saturation",
+      "aliases": [
+        "TSAT",
+        "% Saturation",
+        "Iron Saturation"
+      ],
+      "category": "Iron & vitamins",
+      "kind": "test",
+      "plain_explanation": "A calculated percentage showing how much of the blood's iron-carrying protein (transferrin) is holding iron.",
+      "source_note": "General educational description written for MedLens (synthetic-data hackathon project), based on standard lab-medicine terminology. Not patient-specific."
+    },
+    {
+      "id": "transferrin",
+      "term": "Transferrin",
+      "aliases": [
+        "Serum Transferrin"
+      ],
+      "category": "Iron & vitamins",
+      "kind": "test",
+      "plain_explanation": "Measures transferrin, the main protein that carries iron in the blood.",
+      "source_note": "General educational description written for MedLens (synthetic-data hackathon project), based on standard lab-medicine terminology. Not patient-specific."
+    },
+    {
+      "id": "uibc",
+      "term": "UIBC",
+      "aliases": [
+        "Unsaturated Iron Binding Capacity"
+      ],
+      "category": "Iron & vitamins",
+      "kind": "test",
+      "plain_explanation": "Measures how much more iron the blood's carrier proteins could still take up.",
+      "source_note": "General educational description written for MedLens (synthetic-data hackathon project), based on standard lab-medicine terminology. Not patient-specific."
+    },
+    {
+      "id": "folate",
+      "term": "Folate",
+      "aliases": [
+        "Folic Acid",
+        "Serum Folate",
+        "Vitamin B9"
+      ],
+      "category": "Iron & vitamins",
+      "kind": "test",
+      "plain_explanation": "Measures folate, a B vitamin needed to make new cells, including red blood cells.",
+      "source_note": "General educational description written for MedLens (synthetic-data hackathon project), based on standard lab-medicine terminology. Not patient-specific."
+    },
+    {
+      "id": "vitamin_b1",
+      "term": "Vitamin B1",
+      "aliases": [
+        "Thiamine"
+      ],
+      "category": "Iron & vitamins",
+      "kind": "test",
+      "plain_explanation": "Measures thiamine, a B vitamin the body uses to turn food into energy.",
+      "source_note": "General educational description written for MedLens (synthetic-data hackathon project), based on standard lab-medicine terminology. Not patient-specific."
+    },
+    {
+      "id": "ionized_calcium",
+      "term": "Ionized Calcium",
+      "aliases": [
+        "Ionised Calcium",
+        "iCa",
+        "Free Calcium"
+      ],
+      "category": "Electrolytes",
+      "kind": "test",
+      "plain_explanation": "Measures the calcium in blood that is not attached to proteins (the 'free' part).",
+      "source_note": "General educational description written for MedLens (synthetic-data hackathon project), based on standard lab-medicine terminology. Not patient-specific."
+    },
+    {
+      "id": "magnesium",
+      "term": "Magnesium",
+      "aliases": [
+        "Serum Magnesium",
+        "Mg"
+      ],
+      "category": "Electrolytes",
+      "kind": "test",
+      "plain_explanation": "Measures magnesium, a mineral used by muscles, nerves and bones.",
+      "source_note": "General educational description written for MedLens (synthetic-data hackathon project), based on standard lab-medicine terminology. Not patient-specific."
+    },
+    {
+      "id": "anion_gap",
+      "term": "Anion Gap",
+      "aliases": [],
+      "category": "Electrolytes",
+      "kind": "test",
+      "plain_explanation": "A calculated number from sodium, chloride and bicarbonate results.",
+      "source_note": "General educational description written for MedLens (synthetic-data hackathon project), based on standard lab-medicine terminology. Not patient-specific."
+    },
+    {
+      "id": "osmolality",
+      "term": "Osmolality",
+      "aliases": [
+        "Serum Osmolality"
+      ],
+      "category": "Electrolytes",
+      "kind": "test",
+      "plain_explanation": "Measures how concentrated the blood is with dissolved particles.",
+      "source_note": "General educational description written for MedLens (synthetic-data hackathon project), based on standard lab-medicine terminology. Not patient-specific."
+    },
+    {
+      "id": "lactate",
+      "term": "Lactate",
+      "aliases": [
+        "Lactic Acid",
+        "Serum Lactate"
+      ],
+      "category": "Electrolytes",
+      "kind": "test",
+      "plain_explanation": "Measures lactate, a substance made when cells use energy without enough oxygen.",
+      "source_note": "General educational description written for MedLens (synthetic-data hackathon project), based on standard lab-medicine terminology. Not patient-specific."
+    },
+    {
+      "id": "ammonia",
+      "term": "Ammonia",
+      "aliases": [
+        "Plasma Ammonia"
+      ],
+      "category": "Electrolytes",
+      "kind": "test",
+      "plain_explanation": "Measures ammonia, a waste product the liver normally clears.",
+      "source_note": "General educational description written for MedLens (synthetic-data hackathon project), based on standard lab-medicine terminology. Not patient-specific."
+    },
+    {
+      "id": "amylase",
+      "term": "Amylase",
+      "aliases": [
+        "Serum Amylase"
+      ],
+      "category": "Pancreas",
+      "kind": "test",
+      "plain_explanation": "Measures amylase, an enzyme made mainly by the pancreas and salivary glands that helps digest starch.",
+      "source_note": "General educational description written for MedLens (synthetic-data hackathon project), based on standard lab-medicine terminology. Not patient-specific."
+    },
+    {
+      "id": "lipase",
+      "term": "Lipase",
+      "aliases": [
+        "Serum Lipase"
+      ],
+      "category": "Pancreas",
+      "kind": "test",
+      "plain_explanation": "Measures lipase, an enzyme made by the pancreas that helps digest fats.",
+      "source_note": "General educational description written for MedLens (synthetic-data hackathon project), based on standard lab-medicine terminology. Not patient-specific."
+    },
+    {
+      "id": "follicle_stimulating_hormone",
+      "term": "Follicle Stimulating Hormone",
+      "aliases": [
+        "FSH"
+      ],
+      "category": "Hormones",
+      "kind": "test",
+      "plain_explanation": "Measures FSH, a hormone from the pituitary gland that helps control the ovaries and testes.",
+      "source_note": "General educational description written for MedLens (synthetic-data hackathon project), based on standard lab-medicine terminology. Not patient-specific."
+    },
+    {
+      "id": "luteinizing_hormone",
+      "term": "Luteinizing Hormone",
+      "aliases": [
+        "LH",
+        "Luteinising Hormone"
+      ],
+      "category": "Hormones",
+      "kind": "test",
+      "plain_explanation": "Measures LH, a hormone from the pituitary gland that helps control the ovaries and testes.",
+      "source_note": "General educational description written for MedLens (synthetic-data hackathon project), based on standard lab-medicine terminology. Not patient-specific."
+    },
+    {
+      "id": "prolactin",
+      "term": "Prolactin",
+      "aliases": [
+        "PRL",
+        "Serum Prolactin"
+      ],
+      "category": "Hormones",
+      "kind": "test",
+      "plain_explanation": "Measures prolactin, a hormone from the pituitary gland involved in milk production.",
+      "source_note": "General educational description written for MedLens (synthetic-data hackathon project), based on standard lab-medicine terminology. Not patient-specific."
+    },
+    {
+      "id": "testosterone",
+      "term": "Testosterone",
+      "aliases": [
+        "Total Testosterone",
+        "Free Testosterone"
+      ],
+      "category": "Hormones",
+      "kind": "test",
+      "plain_explanation": "Measures testosterone, a sex hormone found in both men and women.",
+      "source_note": "General educational description written for MedLens (synthetic-data hackathon project), based on standard lab-medicine terminology. Not patient-specific."
+    },
+    {
+      "id": "estradiol",
+      "term": "Estradiol",
+      "aliases": [
+        "E2",
+        "Oestradiol"
+      ],
+      "category": "Hormones",
+      "kind": "test",
+      "plain_explanation": "Measures estradiol, the main form of the hormone estrogen.",
+      "source_note": "General educational description written for MedLens (synthetic-data hackathon project), based on standard lab-medicine terminology. Not patient-specific."
+    },
+    {
+      "id": "progesterone",
+      "term": "Progesterone",
+      "aliases": [],
+      "category": "Hormones",
+      "kind": "test",
+      "plain_explanation": "Measures progesterone, a hormone involved in the menstrual cycle and pregnancy.",
+      "source_note": "General educational description written for MedLens (synthetic-data hackathon project), based on standard lab-medicine terminology. Not patient-specific."
+    },
+    {
+      "id": "cortisol",
+      "term": "Cortisol",
+      "aliases": [
+        "Serum Cortisol",
+        "Morning Cortisol",
+        "8 AM Cortisol"
+      ],
+      "category": "Hormones",
+      "kind": "test",
+      "plain_explanation": "Measures cortisol, a hormone made by the adrenal glands.",
+      "source_note": "General educational description written for MedLens (synthetic-data hackathon project), based on standard lab-medicine terminology. Not patient-specific."
+    },
+    {
+      "id": "parathyroid_hormone",
+      "term": "Parathyroid Hormone",
+      "aliases": [
+        "PTH",
+        "Intact PTH",
+        "iPTH"
+      ],
+      "category": "Hormones",
+      "kind": "test",
+      "plain_explanation": "Measures PTH, a hormone from the parathyroid glands that helps control calcium levels.",
+      "source_note": "General educational description written for MedLens (synthetic-data hackathon project), based on standard lab-medicine terminology. Not patient-specific."
+    },
+    {
+      "id": "insulin",
+      "term": "Insulin",
+      "aliases": [
+        "Fasting Insulin",
+        "Serum Insulin"
+      ],
+      "category": "Hormones",
+      "kind": "test",
+      "plain_explanation": "Measures insulin, a hormone made by the pancreas that helps move sugar from the blood into cells.",
+      "source_note": "General educational description written for MedLens (synthetic-data hackathon project), based on standard lab-medicine terminology. Not patient-specific."
+    },
+    {
+      "id": "c_peptide",
+      "term": "C-Peptide",
+      "aliases": [
+        "C Peptide"
+      ],
+      "category": "Hormones",
+      "kind": "test",
+      "plain_explanation": "Measures C-peptide, a substance released by the pancreas in equal amounts with insulin.",
+      "source_note": "General educational description written for MedLens (synthetic-data hackathon project), based on standard lab-medicine terminology. Not patient-specific."
+    },
+    {
+      "id": "beta_hcg",
+      "term": "Beta hCG",
+      "aliases": [
+        "β-hCG",
+        "hCG",
+        "Beta-hCG",
+        "Serum Beta hCG"
+      ],
+      "category": "Hormones",
+      "kind": "test",
+      "plain_explanation": "Measures hCG, a hormone made during pregnancy.",
+      "source_note": "General educational description written for MedLens (synthetic-data hackathon project), based on standard lab-medicine terminology. Not patient-specific."
+    },
+    {
+      "id": "amh",
+      "term": "AMH",
+      "aliases": [
+        "Anti-Mullerian Hormone",
+        "Anti Mullerian Hormone"
+      ],
+      "category": "Hormones",
+      "kind": "test",
+      "plain_explanation": "Measures anti-Müllerian hormone, made by cells in the ovaries.",
+      "source_note": "General educational description written for MedLens (synthetic-data hackathon project), based on standard lab-medicine terminology. Not patient-specific."
+    },
+    {
+      "id": "growth_hormone",
+      "term": "Growth Hormone",
+      "aliases": [
+        "GH",
+        "HGH"
+      ],
+      "category": "Hormones",
+      "kind": "test",
+      "plain_explanation": "Measures growth hormone, made by the pituitary gland.",
+      "source_note": "General educational description written for MedLens (synthetic-data hackathon project), based on standard lab-medicine terminology. Not patient-specific."
+    },
+    {
+      "id": "thyroglobulin",
+      "term": "Thyroglobulin",
+      "aliases": [
+        "Serum Thyroglobulin"
+      ],
+      "category": "Thyroid",
+      "kind": "test",
+      "plain_explanation": "Measures thyroglobulin, a protein made by the thyroid gland.",
+      "source_note": "General educational description written for MedLens (synthetic-data hackathon project), based on standard lab-medicine terminology. Not patient-specific."
+    },
+    {
+      "id": "anti_thyroglobulin_antibodies",
+      "term": "Anti-Thyroglobulin Antibodies",
+      "aliases": [
+        "Anti-Tg",
+        "Anti TG",
+        "Anti-TG Antibodies"
+      ],
+      "category": "Thyroid",
+      "kind": "test",
+      "plain_explanation": "Measures antibodies against thyroglobulin, a thyroid protein.",
+      "source_note": "General educational description written for MedLens (synthetic-data hackathon project), based on standard lab-medicine terminology. Not patient-specific."
+    },
+    {
+      "id": "procalcitonin",
+      "term": "Procalcitonin",
+      "aliases": [
+        "PCT"
+      ],
+      "category": "Inflammation & immunity",
+      "kind": "test",
+      "plain_explanation": "Measures procalcitonin, a protein whose blood level can change during some infections.",
+      "source_note": "General educational description written for MedLens (synthetic-data hackathon project), based on standard lab-medicine terminology. Not patient-specific."
+    },
+    {
+      "id": "rheumatoid_factor",
+      "term": "Rheumatoid Factor",
+      "aliases": [
+        "RA Factor",
+        "RF",
+        "RA Test"
+      ],
+      "category": "Inflammation & immunity",
+      "kind": "test",
+      "plain_explanation": "Measures rheumatoid factor, a type of antibody.",
+      "source_note": "General educational description written for MedLens (synthetic-data hackathon project), based on standard lab-medicine terminology. Not patient-specific."
+    },
+    {
+      "id": "anti_ccp",
+      "term": "Anti-CCP",
+      "aliases": [
+        "Anti CCP",
+        "Anti-Cyclic Citrullinated Peptide"
+      ],
+      "category": "Inflammation & immunity",
+      "kind": "test",
+      "plain_explanation": "Measures antibodies against cyclic citrullinated peptide.",
+      "source_note": "General educational description written for MedLens (synthetic-data hackathon project), based on standard lab-medicine terminology. Not patient-specific."
+    },
+    {
+      "id": "antinuclear_antibody",
+      "term": "Antinuclear Antibody",
+      "aliases": [
+        "ANA",
+        "ANA by IFA",
+        "Antinuclear Antibodies"
+      ],
+      "category": "Inflammation & immunity",
+      "kind": "test",
+      "plain_explanation": "Measures antibodies that react with parts of the body's own cell nuclei.",
+      "source_note": "General educational description written for MedLens (synthetic-data hackathon project), based on standard lab-medicine terminology. Not patient-specific."
+    },
+    {
+      "id": "antistreptolysin_o",
+      "term": "Antistreptolysin O",
+      "aliases": [
+        "ASO",
+        "ASO Titre",
+        "ASO Titer"
+      ],
+      "category": "Inflammation & immunity",
+      "kind": "test",
+      "plain_explanation": "Measures antibodies against a substance made by streptococcus bacteria.",
+      "source_note": "General educational description written for MedLens (synthetic-data hackathon project), based on standard lab-medicine terminology. Not patient-specific."
+    },
+    {
+      "id": "immunoglobulin_e",
+      "term": "Immunoglobulin E",
+      "aliases": [
+        "IgE",
+        "Total IgE"
+      ],
+      "category": "Inflammation & immunity",
+      "kind": "test",
+      "plain_explanation": "Measures IgE, a type of antibody linked to allergic reactions.",
+      "source_note": "General educational description written for MedLens (synthetic-data hackathon project), based on standard lab-medicine terminology. Not patient-specific."
+    },
+    {
+      "id": "complement_c3",
+      "term": "Complement C3",
+      "aliases": [
+        "C3"
+      ],
+      "category": "Inflammation & immunity",
+      "kind": "test",
+      "plain_explanation": "Measures C3, a protein in the immune system's complement group.",
+      "source_note": "General educational description written for MedLens (synthetic-data hackathon project), based on standard lab-medicine terminology. Not patient-specific."
+    },
+    {
+      "id": "complement_c4",
+      "term": "Complement C4",
+      "aliases": [
+        "C4"
+      ],
+      "category": "Inflammation & immunity",
+      "kind": "test",
+      "plain_explanation": "Measures C4, a protein in the immune system's complement group.",
+      "source_note": "General educational description written for MedLens (synthetic-data hackathon project), based on standard lab-medicine terminology. Not patient-specific."
+    },
+    {
+      "id": "vdrl",
+      "term": "VDRL",
+      "aliases": [
+        "RPR",
+        "Syphilis Screen"
+      ],
+      "category": "Serology & infection",
+      "kind": "test",
+      "plain_explanation": "A blood test that checks for antibodies related to the bacteria that cause syphilis.",
+      "source_note": "General educational description written for MedLens (synthetic-data hackathon project), based on standard lab-medicine terminology. Not patient-specific."
+    },
+    {
+      "id": "dengue_ns1_antigen",
+      "term": "Dengue NS1 Antigen",
+      "aliases": [
+        "NS1",
+        "Dengue NS1",
+        "NS1 Antigen"
+      ],
+      "category": "Serology & infection",
+      "kind": "test",
+      "plain_explanation": "Checks the blood for NS1, a protein from the dengue virus.",
+      "source_note": "General educational description written for MedLens (synthetic-data hackathon project), based on standard lab-medicine terminology. Not patient-specific."
+    },
+    {
+      "id": "dengue_igm",
+      "term": "Dengue IgM",
+      "aliases": [
+        "Dengue IgM Antibody"
+      ],
+      "category": "Serology & infection",
+      "kind": "test",
+      "plain_explanation": "Checks the blood for IgM antibodies against dengue virus, a type of antibody made early in an infection.",
+      "source_note": "General educational description written for MedLens (synthetic-data hackathon project), based on standard lab-medicine terminology. Not patient-specific."
+    },
+    {
+      "id": "dengue_igg",
+      "term": "Dengue IgG",
+      "aliases": [
+        "Dengue IgG Antibody"
+      ],
+      "category": "Serology & infection",
+      "kind": "test",
+      "plain_explanation": "Checks the blood for IgG antibodies against dengue virus, a type of antibody that can stay for a long time.",
+      "source_note": "General educational description written for MedLens (synthetic-data hackathon project), based on standard lab-medicine terminology. Not patient-specific."
+    },
+    {
+      "id": "malaria_antigen",
+      "term": "Malaria Antigen",
+      "aliases": [
+        "Malaria Ag",
+        "Malaria Parasite",
+        "MP",
+        "Rapid Malaria Test",
+        "Plasmodium Vivax",
+        "Plasmodium Falciparum"
+      ],
+      "category": "Serology & infection",
+      "kind": "test",
+      "plain_explanation": "Checks a blood sample for proteins or forms of the malaria parasite.",
+      "source_note": "General educational description written for MedLens (synthetic-data hackathon project), based on standard lab-medicine terminology. Not patient-specific."
+    },
+    {
+      "id": "culture_and_sensitivity",
+      "term": "Culture and Sensitivity",
+      "aliases": [
+        "Culture & Sensitivity",
+        "C/S",
+        "Culture",
+        "Urine Culture",
+        "Blood Culture",
+        "Antibiotic Sensitivity"
+      ],
+      "category": "Serology & infection",
+      "kind": "test",
+      "plain_explanation": "A test that grows germs from a sample in the lab and checks which medicines stop them growing.",
+      "source_note": "General educational description written for MedLens (synthetic-data hackathon project), based on standard lab-medicine terminology. Not patient-specific."
+    },
+    {
+      "id": "colony_forming_units",
+      "term": "Colony Forming Units",
+      "aliases": [
+        "CFU",
+        "CFU/mL"
+      ],
+      "category": "Serology & infection",
+      "kind": "abbreviation",
+      "plain_explanation": "A unit for counting how many living bacteria grew from a sample.",
+      "source_note": "General educational description written for MedLens (synthetic-data hackathon project), based on standard lab-medicine terminology. Not patient-specific."
+    },
+    {
+      "id": "typhidot",
+      "term": "Typhidot",
+      "aliases": [
+        "Typhoid IgM"
+      ],
+      "category": "Serology & infection",
+      "kind": "test",
+      "plain_explanation": "A blood test that looks for antibodies related to typhoid bacteria.",
+      "source_note": "General educational description written for MedLens (synthetic-data hackathon project), based on standard lab-medicine terminology. Not patient-specific."
+    },
+    {
+      "id": "gram_stain",
+      "term": "Gram Stain",
+      "aliases": [
+        "Gram's Stain"
+      ],
+      "category": "Serology & infection",
+      "kind": "test",
+      "plain_explanation": "A lab stain that sorts bacteria into two broad groups by colour under the microscope.",
+      "source_note": "General educational description written for MedLens (synthetic-data hackathon project), based on standard lab-medicine terminology. Not patient-specific."
+    },
+    {
+      "id": "covid_19_rt_pcr",
+      "term": "COVID-19 RT-PCR",
+      "aliases": [
+        "RT-PCR",
+        "SARS-CoV-2 RT-PCR",
+        "COVID RT-PCR"
+      ],
+      "category": "Serology & infection",
+      "kind": "test",
+      "plain_explanation": "A test that looks for the genetic material of the virus that causes COVID-19.",
+      "source_note": "General educational description written for MedLens (synthetic-data hackathon project), based on standard lab-medicine terminology. Not patient-specific."
+    },
+    {
+      "id": "ct_value",
+      "term": "Ct Value",
+      "aliases": [
+        "Cycle Threshold"
+      ],
+      "category": "Serology & infection",
+      "kind": "report_word",
+      "plain_explanation": "In PCR tests, the number of copying cycles needed before the test detects the target.",
+      "source_note": "General educational description written for MedLens (synthetic-data hackathon project), based on standard lab-medicine terminology. Not patient-specific."
+    },
+    {
+      "id": "reactive",
+      "term": "Reactive",
+      "aliases": [
+        "Non-Reactive",
+        "Non Reactive",
+        "Nonreactive"
+      ],
+      "category": "Report term",
+      "kind": "report_word",
+      "plain_explanation": "Words used in screening tests: 'reactive' means the test reacted; 'non-reactive' means it did not.",
+      "source_note": "General educational description written for MedLens (synthetic-data hackathon project), based on standard lab-medicine terminology. Not patient-specific."
+    },
+    {
+      "id": "prostate_specific_antigen",
+      "term": "Prostate Specific Antigen",
+      "aliases": [
+        "PSA",
+        "Total PSA",
+        "Free PSA"
+      ],
+      "category": "Tumour marker",
+      "kind": "test",
+      "plain_explanation": "Measures PSA, a protein made by the prostate gland.",
+      "source_note": "General educational description written for MedLens (synthetic-data hackathon project), based on standard lab-medicine terminology. Not patient-specific."
+    },
+    {
+      "id": "carcinoembryonic_antigen",
+      "term": "Carcinoembryonic Antigen",
+      "aliases": [
+        "CEA"
+      ],
+      "category": "Tumour marker",
+      "kind": "test",
+      "plain_explanation": "Measures CEA, a protein that can be found in the blood.",
+      "source_note": "General educational description written for MedLens (synthetic-data hackathon project), based on standard lab-medicine terminology. Not patient-specific."
+    },
+    {
+      "id": "ca_125",
+      "term": "CA-125",
+      "aliases": [
+        "CA 125",
+        "CA125",
+        "Cancer Antigen 125"
+      ],
+      "category": "Tumour marker",
+      "kind": "test",
+      "plain_explanation": "Measures CA-125, a protein that can be found in the blood.",
+      "source_note": "General educational description written for MedLens (synthetic-data hackathon project), based on standard lab-medicine terminology. Not patient-specific."
+    },
+    {
+      "id": "alpha_fetoprotein",
+      "term": "Alpha-Fetoprotein",
+      "aliases": [
+        "AFP",
+        "Alpha Fetoprotein"
+      ],
+      "category": "Tumour marker",
+      "kind": "test",
+      "plain_explanation": "Measures AFP, a protein made by the liver in unborn babies and in small amounts in adults.",
+      "source_note": "General educational description written for MedLens (synthetic-data hackathon project), based on standard lab-medicine terminology. Not patient-specific."
+    },
+    {
+      "id": "ca_19_9",
+      "term": "CA 19-9",
+      "aliases": [
+        "CA19-9",
+        "Cancer Antigen 19-9"
+      ],
+      "category": "Tumour marker",
+      "kind": "test",
+      "plain_explanation": "Measures CA 19-9, a protein that can be found in the blood.",
+      "source_note": "General educational description written for MedLens (synthetic-data hackathon project), based on standard lab-medicine terminology. Not patient-specific."
+    },
+    {
+      "id": "albumin_creatinine_ratio",
+      "term": "Albumin/Creatinine Ratio",
+      "aliases": [
+        "ACR",
+        "UACR",
+        "Urine Albumin Creatinine Ratio",
+        "Microalbumin/Creatinine Ratio"
+      ],
+      "category": "Urine & stool",
+      "kind": "test",
+      "plain_explanation": "A calculated ratio comparing the small amount of albumin in urine with urine creatinine.",
+      "source_note": "General educational description written for MedLens (synthetic-data hackathon project), based on standard lab-medicine terminology. Not patient-specific."
+    },
+    {
+      "id": "microalbumin",
+      "term": "Microalbumin",
+      "aliases": [
+        "Urine Microalbumin",
+        "Microalbuminuria"
+      ],
+      "category": "Urine & stool",
+      "kind": "test",
+      "plain_explanation": "Measures very small amounts of albumin (a protein) in urine.",
+      "source_note": "General educational description written for MedLens (synthetic-data hackathon project), based on standard lab-medicine terminology. Not patient-specific."
+    },
+    {
+      "id": "24_hour_urine_protein",
+      "term": "24-hour Urine Protein",
+      "aliases": [
+        "24 Hour Urine Protein",
+        "24 Hr Urine Protein"
+      ],
+      "category": "Urine & stool",
+      "kind": "test",
+      "plain_explanation": "Measures the total protein passed in urine over a whole day.",
+      "source_note": "General educational description written for MedLens (synthetic-data hackathon project), based on standard lab-medicine terminology. Not patient-specific."
+    },
+    {
+      "id": "urine_creatinine",
+      "term": "Urine Creatinine",
+      "aliases": [
+        "Creatinine (Urine)"
+      ],
+      "category": "Urine & stool",
+      "kind": "test",
+      "plain_explanation": "Measures creatinine in urine, often used to adjust other urine results.",
+      "source_note": "General educational description written for MedLens (synthetic-data hackathon project), based on standard lab-medicine terminology. Not patient-specific."
+    },
+    {
+      "id": "red_blood_cells_urine",
+      "term": "Red Blood Cells (Urine)",
+      "aliases": [
+        "RBC (Urine)",
+        "Urine RBC",
+        "Red Cells (Urine)"
+      ],
+      "category": "Urine & stool",
+      "kind": "test",
+      "plain_explanation": "Red blood cells seen in urine under the microscope, counted per high-power field.",
+      "source_note": "General educational description written for MedLens (synthetic-data hackathon project), based on standard lab-medicine terminology. Not patient-specific."
+    },
+    {
+      "id": "bacteria_urine",
+      "term": "Bacteria (Urine)",
+      "aliases": [
+        "Bacteria",
+        "Urine Bacteria"
+      ],
+      "category": "Urine & stool",
+      "kind": "test",
+      "plain_explanation": "Bacteria seen in a urine sample under the microscope.",
+      "source_note": "General educational description written for MedLens (synthetic-data hackathon project), based on standard lab-medicine terminology. Not patient-specific."
+    },
+    {
+      "id": "yeast_cells",
+      "term": "Yeast Cells",
+      "aliases": [
+        "Budding Yeast"
+      ],
+      "category": "Urine & stool",
+      "kind": "test",
+      "plain_explanation": "Yeast (a type of fungus) seen in a sample under the microscope.",
+      "source_note": "General educational description written for MedLens (synthetic-data hackathon project), based on standard lab-medicine terminology. Not patient-specific."
+    },
+    {
+      "id": "mucus_threads",
+      "term": "Mucus Threads",
+      "aliases": [
+        "Mucus"
+      ],
+      "category": "Urine & stool",
+      "kind": "test",
+      "plain_explanation": "Strands of mucus seen in a sample under the microscope.",
+      "source_note": "General educational description written for MedLens (synthetic-data hackathon project), based on standard lab-medicine terminology. Not patient-specific."
+    },
+    {
+      "id": "amorphous_deposits",
+      "term": "Amorphous Deposits",
+      "aliases": [
+        "Amorphous Phosphates",
+        "Amorphous Urates"
+      ],
+      "category": "Urine & stool",
+      "kind": "test",
+      "plain_explanation": "Shapeless mineral particles seen in urine under the microscope.",
+      "source_note": "General educational description written for MedLens (synthetic-data hackathon project), based on standard lab-medicine terminology. Not patient-specific."
+    },
+    {
+      "id": "calcium_oxalate_crystals",
+      "term": "Calcium Oxalate Crystals",
+      "aliases": [
+        "Calcium Oxalate"
+      ],
+      "category": "Urine & stool",
+      "kind": "test",
+      "plain_explanation": "A type of mineral crystal that can be seen in urine under the microscope.",
+      "source_note": "General educational description written for MedLens (synthetic-data hackathon project), based on standard lab-medicine terminology. Not patient-specific."
+    },
+    {
+      "id": "bilirubin_urine",
+      "term": "Bilirubin (Urine)",
+      "aliases": [
+        "Urine Bilirubin"
+      ],
+      "category": "Urine & stool",
+      "kind": "test",
+      "plain_explanation": "Checks urine for bilirubin, a yellow substance from red blood cell breakdown.",
+      "source_note": "General educational description written for MedLens (synthetic-data hackathon project), based on standard lab-medicine terminology. Not patient-specific."
+    },
+    {
+      "id": "volume",
+      "term": "Volume",
+      "aliases": [
+        "Urine Volume",
+        "Quantity"
+      ],
+      "category": "Urine & stool",
+      "kind": "report_word",
+      "plain_explanation": "The amount of sample collected.",
+      "source_note": "General educational description written for MedLens (synthetic-data hackathon project), based on standard lab-medicine terminology. Not patient-specific."
+    },
+    {
+      "id": "stool_routine_examination",
+      "term": "Stool Routine Examination",
+      "aliases": [
+        "Stool Routine",
+        "Stool R/E",
+        "Stool Examination",
+        "Stool Analysis"
+      ],
+      "category": "Urine & stool",
+      "kind": "test",
+      "plain_explanation": "A set of checks on a stool (poo) sample: how it looks and what is seen under the microscope.",
+      "source_note": "General educational description written for MedLens (synthetic-data hackathon project), based on standard lab-medicine terminology. Not patient-specific."
+    },
+    {
+      "id": "ova_and_cysts",
+      "term": "Ova and Cysts",
+      "aliases": [
+        "Ova & Cysts",
+        "Ova",
+        "O&C",
+        "Ova/Cyst"
+      ],
+      "category": "Urine & stool",
+      "kind": "test",
+      "plain_explanation": "Checks a stool sample under the microscope for eggs (ova) or cysts of parasites.",
+      "source_note": "General educational description written for MedLens (synthetic-data hackathon project), based on standard lab-medicine terminology. Not patient-specific."
+    },
+    {
+      "id": "stool_occult_blood",
+      "term": "Stool Occult Blood",
+      "aliases": [
+        "Faecal Occult Blood",
+        "Fecal Occult Blood",
+        "FOBT"
+      ],
+      "category": "Urine & stool",
+      "kind": "test",
+      "plain_explanation": "Checks a stool sample for small amounts of blood not visible to the eye.",
+      "source_note": "General educational description written for MedLens (synthetic-data hackathon project), based on standard lab-medicine terminology. Not patient-specific."
+    },
+    {
+      "id": "consistency",
+      "term": "Consistency",
+      "aliases": [
+        "Stool Consistency"
+      ],
+      "category": "Urine & stool",
+      "kind": "report_word",
+      "plain_explanation": "Describes how firm or soft a stool sample is.",
+      "source_note": "General educational description written for MedLens (synthetic-data hackathon project), based on standard lab-medicine terminology. Not patient-specific."
+    },
+    {
+      "id": "reducing_substances",
+      "term": "Reducing Substances",
+      "aliases": [
+        "Stool Reducing Substances"
+      ],
+      "category": "Urine & stool",
+      "kind": "test",
+      "plain_explanation": "A check on a stool sample for certain sugars.",
+      "source_note": "General educational description written for MedLens (synthetic-data hackathon project), based on standard lab-medicine terminology. Not patient-specific."
+    },
+    {
+      "id": "anisocytosis",
+      "term": "Anisocytosis",
+      "aliases": [],
+      "category": "Peripheral smear",
+      "kind": "finding",
+      "plain_explanation": "A word for red blood cells of uneven sizes seen on a blood smear.",
+      "source_note": "General educational description written for MedLens (synthetic-data hackathon project), based on standard lab-medicine terminology. Not patient-specific."
+    },
+    {
+      "id": "poikilocytosis",
+      "term": "Poikilocytosis",
+      "aliases": [],
+      "category": "Peripheral smear",
+      "kind": "finding",
+      "plain_explanation": "A word for red blood cells of uneven shapes seen on a blood smear.",
+      "source_note": "General educational description written for MedLens (synthetic-data hackathon project), based on standard lab-medicine terminology. Not patient-specific."
+    },
+    {
+      "id": "microcytic",
+      "term": "Microcytic",
+      "aliases": [
+        "Microcytes",
+        "Microcytosis"
+      ],
+      "category": "Peripheral smear",
+      "kind": "finding",
+      "plain_explanation": "A word describing red blood cells that look smaller than usual.",
+      "source_note": "General educational description written for MedLens (synthetic-data hackathon project), based on standard lab-medicine terminology. Not patient-specific."
+    },
+    {
+      "id": "macrocytic",
+      "term": "Macrocytic",
+      "aliases": [
+        "Macrocytes",
+        "Macrocytosis"
+      ],
+      "category": "Peripheral smear",
+      "kind": "finding",
+      "plain_explanation": "A word describing red blood cells that look larger than usual.",
+      "source_note": "General educational description written for MedLens (synthetic-data hackathon project), based on standard lab-medicine terminology. Not patient-specific."
+    },
+    {
+      "id": "normocytic",
+      "term": "Normocytic",
+      "aliases": [
+        "Normocytes"
+      ],
+      "category": "Peripheral smear",
+      "kind": "report_word",
+      "plain_explanation": "A word describing red blood cells of usual size.",
+      "source_note": "General educational description written for MedLens (synthetic-data hackathon project), based on standard lab-medicine terminology. Not patient-specific."
+    },
+    {
+      "id": "hypochromic",
+      "term": "Hypochromic",
+      "aliases": [
+        "Hypochromia"
+      ],
+      "category": "Peripheral smear",
+      "kind": "finding",
+      "plain_explanation": "A word describing red blood cells that look paler than usual.",
+      "source_note": "General educational description written for MedLens (synthetic-data hackathon project), based on standard lab-medicine terminology. Not patient-specific."
+    },
+    {
+      "id": "normochromic",
+      "term": "Normochromic",
+      "aliases": [],
+      "category": "Peripheral smear",
+      "kind": "report_word",
+      "plain_explanation": "A word describing red blood cells of usual colour.",
+      "source_note": "General educational description written for MedLens (synthetic-data hackathon project), based on standard lab-medicine terminology. Not patient-specific."
+    },
+    {
+      "id": "target_cells",
+      "term": "Target Cells",
+      "aliases": [
+        "Target Cell"
+      ],
+      "category": "Peripheral smear",
+      "kind": "finding",
+      "plain_explanation": "Red blood cells that look like a bull's-eye target on a blood smear.",
+      "source_note": "General educational description written for MedLens (synthetic-data hackathon project), based on standard lab-medicine terminology. Not patient-specific."
+    },
+    {
+      "id": "blasts",
+      "term": "Blasts",
+      "aliases": [
+        "Blast Cells",
+        "Blast"
+      ],
+      "category": "Peripheral smear",
+      "kind": "finding",
+      "plain_explanation": "Very young, immature blood cells seen on a smear.",
+      "source_note": "General educational description written for MedLens (synthetic-data hackathon project), based on standard lab-medicine terminology. Not patient-specific."
+    },
+    {
+      "id": "atypical_lymphocytes",
+      "term": "Atypical Lymphocytes",
+      "aliases": [
+        "Reactive Lymphocytes"
+      ],
+      "category": "Peripheral smear",
+      "kind": "finding",
+      "plain_explanation": "Lymphocytes (a white blood cell) with an unusual look on a smear.",
+      "source_note": "General educational description written for MedLens (synthetic-data hackathon project), based on standard lab-medicine terminology. Not patient-specific."
+    },
+    {
+      "id": "pencil_cells",
+      "term": "Pencil Cells",
+      "aliases": [
+        "Elliptocytes",
+        "Pencil Forms"
+      ],
+      "category": "Peripheral smear",
+      "kind": "finding",
+      "plain_explanation": "Long, thin red blood cells seen on a smear.",
+      "source_note": "General educational description written for MedLens (synthetic-data hackathon project), based on standard lab-medicine terminology. Not patient-specific."
+    },
+    {
+      "id": "platelets_adequate",
+      "term": "Platelets Adequate",
+      "aliases": [
+        "Platelets Adequate on Smear",
+        "Adequate Platelets"
+      ],
+      "category": "Peripheral smear",
+      "kind": "report_word",
+      "plain_explanation": "A smear note meaning the number of platelets seen looks enough.",
+      "source_note": "General educational description written for MedLens (synthetic-data hackathon project), based on standard lab-medicine terminology. Not patient-specific."
+    },
+    {
+      "id": "toxic_granules",
+      "term": "Toxic Granules",
+      "aliases": [
+        "Toxic Granulation"
+      ],
+      "category": "Peripheral smear",
+      "kind": "finding",
+      "plain_explanation": "Dark granules seen inside some white blood cells on a smear.",
+      "source_note": "General educational description written for MedLens (synthetic-data hackathon project), based on standard lab-medicine terminology. Not patient-specific."
+    },
+    {
+      "id": "left_shift",
+      "term": "Left Shift",
+      "aliases": [
+        "Shift to Left"
+      ],
+      "category": "Peripheral smear",
+      "kind": "finding",
+      "plain_explanation": "A smear note that more young (immature) neutrophils are seen than usual.",
+      "source_note": "General educational description written for MedLens (synthetic-data hackathon project), based on standard lab-medicine terminology. Not patient-specific."
+    },
+    {
+      "id": "haemoparasites",
+      "term": "Haemoparasites",
+      "aliases": [
+        "Hemoparasites",
+        "No Haemoparasites Seen",
+        "No Hemoparasites Seen"
+      ],
+      "category": "Peripheral smear",
+      "kind": "report_word",
+      "plain_explanation": "Parasites (such as malaria) looked for in blood on a smear.",
+      "source_note": "General educational description written for MedLens (synthetic-data hackathon project), based on standard lab-medicine terminology. Not patient-specific."
     }
   ]
 }
