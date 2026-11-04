@@ -1,0 +1,26 @@
+*** SYNTHETIC SAMPLE — not real patient data ***
+BRIGHTWAY DIAGNOSTICS (fictional lab)
+Patient Name : Test Patient H          Age/Sex : 61 Y / Male
+Reported On  : 04/11/2026              Sample  : Citrate Plasma
+
+COAGULATION PROFILE
+Test Name                 Result     Unit      Reference Range
+Prothrombin Time          14.8       sec       11.0 - 13.5
+Control                   12.5       sec
+INR Value                 1.25                 0.8 - 1.2
+aPTT                      33         sec       25 - 35
+Fibrinogen                380        mg/dL     200 - 400
+D-dimer                   0.62       ug/mL     < 0.50
+Bleeding Time             3          min       1 - 5
+
+CARDIAC MARKERS
+Troponin I                0.01       ng/mL     < 0.04
+CK-MB                     18         U/L       < 25
+CPK                       210        U/L       M: 39-308 F: 26-192
+NT-proBNP                 410        pg/mL     < 125
+LDH                       230        U/L       140 - 280
+Magnesium                 2.1        mg/dL     1.7 - 2.2
+Ionized Calcium           1.18       mmol/L    1.12 - 1.32
+
+Remarks: Correlate clinically. Repeat D-dimer if clinically indicated.
+*** End of synthetic report ***

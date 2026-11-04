@@ -1,0 +1,24 @@
+*** SYNTHETIC SAMPLE — not real patient data ***
+NORTHGATE IMAGING & CARDIOLOGY (fictional)
+Patient: Test Patient I        Age/Sex: 55 Y / F
+Study: Chest X-ray PA View and 12-Lead ECG
+
+CHEST X-RAY PA VIEW
+FINDINGS:
+Trachea is central. Mediastinum is not widened.
+Cardiothoracic ratio is about 0.55; cardiac silhouette appears enlarged.
+Both lung fields show mild hazy opacity in the right lower zone; possible early consolidation.
+Both costophrenic angles are clear. No pleural effusion. No pneumothorax.
+Hila are normal. Domes of diaphragm are normal. Bony cage and soft tissues are unremarkable.
+
+IMPRESSION:
+1. Cardiomegaly.
+2. Right lower zone opacity, likely infiltrate; consolidation cannot be ruled out.
+
+ECG REPORT
+Heart Rate: 88 bpm. Normal sinus rhythm. Axis normal.
+PR interval 160 ms. QRS duration 92 ms. QTc 430 ms.
+No significant ST-T changes. T waves upright.
+
+Opinion: ECG within normal limits. Kindly correlate clinically.
+*** End of synthetic report ***

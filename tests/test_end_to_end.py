@@ -111,3 +111,22 @@ def test_banner_line_produces_no_glossary_card(name):
     r = run(name)
     banner_end = r.text.index("\n")
     assert not any(t.span.start < banner_end for t in r.terms)
+
+
+def test_coag_cardiac_sample():
+    r = run("08_coag_cardiac.txt")
+    assert by_name(r, "Prothrombin Time").status == Status.ABOVE
+    assert by_name(r, "D-dimer").status == Status.ABOVE                 # 0.62 vs "< 0.50"
+    assert by_name(r, "CPK").status == Status.WITHIN                    # header Male picks M: 39-308
+    assert by_name(r, "Control").missing_range_reason == "no_range_printed"
+    assert r.unrecognized == []
+    assert {"activated_partial_thromboplastin_time", "troponin", "ck_mb", "b_type_natriuretic_peptide"} <= {t.term_id for t in r.terms}
+
+
+def test_chest_xray_ecg_sample():
+    r = run("09_chest_xray_ecg.txt")
+    assert r.unrecognized == []
+    ids = {t.term_id for t in r.terms}
+    assert {"cardiomegaly", "consolidation", "sinus_rhythm", "electrocardiogram", "qrs_duration"} <= ids
+    imp = [e for e in r.explanations if e.title.startswith("IMPRESSION")]
+    assert imp and all(e.tag == Tag.PROFESSIONAL for e in imp)

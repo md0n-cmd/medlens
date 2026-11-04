@@ -33,7 +33,7 @@
 | 29 | Ambiguous abbreviation `PCV` | Context keywords resolve it; otherwise all meanings listed | `test_ambiguous_abbreviation_*` |
 | 30 | Unknown term (`cholecystitis`, `QZX`) | Listed as "unrecognized: ask your clinician"; no meaning invented | `test_unrecognized_terms_are_listed_not_explained` |
 | 31 | Diagnostic/treatment wording in generated text | Replaced by safe fallback | `test_safety_blocks_diagnostic_and_treatment_phrasing` |
-| 32 | Glossary content safety | All 143 entries must pass the filter | `test_every_glossary_entry_passes_safety_filter` |
+| 32 | Glossary content safety | All 302 entries must pass the filter | `test_every_glossary_entry_passes_safety_filter` |
 | 33 | CRLF line endings | Normalised; offsets match the returned text | `test_crlf_input_normalised` |
 | 34 | Empty input | HTTP 400 | `test_api.py::test_analyze_rejects_empty` |
 | 35 | Text with no medical content | Warning; empty results | `test_empty_and_garbage_input` |
@@ -64,3 +64,8 @@
 | 60 | Term search typos / aliases / no match | Fuzzy (difflib ≥ 0.75), alias → canonical, "Not in our glossary. Ask your clinician or the lab." | `test_search.py` |
 | 61 | Passage linking for every card | Values/terms: whole source line; Impression/Remarks/Advice: whole section block; combination card has no passage | `test_passages.py` |
 | 62 | Narrative report summary | Header + section skeleton + quoted Impression lines, even with no lab values | `test_summary.py::test_narrative_report_summary` |
+| 63 | Short ALL-CAPS abbreviation vs lowercase/unit (`CT` vs `ct`, `Ct`) | Exact-case match only for ≤ 4-char ALL-CAPS aliases | `test_glossary.py::test_ct_is_case_sensitive` |
+| 64 | Abbreviation inside a longer token (`PT` in `PTH`, `RA` in `ERA`) | Word boundaries + exact case; PTH matches its own entry | `test_short_caps_not_inside_longer_tokens` |
+| 65 | Disease / finding words (cholecystitis, malignant, cardiomegaly) | Defined as words only; fixed note "This explains the word only…"; source line stays NEEDS_PROFESSIONAL | `test_kinds_and_finding_note` |
+| 66 | Same alias in two entries (e.g. `TG` triglycerides vs `Tg` thyroglobulin) | Build script and test reject it | `test_no_duplicate_aliases_across_entries` |
+| 67 | Glossary wording drift | No entry may contain "you have", "indicates", "means you", "diagnos", "treat"; all pass safety.py | `test_no_forbidden_phrases_in_entries`, `test_every_glossary_entry_passes_safety_filter` |
