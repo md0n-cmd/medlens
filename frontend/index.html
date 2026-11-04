@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>MedLens — Medical Report Explainer</title>
 <style>
-  :root {
+  :root { --fs: 1;
     --bg: #f5f7fb; --card: #fff; --ink: #1d2433; --muted: #5b6577; --line: #e3e8f0;
     --brand: #2851e6; --factual: #2851e6; --general: #0f8b8d; --prof: #c26a00;
     --out: #c62828; --out-bg: #fde8e8; --in: #1e7d3a; --in-bg: #e3f5e8;
@@ -13,28 +13,28 @@
     --flash: #ffe066;
   }
   * { box-sizing: border-box; }
-  body { margin: 0; font: 15px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; background: var(--bg); color: var(--ink); }
+  body { margin: 0; font: calc(15px * var(--fs))/1.5 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; background: var(--bg); color: var(--ink); }
   header { background: #0f1b3d; color: #fff; padding: 14px 24px; display: flex; align-items: center; gap: 14px; }
-  header h1 { margin: 0; font-size: 22px; letter-spacing: .3px; }
-  header .tag { color: #b9c6ff; font-size: 14px; }
+  header h1 { margin: 0; font-size: calc(22px * var(--fs)); letter-spacing: .3px; }
+  header .tag { color: #b9c6ff; font-size: calc(14px * var(--fs)); }
   .disclaimer { position: sticky; top: 0; z-index: 10; background: #fff4e5; border-bottom: 2px solid #f0b35a; color: #6b3d00;
-    padding: 8px 24px; font-size: 13.5px; }
+    padding: 8px 24px; font-size: calc(13.5px * var(--fs)); }
   .disclaimer strong { color: #8a4b00; }
   main { max-width: 1500px; margin: 0 auto; padding: 18px 24px 60px; }
   .card { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 16px 18px; box-shadow: 0 1px 2px rgba(20,30,60,.04); }
-  h2 { font-size: 16px; margin: 0 0 10px; }
-  h3 { font-size: 14px; margin: 0 0 8px; text-transform: uppercase; letter-spacing: .5px; color: var(--muted); }
-  textarea { width: 100%; min-height: 170px; font: 13px/1.45 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; padding: 10px;
+  h2 { font-size: calc(16px * var(--fs)); margin: 0 0 10px; }
+  h3 { font-size: calc(14px * var(--fs)); margin: 0 0 8px; text-transform: uppercase; letter-spacing: .5px; color: var(--muted); }
+  textarea { width: 100%; min-height: 170px; font: calc(13px * var(--fs))/1.45 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; padding: 10px;
     border: 1px solid var(--line); border-radius: 8px; resize: vertical; }
   .controls { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; margin-top: 10px; }
   select, button { font: inherit; padding: 8px 14px; border-radius: 8px; border: 1px solid var(--line); background: #fff; cursor: pointer; }
   button.primary { background: var(--brand); color: #fff; border-color: var(--brand); font-weight: 600; }
   button.primary:hover { filter: brightness(1.08); }
-  .hint { color: var(--muted); font-size: 13px; }
+  .hint { color: var(--muted); font-size: calc(13px * var(--fs)); }
   .grid { display: grid; grid-template-columns: minmax(0, 46%) minmax(0, 54%); gap: 18px; margin-top: 18px; }
   @media (max-width: 1000px) { .grid { grid-template-columns: 1fr; } .sticky { position: static !important; max-height: none !important; } }
   .sticky { position: sticky; top: 52px; max-height: calc(100vh - 70px); overflow: auto; }
-  #report { white-space: pre-wrap; font: 13px/1.65 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; overflow-x: auto; }
+  #report { white-space: pre-wrap; font: calc(13px * var(--fs))/1.65 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; overflow-x: auto; }
   #report span[data-seg] { cursor: pointer; border-radius: 3px; }
   .h-term { text-decoration: underline dotted var(--general) 2px; text-underline-offset: 3px; }
   .h-unk { text-decoration: underline wavy var(--unk) 1.5px; text-underline-offset: 3px; }
@@ -48,18 +48,18 @@
   .h-flagbad { outline: 2px solid var(--amb); }
   .flash { animation: flash 1.6s ease-out; }
   @keyframes flash { 0%, 40% { background: var(--flash); box-shadow: 0 0 0 3px var(--flash); } 100% { } }
-  .legend { display: flex; flex-wrap: wrap; gap: 8px 14px; font-size: 12.5px; color: var(--muted); margin: 8px 0 12px; }
+  .legend { display: flex; flex-wrap: wrap; gap: 8px 14px; font-size: calc(12.5px * var(--fs)); color: var(--muted); margin: 8px 0 12px; }
   .legend span.sw { display: inline-block; padding: 0 6px; border-radius: 3px; margin-right: 4px; font-family: ui-monospace, monospace; }
   .summary { display: grid; grid-template-columns: repeat(auto-fit, minmax(110px, 1fr)); gap: 10px; margin-bottom: 14px; }
   .stat { background: var(--card); border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px; }
-  .stat .n { font-size: 24px; font-weight: 700; }
-  .stat .l { font-size: 12px; color: var(--muted); }
+  .stat .n { font-size: calc(24px * var(--fs)); font-weight: 700; }
+  .stat .l { font-size: calc(12px * var(--fs)); color: var(--muted); }
   .stat.out .n { color: var(--out); } .stat.amb .n { color: var(--amb); } .stat.in .n { color: var(--in); } .stat.prof .n { color: var(--prof); }
-  table { width: 100%; border-collapse: collapse; font-size: 13.5px; }
+  table { width: 100%; border-collapse: collapse; font-size: calc(13.5px * var(--fs)); }
   th, td { text-align: left; padding: 7px 8px; border-bottom: 1px solid var(--line); vertical-align: top; }
-  th { font-size: 12px; text-transform: uppercase; letter-spacing: .4px; color: var(--muted); background: #fafbfd; position: sticky; top: 0; }
+  th { font-size: calc(12px * var(--fs)); text-transform: uppercase; letter-spacing: .4px; color: var(--muted); background: #fafbfd; position: sticky; top: 0; }
   tbody tr { cursor: pointer; } tbody tr:hover { background: #f6f8ff; }
-  .badge { display: inline-block; padding: 2px 8px; border-radius: 999px; font-size: 12px; font-weight: 600; white-space: nowrap; }
+  .badge { display: inline-block; padding: 2px 8px; border-radius: 999px; font-size: calc(12px * var(--fs)); font-weight: 600; white-space: nowrap; }
   .b-out { background: var(--out-bg); color: var(--out); } .b-in { background: var(--in-bg); color: var(--in); }
   .b-amb { background: var(--amb-bg); color: var(--amb); } .b-neutral { background: var(--neutral-bg); color: #39445a; }
   .b-FACTUAL_FROM_REPORT { background: #e6ecfd; color: var(--factual); }
@@ -72,25 +72,53 @@
   .group.FACTUAL_FROM_REPORT { border-color: var(--factual); }
   .group.GENERAL_INFO { border-color: var(--general); }
   .group.NEEDS_PROFESSIONAL_INTERPRETATION { border-color: var(--prof); }
-  .group .desc { font-size: 13px; color: var(--muted); margin: -4px 0 10px; }
+  .group .desc { font-size: calc(13px * var(--fs)); color: var(--muted); margin: -4px 0 10px; }
   .xcard { background: var(--card); border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px; margin-bottom: 10px; cursor: pointer; scroll-margin: 80px; }
   .xcard:hover { border-color: #b8c4e6; }
   .xcard.active { box-shadow: 0 0 0 3px var(--flash); border-color: #e0b800; }
   .xcard .t { font-weight: 650; margin: 4px 0 2px; }
-  .xcard .src { margin-top: 6px; font: 12px/1.4 ui-monospace, monospace; background: #f6f7fa; border-left: 3px solid #c7cfdf; padding: 4px 8px; color: #3c4658; white-space: pre-wrap; }
-  .xcard .src::before { content: "Source in report: "; font-family: system-ui, sans-serif; color: var(--muted); font-size: 11px; }
-  .xcard .note { font-size: 12.5px; color: var(--muted); margin-top: 4px; }
+  .xcard .src { margin-top: 6px; font: calc(12px * var(--fs))/1.4 ui-monospace, monospace; background: #f6f7fa; border-left: 3px solid #c7cfdf; padding: 4px 8px; color: #3c4658; white-space: pre-wrap; }
+  .xcard .src::before { content: "Source in report: "; font-family: system-ui, sans-serif; color: var(--muted); font-size: calc(11px * var(--fs)); }
+  .xcard .note { font-size: calc(12.5px * var(--fs)); color: var(--muted); margin-top: 4px; }
   .empty { color: var(--muted); font-style: italic; padding: 30px 0; text-align: center; }
-  .warnings { color: #8a4b00; font-size: 13px; }
-  details summary { cursor: pointer; color: var(--muted); font-size: 13px; }
+  .warnings { color: #8a4b00; font-size: calc(13px * var(--fs)); }
+  details summary { cursor: pointer; color: var(--muted); font-size: calc(13px * var(--fs)); }
   .collapse-toggle { margin-left: auto; }
-  footer { text-align: center; color: var(--muted); font-size: 12.5px; padding: 20px; }
+  footer { text-align: center; color: var(--muted); font-size: calc(12.5px * var(--fs)); padding: 20px; }
+  .fs-ctl { margin-left: auto; display: flex; gap: 6px; align-items: center; }
+  .fs-ctl button { background: #1d2b57; color: #fff; border-color: #3b4b80; padding: 4px 10px; }
+  .fs-ctl button[aria-pressed="true"] { background: #fff; color: #0f1b3d; font-weight: 700; }
+  .fs-ctl button[data-fs="1"] { font-size: calc(13px * var(--fs)); }
+  .fs-ctl button[data-fs="1.2"] { font-size: calc(15px * var(--fs)); }
+  .fs-ctl button[data-fs="1.4"] { font-size: calc(17px * var(--fs)); }
+  .plain { background: #f0f6ff; border: 1px solid #bcd3f5; border-radius: 12px; padding: 14px 18px; margin-bottom: 16px; }
+  .plain h2 { margin-bottom: 6px; }
+  .plain ul { margin: 6px 0 10px; padding-left: 20px; }
+  .plain li { margin: 4px 0; }
+  .plain a { color: var(--brand); font-weight: 600; }
+  .plain .foot { font-size: calc(13px * var(--fs)); color: var(--muted); border-top: 1px solid #d5e2f6; padding-top: 8px; margin-top: 8px; }
+  details.group > summary { list-style: revert; }
+  details.group > summary h3 { display: inline; }
+  @media print {
+    header .fs-ctl, #input-card, .controls, button, #rep-card, .group.FACTUAL_FROM_REPORT, .group.GENERAL_INFO, footer, .legend { display: none !important; }
+    .disclaimer { position: static; }
+    .grid { display: block; }
+    body { background: #fff; }
+    .card, .xcard { box-shadow: none; break-inside: avoid; }
+    .xcard.active { box-shadow: none; }
+  }
 </style>
 </head>
 <body>
 <header>
   <h1>🔎 MedLens</h1>
-  <span class="tag">Medical report explanation &amp; information navigator</span>
+  <span class="tag">Understand your medical report in plain words</span>
+  <div class="fs-ctl" role="group" aria-label="Text size">
+    <span class="tag">Text size:</span>
+    <button type="button" data-fs="1" aria-pressed="true" title="Normal text">A</button>
+    <button type="button" data-fs="1.2" aria-pressed="false" title="Larger text">A+</button>
+    <button type="button" data-fs="1.4" aria-pressed="false" title="Largest text">A++</button>
+  </div>
 </header>
 <div class="disclaimer" role="note">
   <strong>Informational only — not a diagnosis or treatment advice.</strong>
@@ -99,19 +127,20 @@
 </div>
 
 <main>
-  <section class="card" aria-labelledby="in-h">
+  <section class="card" id="input-card" aria-labelledby="in-h">
     <h2 id="in-h">1. Paste report text</h2>
     <textarea id="input" aria-label="Report text" placeholder="Paste the text of a lab or radiology report here, or load a synthetic sample…"></textarea>
     <div class="controls">
       <label for="sample" class="hint">Load sample:</label>
       <select id="sample"><option value="">— choose a synthetic sample —</option></select>
       <button class="primary" id="analyze">Analyze report</button>
+      <button id="print" disabled title="Analyze a report first">Print / Save summary</button>
       <span class="hint" id="status" aria-live="polite"></span>
     </div>
   </section>
 
   <div class="grid">
-    <section class="card sticky" aria-labelledby="rep-h">
+    <section class="card sticky" id="rep-card" aria-labelledby="rep-h">
       <h2 id="rep-h">2. Annotated report</h2>
       <div class="legend" aria-label="Highlight legend">
         <span><span class="sw h-out">11.2</span>outside printed range</span>
@@ -126,6 +155,7 @@
     </section>
 
     <section aria-labelledby="res-h">
+      <div class="plain" id="plain" aria-live="polite" hidden></div>
       <div class="card">
         <h2 id="res-h">3. What the report says</h2>
         <div class="summary" id="summary"></div>
@@ -147,12 +177,12 @@ const $ = (s) => document.querySelector(s);
 const esc = (s) => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 
 const STATUS = {
-  above_range:   {label: "▲ Above printed range", cls: "out"},
-  below_range:   {label: "▼ Below printed range", cls: "out"},
+  above_range:   {label: "▲ Higher than report range", cls: "out"},
+  below_range:   {label: "▼ Lower than report range", cls: "out"},
   differs_from_reference: {label: "≠ Differs from reference", cls: "out"},
-  within_range:  {label: "✓ Within printed range", cls: "in"},
-  ambiguous_range: {label: "? Ambiguous range", cls: "amb"},
-  no_reference_range_supplied: {label: "— No range supplied", cls: "neutral"},
+  within_range:  {label: "✓ Within report range", cls: "in"},
+  ambiguous_range: {label: "? Range depends on sex/age", cls: "amb"},
+  no_reference_range_supplied: {label: "— No range on report", cls: "neutral"},
   unit_mismatch: {label: "⚠ Unit mismatch", cls: "neutral"},
   indeterminate: {label: "~ Indeterminate", cls: "neutral"},
   unparseable:   {label: "⚠ Range unreadable", cls: "neutral"},
@@ -245,6 +275,8 @@ function focusCard(eid) {
   const card = document.getElementById("card-" + eid);
   if (!card) return;
   card.classList.add("active");
+  const parent = card.closest("details");
+  if (parent) parent.open = true;
   card.scrollIntoView({behavior: "smooth", block: "center"});
   const e = result.explanations.find(x => x.id === eid);
   if (e && e.span) flashRange(e.span.start, e.span.end, false);
@@ -297,7 +329,8 @@ function renderCards(r) {
         <div class="t">${esc(e.title)}</div><div>${esc(e.text)}</div>${notes}
         <div class="src">${esc(e.source_snippet)}</div></div>`;
     }).join("") || `<div class="hint">Nothing in this category.</div>`;
-    return `<div class="group ${tag}"><h3>${meta.label} (${items.length})</h3><div class="desc">${meta.desc}</div>${cards}</div>`;
+    const open = tag === "GENERAL_INFO" ? "" : " open";
+    return `<details class="group ${tag}"${open}><summary><h3>${meta.label} (${items.length})</h3></summary><div class="desc">${meta.desc}</div>${cards}</details>`;
   }).join("");
   g.querySelectorAll(".xcard").forEach(c => {
     const go = () => {
@@ -310,8 +343,82 @@ function renderCards(r) {
   });
 }
 
+
+// ---- "In plain words" summary. Questions only, never advice; phrases checked by tests/test_frontend_text.py
+const PLAIN = {
+  title: "In plain words",
+  found: "We found {n} test results and {m} medical words on this report.",
+  narrative: "This looks like a written report (about {w} words). We found {m} medical words in it.",
+  lower: "{x} results are lower than the range printed on the report:",
+  higher: "{x} results are higher than the range printed on the report:",
+  differs: "{x} results differ from the expected result printed on the report:",
+  within: "{x} results are within the range printed on the report.",
+  ambiguous: "{x} results have different ranges for men and women, and the report doesn't say which applies:",
+  flag: "For {t}, the lab's own H/L mark doesn't match the printed range. Worth confirming with the lab.",
+  interp: "{x} statements (like the Impression or Remarks) can only be explained by your doctor.",
+  qtitle: "Questions you could ask your doctor",
+  qOut: "What do the results outside the printed range mean for me?",
+  qAmb: "Which of the printed ranges applies to me?",
+  qInterp: "Can you explain the Impression / Remarks section in simple words?",
+  qAlways: "Do I need any repeat test or follow-up?",
+  foot: "This is a reading aid, not a diagnosis. Only your doctor can say what these results mean for you.",
+};
+const fill = (t, o) => t.replace(/\{(\w)\}/g, (_, k) => o[k]);
+
+function renderPlain(r) {
+  const firstCard = {};
+  r.explanations.forEach(e => { if (e.related_id && !(e.related_id in firstCard)) firstCard[e.related_id] = e.id; });
+  const link = v => `<a href="#" data-eid="${firstCard[v.id] || ""}">${esc(v.test_name)}</a>`;
+  const names = vs => vs.map(link).join(" · ");
+  const by = st => r.values.filter(v => v.status === st);
+  const lower = by("below_range"), higher = by("above_range"), differs = by("differs_from_reference");
+  const within = by("within_range"), amb = by("ambiguous_range");
+  const flags = r.values.filter(v => v.flag_disagreement);
+  const interp = r.explanations.filter(e => e.tag === "NEEDS_PROFESSIONAL_INTERPRETATION" && !e.related_id && e.span && !e.title.startsWith("Unrecognized"));
+  const m = r.summary.terms_found;
+  const li = [];
+  if (r.values.length) li.push(esc(fill(PLAIN.found, {n: r.values.length, m})));
+  else li.push(esc(fill(PLAIN.narrative, {w: (r.text.match(/\S+/g) || []).length, m})));
+  if (lower.length) li.push(esc(fill(PLAIN.lower, {x: lower.length})) + " " + names(lower));
+  if (higher.length) li.push(esc(fill(PLAIN.higher, {x: higher.length})) + " " + names(higher));
+  if (differs.length) li.push(esc(fill(PLAIN.differs, {x: differs.length})) + " " + names(differs));
+  if (within.length) li.push(esc(fill(PLAIN.within, {x: within.length})));
+  if (amb.length) li.push(esc(fill(PLAIN.ambiguous, {x: amb.length})) + " " + names(amb));
+  flags.forEach(v => li.push(fill(esc(PLAIN.flag), {t: link(v)})));
+  if (interp.length) li.push(esc(fill(PLAIN.interp, {x: interp.length})));
+  const qs = [];
+  if (lower.length || higher.length || differs.length) qs.push(PLAIN.qOut);
+  if (amb.length) qs.push(PLAIN.qAmb);
+  if (interp.length) qs.push(PLAIN.qInterp);
+  qs.push(PLAIN.qAlways);
+  const el = $("#plain");
+  el.innerHTML = `<h2>${PLAIN.title}</h2><ul>${li.map(x => `<li>${x}</li>`).join("")}</ul>
+    <h3>${PLAIN.qtitle}</h3><ul>${qs.map(q => `<li>${esc(q)}</li>`).join("")}</ul>
+    <div class="foot">${esc(PLAIN.foot)}</div>`;
+  el.hidden = false;
+  el.querySelectorAll("a[data-eid]").forEach(a => a.addEventListener("click", ev => { ev.preventDefault(); if (a.dataset.eid) focusCard(a.dataset.eid); }));
+}
+
+// ---- text size
+function setFs(v) {
+  document.documentElement.style.setProperty("--fs", v);
+  document.querySelectorAll(".fs-ctl button").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.fs === String(v))));
+  try { localStorage.setItem("medlens-fs", v); } catch (e) {}
+}
+document.querySelectorAll(".fs-ctl button").forEach(b => b.addEventListener("click", () => setFs(b.dataset.fs)));
+try { const saved = localStorage.getItem("medlens-fs"); if (["1", "1.2", "1.4"].includes(saved)) setFs(saved); } catch (e) {}
+
+// ---- print
+$("#print").addEventListener("click", () => {
+  const prof = document.querySelector("details.group.NEEDS_PROFESSIONAL_INTERPRETATION");
+  if (prof) prof.open = true;
+  window.print();
+});
+
 function render() {
   const spans = buildSpans(result);
+  renderPlain(result);
+  $("#print").disabled = false; $("#print").title = "";
   renderReport(result, spans);
   renderSummary(result);
   renderTable(result);
