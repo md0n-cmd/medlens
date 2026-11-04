@@ -192,12 +192,16 @@ def parse_columnar(line: Line) -> Optional[RawRow]:
                 row.unit_span = _span(line.start, us, ue, t)
                 row.unit = row.unit_span.text
             break
-    if not range_found and rest and row.unit is None:
-        us, ue = rest[0]
-        cand = t[us:ue]
-        if UNIT_RE.match(cand.strip()):
+    if not range_found and rest:
+        if row.unit is None and UNIT_RE.match(t[rest[0][0]:rest[0][1]].strip()):
+            us, ue = rest[0]
             row.unit_span = _span(line.start, us, ue, t)
-            row.unit = cand
+            row.unit = row.unit_span.text
+            rest = rest[1:]
+        if rest:
+            # a range column is present but unreadable -> keep it so status becomes "unparseable"
+            rs, re_ = rest[0][0], rest[-1][1]
+            row.range_raw, row.range_span = t[rs:re_], _span(line.start, rs, re_, t)
     return row
 
 

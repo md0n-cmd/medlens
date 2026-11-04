@@ -1581,7 +1581,7 @@
       "category": "Report term",
       "plain_explanation": "The range of values the lab printed for comparison. MedLens only uses ranges printed on your report.",
       "source_note": "General educational description written for MedLens (synthetic-data hackathon project), based on standard lab-medicine terminology. Not patient-specific.",
-      "what_it_is_not": "Being outside it does not by itself mean you are ill; being inside it does not by itself mean you are well."
+      "what_it_is_not": "A value outside the printed range is not, by itself, a diagnosis, and a value inside it is not, by itself, a clean bill of health."
     },
     {
       "id": "specimen",
