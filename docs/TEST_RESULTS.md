@@ -10,7 +10,7 @@ rootdir: /home/d0n/medlens
 configfile: pytest.ini
 testpaths: tests
 plugins: anyio-4.16.0
-collecting ... collected 108 items
+collecting ... collected 110 items
 
 tests/test_api.py::test_health PASSED
 tests/test_api.py::test_samples_listed_and_synthetic PASSED
@@ -66,6 +66,8 @@ tests/test_glossary.py::test_ambiguous_abbreviation_resolved_by_context PASSED
 tests/test_glossary.py::test_spans_are_exact PASSED
 tests/test_glossary.py::test_unrecognized_terms_are_listed_not_explained PASSED
 tests/test_glossary.py::test_known_terms_not_reported_as_unrecognized PASSED
+tests/test_llm_hook.py::test_llm_output_is_labelled_and_safety_filtered PASSED
+tests/test_llm_hook.py::test_llm_failure_never_breaks_pipeline PASSED
 tests/test_ranges.py::test_interval_formats[70-110-70-110] PASSED
 tests/test_ranges.py::test_interval_formats[70 - 110-70-110] PASSED
 tests/test_ranges.py::test_interval_formats[70\u2013110-70-110] PASSED
@@ -121,5 +123,5 @@ tests/test_values.py::test_value_without_range PASSED
 tests/test_values.py::test_non_result_lines_ignored PASSED
 tests/test_values.py::test_sections_and_interpretive_flag PASSED
 
-============================= 108 passed in 1.10s ==============================
+============================= 110 passed in 1.05s ==============================
 ```

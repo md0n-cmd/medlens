@@ -19,7 +19,7 @@ uvicorn app.main:app --reload        # or: ./run.sh  (creates a venv for you)
 
 Open http://localhost:8000. Pick a sample from the dropdown, or open `http://localhost:8000/?sample=01_cbc` directly.
 
-Run the tests with `pytest -v` (108 tests; see [docs/TEST_RESULTS.md](docs/TEST_RESULTS.md)).
+Run the tests with `pytest -v` (110 tests; see [docs/TEST_RESULTS.md](docs/TEST_RESULTS.md)).
 
 ## Screenshots
 
@@ -127,7 +127,7 @@ curl -s -X POST localhost:8000/api/analyze -H 'Content-Type: application/json' \
 * **New glossary terms:** edit `scripts/build_glossary.py`, then run it. Tests enforce schema and safety.
 * **New hedge phrases or interpretive sections:** `classify.py::HEDGE_PATTERNS` and `parser/lines.py::INTERPRETIVE_SECTIONS`.
 * **New safety rules:** append to `safety.py::BLOCKED_PATTERNS`. They apply to every generated string automatically.
-* **Optional LLM fallback:** a `UnknownTermExplainer` hook in `pipeline.analyze()`. It is enabled with `USE_LLM=1` and `ANTHROPIC_API_KEY`. Its output is labelled *AI-generated, unverified* and goes through the same safety filter.
+* **Optional LLM fallback (`app/llm.py`):** a `UnknownTermExplainer` hook in `pipeline.analyze()`. It is **off by default**. To turn it on, run `pip install anthropic`, then `USE_LLM=1 ANTHROPIC_API_KEY=... ./run.sh`. Only the unknown term and its one source line are sent (model `claude-opus-5-5`, low effort, server-side refusal fallback). Output is labelled *AI-generated, unverified*, goes through the same safety filter, and any failure falls back to "unrecognized term: ask your clinician".
 
 ## Docs
 
