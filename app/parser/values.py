@@ -35,6 +35,7 @@ INLINE_RANGE_RE = re.compile(
     re.I,
 )
 NAME_RE = re.compile(r"[A-Za-z]")
+NAME_EDGE_JUNK = set(" .,-_~|)—–'\"`:;=")
 
 # Lines whose "name" is patient metadata, not a test.
 METADATA_NAMES = re.compile(
@@ -120,9 +121,11 @@ def _parse_value_cell(cell: str) -> Optional[dict]:
 
 def _row_from_value(line: Line, name_s: int, name_e: int, val_s: int, cell: str, pv: dict) -> RawRow:
     t, base = line.text, line.start
-    name_text = t[name_s:name_e].rstrip(" :=-.")
+    while name_s < name_e and t[name_s] in NAME_EDGE_JUNK:      # OCR noise like ".- Total RBC Count"
+        name_s += 1
+    name_text = t[name_s:name_e].rstrip(" :=-.—–_~|")
     row = RawRow(
-        test_name=name_text.strip(),
+        test_name=re.sub(r"\s+", " ", name_text.strip()),
         test_span=_span(base, name_s, name_s + len(name_text), t),
         value_raw=cell[pv["vs"]:pv["ve"]],
         value_span=_span(base, val_s + pv["vs"], val_s + pv["ve"], t),
@@ -158,6 +161,10 @@ def parse_columnar(line: Line) -> Optional[RawRow]:
     name_s, name_e = cols[0]
     if not _valid_name(t[name_s:name_e]):
         return None
+    # "Total Leukocyte Count  (TLC)": a bracketed column right after the name belongs to the name
+    while len(cols) > 2 and re.fullmatch(r"\([^()]{1,15}\)", t[cols[1][0]:cols[1][1]].strip()):
+        name_e = cols[1][1]
+        cols = [(name_s, name_e)] + cols[2:]
     # value = first column after the name that parses as a value
     for idx in range(1, len(cols)):
         cs, ce = cols[idx]

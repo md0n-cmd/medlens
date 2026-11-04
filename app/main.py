@@ -62,6 +62,7 @@ class ExtractResult(BaseModel):
     ocr_confidence: Optional[float] = None
     low_confidence_tokens: list[str] = []
     warnings: list[str] = []
+    rows_found: int = 0
 
 
 def sniff(data: bytes) -> Optional[str]:
@@ -90,7 +91,8 @@ async def extract_endpoint(file: UploadFile = File(...)) -> ExtractResult:
         if kind == "pdf":
             r = extract_pdf(data)
             return ExtractResult(text=r.text, source=r.source, pages=r.pages, ocr_confidence=r.ocr_confidence,
-                                 low_confidence_tokens=r.low_confidence_tokens, warnings=r.warnings)
+                                 low_confidence_tokens=r.low_confidence_tokens, warnings=r.warnings,
+                                 rows_found=_rows_found(r.text))
         res = ocr_bytes(data)
     except OcrUnavailable:
         raise HTTPException(503, OCR_MISSING_MSG)
@@ -100,7 +102,12 @@ async def extract_endpoint(file: UploadFile = File(...)) -> ExtractResult:
         raise HTTPException(422, "This image could not be read. Please try a clearer photo or another file.")
     warnings = [] if res.confidence >= 70 else ["The scan quality is low. Please compare every number with your paper report."]
     return ExtractResult(text=res.text, source="image_ocr", pages=1, ocr_confidence=res.confidence,
-                         low_confidence_tokens=res.low_confidence_tokens, warnings=warnings)
+                         low_confidence_tokens=res.low_confidence_tokens, warnings=warnings,
+                         rows_found=res.rows_found)
+
+
+def _rows_found(text: str) -> int:
+    return sum(1 for v in analyze(text).values if v.reference is not None)
 
 
 @app.get("/api/sample-files/{name}", include_in_schema=False)

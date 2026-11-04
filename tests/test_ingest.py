@@ -101,3 +101,35 @@ def test_password_protected_pdf_friendly_message():
     c.save()
     with pytest.raises(PdfError, match="password-protected"):
         extract_pdf(buf.getvalue())
+
+
+@needs_ocr
+def test_phone_photo_recovers_cbc_rows():
+    """Before multi-pass OCR: 10 rows parsed, 2/15 exact. After: 15/15."""
+    res = ocr_bytes((FILES / "01_cbc_scan.jpg").read_bytes())
+    got = rows(res.text)
+    assert set(BASE) <= set(got)                                  # every test name recovered
+    exact = sum(got[n][0] == BASE[n][0] for n in BASE)
+    assert exact >= 14
+    assert got["Hemoglobin"][0] == "11.2"                         # previously misread as 11.52
+    assert res.rows_found >= 14
+
+
+def test_digit_confusion_is_suggested_not_applied():
+    from app.ingest.ocr import suggest_digit_fixes
+    hints = suggest_digit_fixes("Potassium   4.1O   mmol/L   3.5 - 5.1\nHb   l1.2   g/dL")
+    assert "4.1O → 4.10?" in hints and "l1.2 → 11.2?" in hints
+    assert suggest_digit_fixes("Hemoglobin 11.2 Total Bilirubin") == []
+
+
+def test_deskew_estimates_rotation():
+    from PIL import Image
+    from app.ingest.ocr import estimate_skew, normalize_background
+    img = Image.open(FILES / "01_cbc.png").convert("L").rotate(3, expand=True, fillcolor=255)
+    assert abs(estimate_skew(normalize_background(img)) + 3) <= 0.6
+
+
+@needs_ocr
+def test_api_extract_reports_rows_found():
+    r = post("01_cbc_scan.jpg", (FILES / "01_cbc_scan.jpg").read_bytes(), "image/jpeg")
+    assert r.json()["rows_found"] >= 14

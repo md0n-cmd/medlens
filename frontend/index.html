@@ -513,6 +513,7 @@ function showReview(b, name) {
   el.className = "review" + (low ? " low" : "");
   let html = `<strong>Check the text before analyzing.</strong> Source: ${esc(name)} · ${esc(SOURCE_LABEL[b.source] || b.source)}`;
   if (b.pages > 1) html += ` · ${b.pages} pages`;
+  html += `<br>We found <strong>${b.rows_found}</strong> result rows. Check none are missing.`;
   if (conf !== null && conf !== undefined) html += ` · OCR confidence ${Math.round(conf)}%`;
   if (low) html += `<br><strong>The scan quality is low. Please compare every number with your paper report.</strong>`;
   else if (b.source !== "pdf_text") html += `<br>Scanned text can misread numbers (1.1 vs 11, O vs 0, a missing decimal point).`;

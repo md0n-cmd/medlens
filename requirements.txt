@@ -12,3 +12,4 @@ pytesseract>=0.3.10
 Pillow>=10.0
 reportlab>=4.0      # only for scripts/make_fixtures.py
 # OCR engine (system package): sudo apt install tesseract-ocr
+numpy>=1.26
