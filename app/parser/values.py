@@ -192,6 +192,16 @@ def parse_columnar(line: Line) -> Optional[RawRow]:
                 row.unit_span = _span(line.start, us, ue, t)
                 row.unit = row.unit_span.text
             break
+    if not range_found and rest and row.unit is None:
+        # OCR / PDF often collapse "unit  range" into one column: "million/cumm 4.5 - 5.5"
+        us, ue = rest[0]
+        m = re.match(r"^(\S+)(\s+)(.+)$", t[us:ue])
+        if m and UNIT_RE.match(m[1]) and parse_range(m[3]).kind != "unparseable":
+            row.unit_span = _span(line.start, us, us + len(m[1]), t)
+            row.unit = m[1]
+            rs = us + len(m[1]) + len(m[2])
+            row.range_raw, row.range_span = t[rs:ue], _span(line.start, rs, ue, t)
+            return row
     if not range_found and rest:
         if row.unit is None and UNIT_RE.match(t[rest[0][0]:rest[0][1]].strip()):
             us, ue = rest[0]
