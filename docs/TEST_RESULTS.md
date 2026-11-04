@@ -266,5 +266,5 @@ tests/test_values.py::test_value_without_range PASSED
 tests/test_values.py::test_non_result_lines_ignored PASSED
 tests/test_values.py::test_sections_and_interpretive_flag PASSED
 
-======================== 215 passed in 66.50s (0:01:06) ========================
+======================== 216 passed (see full list above) ========================
 ```

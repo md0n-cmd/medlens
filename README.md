@@ -11,7 +11,7 @@ MedLens takes the text of a medical report (lab panel or radiology report) and:
 
 ## Live demo
 
-**https://medlens-XXXX.onrender.com** _(placeholder: replace with the Render URL after the first deploy)_
+**https://medlens-68tq.onrender.com**
 
 > **Demo uses synthetic sample data. Do not upload real medical reports.**
 >
@@ -36,7 +36,7 @@ To open it on your phone (same Wi-Fi), run `./run.sh --lan`. It prints the lapto
 
 Open http://localhost:8000. Pick a sample from the dropdown, or open `http://localhost:8000/?sample=01_cbc` directly.
 
-Run the tests with `pytest -v` (215 tests; see [docs/TEST_RESULTS.md](docs/TEST_RESULTS.md)).
+Run the tests with `pytest -v` (216 tests; see [docs/TEST_RESULTS.md](docs/TEST_RESULTS.md)).
 
 ## Glossary
 

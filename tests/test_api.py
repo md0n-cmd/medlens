@@ -31,3 +31,8 @@ def test_analyze_rejects_empty():
 def test_frontend_served():
     r = client.get("/")
     assert r.status_code == 200 and "MedLens" in r.text
+
+
+def test_head_root_for_uptime_checks():
+    r = client.head("/")
+    assert r.status_code == 200 and r.content == b""
