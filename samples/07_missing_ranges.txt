@@ -1,0 +1,19 @@
+*** SYNTHETIC SAMPLE — not real patient data ***
+OAKWOOD LABORATORIES (fictional)
+Patient Name : Test Patient G        Age/Sex : 58 Y / Female
+Reported On  : 04/11/2026            Sample  : Serum
+
+BIOCHEMISTRY
+Test Name              Result    Unit       Reference Range
+Vitamin B12            450       pg/mL
+Serum Ferritin         38        ng/mL      -
+Serum Iron             72        ug/dL      NA
+CRP                    4.2       mg/L       See note
+Calcium                9.6       mg/dL      Refer table
+Uric Acid              5.1       mg/dL      As per clinical context
+Phosphorus             3.8       mg/dL      4.5 - 2.5
+Sodium                 139       mEq/L      136 - 145 mmol/L
+HBsAg                  Non-reactive
+Fasting Blood Sugar    104       mg/dL      70 - 100
+Fasting Blood Sugar    98        mg/dL
+*** End of synthetic report ***

@@ -56,3 +56,9 @@
 | 52 | Overlapping bands (`Adults` and `18-60 years` both match) | `ambiguous_range` (never pick one) | `test_overlapping_bands_are_ambiguous` |
 | 53 | Pregnancy / trimester ranges | Always `ambiguous_range`, since MedLens cannot know pregnancy status | `test_pregnancy_band_on_continuation_line_is_ambiguous` |
 | 54 | Labelled range continued on an indented next line | Merged into the row's range, with a note | `test_pregnancy_band_on_continuation_line_is_ambiguous` |
+| 55 | Range cell is a placeholder (`-`, `--`, `NA`, `N/A`, `Nil` for a number, `See note`, `Refer table`, `As per clinical context`) | `no_reference_range_supplied` with reason `placeholder`; fixed wording; never flagged | `test_missing_ranges.py::test_every_missing_reason_is_covered` |
+| 56 | Missing-range reasons distinguished | `no_range_printed`, `placeholder`, `range_unreadable`, `unit_mismatch`, `qualitative_no_reference`, shown in card, plain words and structured summary | `test_every_missing_reason_is_covered`, `test_summary_lists_missing_with_reasons` |
+| 57 | Same test twice, only one row has a range | Never borrowed: other row gets "range printed for another row of this test; not applied" | `test_range_from_another_row_is_not_borrowed` |
+| 58 | `Nil` as a genuine qualitative reference (e.g. Casts Absent / Nil) | Still compared qualitatively (not a placeholder) | `test_nil_is_still_a_valid_qualitative_reference` |
+| 59 | Structured summary must not leak identity | Patient name never included; header has only lab, date, specimen, age, sex | `test_summary.py::test_summary_never_contains_patient_name` |
+| 60 | Term search typos / aliases / no match | Fuzzy (difflib ≥ 0.75), alias → canonical, "Not in our glossary. Ask your clinician or the lab." | `test_search.py` |

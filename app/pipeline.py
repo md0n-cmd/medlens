@@ -44,19 +44,37 @@ def _fmt_value(v: LabValue) -> str:
     return f"{v.value_raw}{(' ' + v.unit) if v.unit else ''}"
 
 
+NO_RANGE_TEXT = ("Your report does not print a reference range for this test, so MedLens does not compare it. "
+                 "We never use outside 'normal' values. Ask the lab or your doctor what range applies.")
+PLACEHOLDER_RE = re.compile(
+    r"^\s*[(\[]?\s*(?:-+|—|–|na|n/a|n\.a\.|nil|not\s+applicable|see\s+notes?|refer\s+(?:to\s+)?(?:the\s+)?table|"
+    r"as\s+per\s+clinical\s+context|refer\s+notes?)\s*[)\]]?\s*$", re.I)
+MISSING_REASON_TEXT = {
+    "no_range_printed": "No range is printed for this test.",
+    "placeholder": "The range column only shows a placeholder ('{raw}'), not a range.",
+    "range_unreadable": "A range is printed ('{raw}') but MedLens could not read it safely.",
+    "unit_mismatch": "The range is printed in a different unit than the result.",
+    "qualitative_no_reference": "This is a word result (like Positive/Negative) with no expected result printed.",
+    "other_row_only": "A range is printed for another row of this test; it is not applied to this row.",
+}
+
+
+def _missing(v: LabValue, reason: str, raw: str = "") -> None:
+    v.missing_range_reason = reason
+    v.status = Status.UNIT_MISMATCH if reason == "unit_mismatch" else (
+        Status.UNPARSEABLE if reason == "range_unreadable" else Status.NO_RANGE)
+    v.status_explanation = MISSING_REASON_TEXT[reason].format(raw=raw) + " " + NO_RANGE_TEXT
+
+
 def compute_status(v: LabValue, patient_sex: Optional[str], patient_age: Optional[float] = None) -> None:
     """Fill status / status_explanation / applied_range in place."""
     r = v.reference
     if r is None:
-        v.status = Status.NO_RANGE
-        v.status_explanation = ("No reference range is printed for this test on the report, so MedLens does not "
-                                "compare it or flag it.")
-        return
+        if v.reference_span is not None and PLACEHOLDER_RE.match(v.reference_span.text):
+            return _missing(v, "placeholder", v.reference_span.text.strip())
+        return _missing(v, "qualitative_no_reference" if v.value_qualitative else "no_range_printed")
     if r.kind == "unparseable":
-        v.status = Status.UNPARSEABLE
-        v.status_explanation = (f"A reference range is printed ('{r.raw}') but MedLens could not read it safely, "
-                                "so no comparison was made.")
-        return
+        return _missing(v, "range_unreadable", r.raw)
     applied: Optional[ReferenceRange] = r
     if r.kind == "multi":
         applied, note = select_alternative(r, patient_sex, patient_age)
@@ -90,9 +108,10 @@ def compute_status(v: LabValue, patient_sex: Optional[str], patient_age: Optiona
         v.status_explanation = "The result is a word but the printed reference is numeric, so no comparison was made."
         return
     if not units_compatible(v.unit, applied.unit):
-        v.status = Status.UNIT_MISMATCH
+        _missing(v, "unit_mismatch")
         v.status_explanation = (f"The result's unit ({v.unit}) differs from the unit printed with the range "
-                                f"({applied.unit}). MedLens does not convert units, so no comparison was made.")
+                                f"({applied.unit}). MedLens does not convert units, so no comparison was made. "
+                                + NO_RANGE_TEXT)
         return
     v.status = compare_numeric(v.value_num, v.value_comparator, applied, v.value_high)
     if v.status == Status.WITHIN:
@@ -125,6 +144,9 @@ def check_flag(v: LabValue) -> None:
 
 def _to_labvalue(i: int, ln: Line, raw: RawRow) -> LabValue:
     ref = parse_range(raw.range_raw) if raw.range_raw else None
+    if raw.range_raw and PLACEHOLDER_RE.match(raw.range_raw) and not (
+            raw.value_qualitative and ref is not None and ref.kind == "qualitative"):
+        ref = None                     # "-", "NA", "See note" ... is not a range
     return LabValue(
         id=f"v{i}", line_number=ln.number, section=ln.section, test_name=raw.test_name, test_span=raw.test_span,
         value_raw=raw.value_raw, value_num=raw.value_num, value_comparator=raw.value_comparator,
@@ -183,6 +205,16 @@ def analyze(text: str, explain_unknown: Optional[UnknownTermExplainer] = None) -
     for v in values:
         compute_status(v, sex, age)
         check_flag(v)
+    # same test printed twice, only one row has a range: never borrow it
+    by_name: dict[str, list[LabValue]] = {}
+    for v in values:
+        by_name.setdefault(v.test_name.lower(), []).append(v)
+    for rows in by_name.values():
+        if len(rows) > 1 and any(r.reference is not None for r in rows):
+            for v in rows:
+                if v.reference is None:
+                    _missing(v, "other_row_only")
+                    v.notes.append("range printed for another row of this test; not applied")
 
     # ---- terms
     terms = find_terms(text)

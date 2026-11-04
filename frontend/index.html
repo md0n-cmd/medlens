@@ -448,6 +448,7 @@ const PLAIN = {
   ambiguous: "{x} results have different ranges for men and women, and the report doesn't say which applies:",
   flag: "For {t}, the lab's own H/L mark doesn't match the printed range. Worth confirming with the lab.",
   interp: "{x} statements (like the Impression or Remarks) can only be explained by your doctor.",
+  missing: "{x} results have no range printed on the report, so they are not compared:",
   qtitle: "Questions you could ask your doctor",
   qOut: "What do the results outside the printed range mean for me?",
   qAmb: "Which of the printed ranges applies to me?",
@@ -476,6 +477,8 @@ function renderPlain(r) {
   if (differs.length) li.push(esc(fill(PLAIN.differs, {x: differs.length})) + " " + names(differs));
   if (within.length) li.push(esc(fill(PLAIN.within, {x: within.length})));
   if (amb.length) li.push(esc(fill(PLAIN.ambiguous, {x: amb.length})) + " " + names(amb));
+  const missing = r.values.filter(v => v.missing_range_reason);
+  if (missing.length) li.push(esc(fill(PLAIN.missing, {x: missing.length})) + " " + names(missing));
   flags.forEach(v => li.push(fill(esc(PLAIN.flag), {t: link(v)})));
   if (interp.length) li.push(esc(fill(PLAIN.interp, {x: interp.length})));
   const qs = [];
@@ -523,6 +526,14 @@ function renderStructured(r) {
       `</tbody></table></div>`;
   });
   if (!s.sections.some(x => x.tests.length)) html += `<p class="hint">Written report: sections ${s.sections.map(x => esc(x.title)).join(" · ")}.</p>`;
+  const REASON = {no_range_printed: "no range printed", placeholder: "placeholder only (e.g. NA, -, See note)",
+    range_unreadable: "range unreadable", unit_mismatch: "different unit", qualitative_no_reference: "no expected result printed",
+    other_row_only: "range printed for another row of this test; not applied"};
+  if (s.missing_range.length) {
+    html += `<h3>Results without a printed range (${s.missing_range.length})</h3><ul>` +
+      s.missing_range.map(m => `<li><b>${esc(m.name)}</b> ${esc(m.value)} · ${esc(REASON[m.reason] || m.reason)}</li>`).join("") +
+      `</ul><p class="hint">We never use outside "normal" values. Ask the lab or your doctor what range applies.</p>`;
+  }
   if (s.needs_professional_interpretation.length) {
     html += `<h3>Needs your doctor (quoted from the report)</h3>` +
       s.needs_professional_interpretation.map(l => `<blockquote data-a="${l.passage_span.start}" data-b="${l.passage_span.end}">${esc(l.text)}</blockquote>`).join("");

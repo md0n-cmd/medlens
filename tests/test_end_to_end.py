@@ -93,7 +93,9 @@ def test_all_spans_and_text_safe(name):
 def test_empty_and_garbage_input():
     r = analyze("hello world")
     assert r.values == [] and r.warnings
-    r = analyze("Hemoglobin  12  g/dL  see note")
+    r = analyze("Hemoglobin  12  g/dL  see note")          # "see note" is a placeholder, not a range
+    assert r.values[0].status == Status.NO_RANGE and r.values[0].missing_range_reason == "placeholder"
+    r = analyze("Hemoglobin  12  g/dL  17 - 13")
     assert r.values[0].status == Status.UNPARSEABLE
 
 
