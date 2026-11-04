@@ -21,7 +21,16 @@ To open it on your phone (same Wi-Fi), run `./run.sh --lan`. It prints the lapto
 
 Open http://localhost:8000. Pick a sample from the dropdown, or open `http://localhost:8000/?sample=01_cbc` directly.
 
-Run the tests with `pytest -v` (145 tests; see [docs/TEST_RESULTS.md](docs/TEST_RESULTS.md)).
+Run the tests with `pytest -v` (192 tests; see [docs/TEST_RESULTS.md](docs/TEST_RESULTS.md)).
+
+## Round 2 features
+
+| Requirement | What MedLens does |
+|---|---|
+| **Term search** | `GET /api/terms?q=` searches all 143 glossary terms and aliases, ranked exact → prefix → substring → fuzzy (difflib ≥ 0.75, so "hemoglobn" and "bilirubine" work). Max 10 results. UI: live search (200 ms debounce). Results show "✓ in your report (N×)", and ‹ › steps through every occurrence. No match: "Not in our glossary. Ask your clinician or the lab." No definition is ever invented. |
+| **Explanations linked to report passages** | Every card carries a `passage` span: the whole source line, or the whole section block for Impression/Remarks/Advice. "Show in report" outlines the passage. Glossary cards for repeated terms show "Appears N times" with ‹ › stepping. A test checks every passage slices the original text and contains its card's span. |
+| **Missing-reference-range handling** | Each missing range gets a reason: `no_range_printed`, `placeholder` (`-`, `NA`, `N/A`, `Nil`, `See note`, `Refer table`, `As per clinical context`), `range_unreadable`, `unit_mismatch`, `qualitative_no_reference`, or `other_row_only` (a range printed for another row of the same test is **never borrowed**). Fixed wording: *"Your report does not print a reference range for this test, so MedLens does not compare it. We never use outside 'normal' values. Ask the lab or your doctor what range applies."* Sample: `07_missing_ranges.txt`. |
+| **Structured report summary** | `structured_summary` in every `/api/analyze` response, built only from facts already extracted: report header (lab, date, specimen, age, sex; **never the patient name**), sections with tests (value, unit, printed range, status, lab flag, passage span), counts by status, outside-range list with direction, missing-range list with reasons, Impression/Remarks/Advice and hedged lines quoted verbatim, unrecognized terms. UI card with per-section tables, "Download JSON" and "Print summary". |
 
 ## Input options
 
@@ -76,7 +85,7 @@ flowchart LR
 
 ```
 app/
-  main.py            FastAPI: POST /api/analyze, POST /api/extract, GET /api/samples, GET /api/health, GET /
+  main.py            FastAPI: POST /api/analyze, POST /api/extract, GET /api/terms, GET /api/samples, GET /api/health, GET /
   ingest/pdf.py      PDF text layer (layout-preserving) + scanned-page OCR
   ingest/ocr.py      Pillow preprocessing + Tesseract, confidence + uncertain tokens
   models.py          Pydantic schemas (Span, LabValue, TermMatch, ExplanationItem, AnalysisResult…)

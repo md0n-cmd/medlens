@@ -10,7 +10,7 @@ rootdir: /home/d0n/medlens
 configfile: pytest.ini
 testpaths: tests
 plugins: anyio-4.16.0
-collecting ... collected 145 items
+collecting ... collected 192 items
 
 tests/test_age_bands.py::test_age_band_cell_parses_as_multi PASSED
 tests/test_age_bands.py::test_label_bands PASSED
@@ -63,6 +63,7 @@ tests/test_end_to_end.py::test_all_spans_and_text_safe[03_lft_kft.txt] PASSED
 tests/test_end_to_end.py::test_all_spans_and_text_safe[04_thyroid_urine.txt] PASSED
 tests/test_end_to_end.py::test_all_spans_and_text_safe[05_ultrasound.txt] PASSED
 tests/test_end_to_end.py::test_all_spans_and_text_safe[06_age_bands.txt] PASSED
+tests/test_end_to_end.py::test_all_spans_and_text_safe[07_missing_ranges.txt] PASSED
 tests/test_end_to_end.py::test_empty_and_garbage_input PASSED
 tests/test_end_to_end.py::test_crlf_input_normalised PASSED
 tests/test_end_to_end.py::test_banner_line_produces_no_glossary_card[01_cbc.txt] PASSED
@@ -71,6 +72,7 @@ tests/test_end_to_end.py::test_banner_line_produces_no_glossary_card[03_lft_kft.
 tests/test_end_to_end.py::test_banner_line_produces_no_glossary_card[04_thyroid_urine.txt] PASSED
 tests/test_end_to_end.py::test_banner_line_produces_no_glossary_card[05_ultrasound.txt] PASSED
 tests/test_end_to_end.py::test_banner_line_produces_no_glossary_card[06_age_bands.txt] PASSED
+tests/test_end_to_end.py::test_banner_line_produces_no_glossary_card[07_missing_ranges.txt] PASSED
 tests/test_frontend_text.py::test_plain_words_phrases_exist PASSED
 tests/test_frontend_text.py::test_plain_words_phrases_pass_safety_filter PASSED
 tests/test_frontend_text.py::test_doctor_questions_are_questions PASSED
@@ -103,6 +105,19 @@ tests/test_ingest.py::test_deskew_estimates_rotation PASSED
 tests/test_ingest.py::test_api_extract_reports_rows_found PASSED
 tests/test_llm_hook.py::test_llm_output_is_labelled_and_safety_filtered PASSED
 tests/test_llm_hook.py::test_llm_failure_never_breaks_pipeline PASSED
+tests/test_missing_ranges.py::test_every_missing_reason_is_covered PASSED
+tests/test_missing_ranges.py::test_missing_ranges_are_never_flagged_and_use_fixed_wording PASSED
+tests/test_missing_ranges.py::test_range_from_another_row_is_not_borrowed PASSED
+tests/test_missing_ranges.py::test_summary_lists_missing_with_reasons PASSED
+tests/test_missing_ranges.py::test_nil_is_still_a_valid_qualitative_reference PASSED
+tests/test_passages.py::test_every_explanation_has_valid_passage_containing_its_span[01_cbc.txt] PASSED
+tests/test_passages.py::test_every_explanation_has_valid_passage_containing_its_span[02_lipid_diabetes.txt] PASSED
+tests/test_passages.py::test_every_explanation_has_valid_passage_containing_its_span[03_lft_kft.txt] PASSED
+tests/test_passages.py::test_every_explanation_has_valid_passage_containing_its_span[04_thyroid_urine.txt] PASSED
+tests/test_passages.py::test_every_explanation_has_valid_passage_containing_its_span[05_ultrasound.txt] PASSED
+tests/test_passages.py::test_every_explanation_has_valid_passage_containing_its_span[06_age_bands.txt] PASSED
+tests/test_passages.py::test_every_explanation_has_valid_passage_containing_its_span[07_missing_ranges.txt] PASSED
+tests/test_passages.py::test_impression_passage_is_whole_section_block PASSED
 tests/test_ranges.py::test_interval_formats[70-110-70-110] PASSED
 tests/test_ranges.py::test_interval_formats[70 - 110-70-110] PASSED
 tests/test_ranges.py::test_interval_formats[70\u2013110-70-110] PASSED
@@ -147,6 +162,38 @@ tests/test_ranges.py::test_censored_values PASSED
 tests/test_ranges.py::test_qualitative_comparison PASSED
 tests/test_ranges.py::test_unit_compatibility PASSED
 tests/test_ranges.py::test_select_alternative_requires_header_sex PASSED
+tests/test_search.py::test_exact_first PASSED
+tests/test_search.py::test_alias_sgpt_to_alt PASSED
+tests/test_search.py::test_prefix_and_substring_ranked_after_exact PASSED
+tests/test_search.py::test_typos_fuzzy PASSED
+tests/test_search.py::test_no_match_returns_empty PASSED
+tests/test_search.py::test_max_ten PASSED
+tests/test_search.py::test_api_empty_query_400 PASSED
+tests/test_search.py::test_api_long_query_trimmed PASSED
+tests/test_search.py::test_api_search PASSED
+tests/test_summary.py::test_summary_matches_extracted_values[01_cbc.txt] PASSED
+tests/test_summary.py::test_summary_matches_extracted_values[02_lipid_diabetes.txt] PASSED
+tests/test_summary.py::test_summary_matches_extracted_values[03_lft_kft.txt] PASSED
+tests/test_summary.py::test_summary_matches_extracted_values[04_thyroid_urine.txt] PASSED
+tests/test_summary.py::test_summary_matches_extracted_values[05_ultrasound.txt] PASSED
+tests/test_summary.py::test_summary_matches_extracted_values[06_age_bands.txt] PASSED
+tests/test_summary.py::test_summary_matches_extracted_values[07_missing_ranges.txt] PASSED
+tests/test_summary.py::test_summary_never_contains_patient_name[01_cbc.txt] PASSED
+tests/test_summary.py::test_summary_never_contains_patient_name[02_lipid_diabetes.txt] PASSED
+tests/test_summary.py::test_summary_never_contains_patient_name[03_lft_kft.txt] PASSED
+tests/test_summary.py::test_summary_never_contains_patient_name[04_thyroid_urine.txt] PASSED
+tests/test_summary.py::test_summary_never_contains_patient_name[05_ultrasound.txt] PASSED
+tests/test_summary.py::test_summary_never_contains_patient_name[06_age_bands.txt] PASSED
+tests/test_summary.py::test_summary_never_contains_patient_name[07_missing_ranges.txt] PASSED
+tests/test_summary.py::test_summary_passage_spans_slice_original[01_cbc.txt] PASSED
+tests/test_summary.py::test_summary_passage_spans_slice_original[02_lipid_diabetes.txt] PASSED
+tests/test_summary.py::test_summary_passage_spans_slice_original[03_lft_kft.txt] PASSED
+tests/test_summary.py::test_summary_passage_spans_slice_original[04_thyroid_urine.txt] PASSED
+tests/test_summary.py::test_summary_passage_spans_slice_original[05_ultrasound.txt] PASSED
+tests/test_summary.py::test_summary_passage_spans_slice_original[06_age_bands.txt] PASSED
+tests/test_summary.py::test_summary_passage_spans_slice_original[07_missing_ranges.txt] PASSED
+tests/test_summary.py::test_narrative_report_summary PASSED
+tests/test_summary.py::test_cbc_header_and_directions PASSED
 tests/test_values.py::test_columnar_row_with_flag_column PASSED
 tests/test_values.py::test_spans_point_into_original_text PASSED
 tests/test_values.py::test_inline_formats PASSED
@@ -158,5 +205,5 @@ tests/test_values.py::test_value_without_range PASSED
 tests/test_values.py::test_non_result_lines_ignored PASSED
 tests/test_values.py::test_sections_and_interpretive_flag PASSED
 
-============================= 145 passed in 19.96s =============================
+============================= 192 passed in 21.83s =============================
 ```

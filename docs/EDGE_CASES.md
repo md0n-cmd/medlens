@@ -62,3 +62,5 @@
 | 58 | `Nil` as a genuine qualitative reference (e.g. Casts Absent / Nil) | Still compared qualitatively (not a placeholder) | `test_nil_is_still_a_valid_qualitative_reference` |
 | 59 | Structured summary must not leak identity | Patient name never included; header has only lab, date, specimen, age, sex | `test_summary.py::test_summary_never_contains_patient_name` |
 | 60 | Term search typos / aliases / no match | Fuzzy (difflib ≥ 0.75), alias → canonical, "Not in our glossary. Ask your clinician or the lab." | `test_search.py` |
+| 61 | Passage linking for every card | Values/terms: whole source line; Impression/Remarks/Advice: whole section block; combination card has no passage | `test_passages.py` |
+| 62 | Narrative report summary | Header + section skeleton + quoted Impression lines, even with no lab values | `test_summary.py::test_narrative_report_summary` |
