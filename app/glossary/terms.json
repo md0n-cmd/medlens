@@ -1,0 +1,1686 @@
+{
+  "version": 1,
+  "terms": [
+    {
+      "id": "complete_blood_count",
+      "term": "Complete Blood Count",
+      "aliases": [
+        "CBC",
+        "Hemogram",
+        "Haemogram",
+        "Complete Haemogram",
+        "Full Blood Count",
+        "FBC"
+      ],
+      "category": "Blood count (CBC)",
+      "plain_explanation": "A group of tests that counts and measures the different cells in your blood: red cells, white cells and platelets.",
+      "source_note": "General educational description written for MedLens (synthetic-data hackathon project), based on standard lab-medicine terminology. Not patient-specific."
+    },
+    {
+      "id": "hemoglobin",
+      "term": "Hemoglobin",
+      "aliases": [
+        "Haemoglobin",
+        "Hb",
+        "Hgb"
+      ],
+      "category": "Blood count (CBC)",
+      "plain_explanation": "A protein inside red blood cells that carries oxygen from the lungs to the rest of the body. This test measures how much of it is in your blood.",
+      "source_note": "General educational description written for MedLens (synthetic-data hackathon project), based on standard lab-medicine terminology. Not patient-specific."
+    },
+    {
+      "id": "red_blood_cell_count",
+      "term": "Red Blood Cell Count",
+      "aliases": [
+        "RBC",
+        "RBC Count",
+        "Red Blood Cells",
+        "Total RBC Count",
+        "Erythrocytes",
+        "Erythrocyte Count"
+      ],
+      "category": "Blood count (CBC)",
+      "plain_explanation": "Counts the number of red blood cells, the cells that carry oxygen, in a small amount of blood.",
+      "source_note": "General educational description written for MedLens (synthetic-data hackathon project), based on standard lab-medicine terminology. Not patient-specific."
+    },
+    {
+      "id": "white_blood_cell_count",
+      "term": "White Blood Cell Count",
+      "aliases": [
+        "WBC",
+        "WBC Count",
+        "White Blood Cells",
+        "Leukocytes",
+        "Leucocytes",
+        "Leukocyte Count"
+      ],
+      "category": "Blood count (CBC)",
+      "plain_explanation": "Counts the white blood cells, which are part of the body's defence (immune) system.",
+      "source_note": "General educational description written for MedLens (synthetic-data hackathon project), based on standard lab-medicine terminology. Not patient-specific."
+    },
+    {
+      "id": "total_leukocyte_count",
+      "term": "Total Leukocyte Count",
+      "aliases": [
+        "TLC",
+        "Total Leucocyte Count",
+        "Total WBC Count"
+      ],
+      "category": "Blood count (CBC)",
+      "plain_explanation": "Another name for the total white blood cell count: the number of all immune-system white cells in a sample of blood.",
+      "source_note": "General educational description written for MedLens (synthetic-data hackathon project), based on standard lab-medicine terminology. Not patient-specific."
+    },
+    {
+      "id": "differential_leukocyte_count",
+      "term": "Differential Leukocyte Count",
+      "aliases": [
+        "DLC",
+        "Differential Count",
+        "Differential Leucocyte Count"
+      ],
+      "category": "Blood count (CBC)",
+      "plain_explanation": "Breaks the white blood cells into their five main types and shows what share (percentage) each type makes up.",
+      "source_note": "General educational description written for MedLens (synthetic-data hackathon project), based on standard lab-medicine terminology. Not patient-specific."
+    },
+    {
+      "id": "platelet_count",
+      "term": "Platelet Count",
+      "aliases": [
+        "Platelets",
+        "PLT",
+        "Thrombocytes",
+        "Platelet"
+      ],
+      "category": "Blood count (CBC)",
+      "plain_explanation": "Counts platelets, tiny cell fragments that help blood clot and stop bleeding.",
+      "source_note": "General educational description written for MedLens (synthetic-data hackathon project), based on standard lab-medicine terminology. Not patient-specific."
+    },
+    {
+      "id": "packed_cell_volume",
+      "term": "Packed Cell Volume",
+      "aliases": [
+        "Haematocrit",
+        "Hematocrit",
+        "HCT",
+        "Hct"
+      ],
+      "category": "Blood count (CBC)",
+      "plain_explanation": "The share of your blood volume that is made up of red blood cells, shown as a percentage.",
+      "source_note": "General educational description written for MedLens (synthetic-data hackathon project), based on standard lab-medicine terminology. Not patient-specific."
+    },
+    {
+      "id": "pcv",
+      "term": "PCV",
+      "aliases": [
+        "PCV"
+      ],
+      "category": "Ambiguous abbreviation",
+      "plain_explanation": "PCV is an abbreviation with more than one meaning. In a blood-count report it usually means Packed Cell Volume (the share of blood made of red cells). Ask the lab if you are unsure.",
+      "source_note": "General educational description written for MedLens (synthetic-data hackathon project), based on standard lab-medicine terminology. Not patient-specific.",
+      "possibilities": [
+        {
+          "meaning": "Packed Cell Volume (haematocrit) — share of blood made of red cells",
+          "context_keywords": [
+            "hemoglobin",
+            "haemoglobin",
+            "cbc",
+            "hemogram",
+            "haemogram",
+            "rbc",
+            "mcv",
+            "blood count"
+          ]
+        },
+        {
+          "meaning": "Pneumococcal Conjugate Vaccine — a vaccine name",
+          "context_keywords": [
+            "vaccine",
+            "vaccination",
+            "immunization",
+            "immunisation",
+            "dose"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "mean_corpuscular_volume",
+      "term": "Mean Corpuscular Volume",
+      "aliases": [
+        "MCV"
+      ],
+      "category": "Blood count (CBC)",
+      "plain_explanation": "The average size of your red blood cells.",
+      "source_note": "General educational description written for MedLens (synthetic-data hackathon project), based on standard lab-medicine terminology. Not patient-specific."
+    },
+    {
+      "id": "mean_corpuscular_hemoglobin",
+      "term": "Mean Corpuscular Hemoglobin",
+      "aliases": [
+        "MCH",
+        "Mean Corpuscular Haemoglobin"
+      ],
+      "category": "Blood count (CBC)",
+      "plain_explanation": "The average amount of hemoglobin inside one red blood cell.",
+      "source_note": "General educational description written for MedLens (synthetic-data hackathon project), based on standard lab-medicine terminology. Not patient-specific."
+    },
+    {
+      "id": "mean_corpuscular_hemoglobin_concentration",
+      "term": "Mean Corpuscular Hemoglobin Concentration",
+      "aliases": [
+        "MCHC",
+        "Mean Corpuscular Haemoglobin Concentration"
+      ],
+      "category": "Blood count (CBC)",
+      "plain_explanation": "The average concentration of hemoglobin in a given volume of red blood cells.",
+      "source_note": "General educational description written for MedLens (synthetic-data hackathon project), based on standard lab-medicine terminology. Not patient-specific."
+    },
+    {
+      "id": "red_cell_distribution_width",
+      "term": "Red Cell Distribution Width",
+      "aliases": [
+        "RDW",
+        "RDW-CV",
+        "RDW-SD",
+        "RDW CV",
+        "RDW SD"
+      ],
+      "category": "Blood count (CBC)",
+      "plain_explanation": "Shows how much your red blood cells vary in size from one another.",
+      "source_note": "General educational description written for MedLens (synthetic-data hackathon project), based on standard lab-medicine terminology. Not patient-specific."
+    },
+    {
+      "id": "neutrophils",
+      "term": "Neutrophils",
+      "aliases": [
+        "Neutrophil",
+        "Polymorphs",
+        "Segmented Neutrophils",
+        "Neutrophil Count"
+      ],
+      "category": "Blood count (CBC)",
+      "plain_explanation": "The most common type of white blood cell. The report shows their share of all white cells or their count.",
+      "source_note": "General educational description written for MedLens (synthetic-data hackathon project), based on standard lab-medicine terminology. Not patient-specific."
+    },
+    {
+      "id": "lymphocytes",
+      "term": "Lymphocytes",
+      "aliases": [
+        "Lymphocyte",
+        "Lymphs",
+        "Lymphocyte Count"
+      ],
+      "category": "Blood count (CBC)",
+      "plain_explanation": "A type of white blood cell that includes B cells and T cells, part of the immune system.",
+      "source_note": "General educational description written for MedLens (synthetic-data hackathon project), based on standard lab-medicine terminology. Not patient-specific."
+    },
+    {
+      "id": "eosinophils",
+      "term": "Eosinophils",
+      "aliases": [
+        "Eosinophil",
+        "Eosinophil Count",
+        "Absolute Eosinophil Count",
+        "AEC"
+      ],
+      "category": "Blood count (CBC)",
+      "plain_explanation": "A type of white blood cell. The report shows their share of all white cells or their count.",
+      "source_note": "General educational description written for MedLens (synthetic-data hackathon project), based on standard lab-medicine terminology. Not patient-specific."
+    },
+    {
+      "id": "monocytes",
+      "term": "Monocytes",
+      "aliases": [
+        "Monocyte",
+        "Monocyte Count"
+      ],
+      "category": "Blood count (CBC)",
+      "plain_explanation": "A type of white blood cell that can move into tissues. The report shows their share or count.",
+      "source_note": "General educational description written for MedLens (synthetic-data hackathon project), based on standard lab-medicine terminology. Not patient-specific."
+    },
+    {
+      "id": "basophils",
+      "term": "Basophils",
+      "aliases": [
+        "Basophil",
+        "Basophil Count"
+      ],
+      "category": "Blood count (CBC)",
+      "plain_explanation": "The least common type of white blood cell. The report shows their share or count.",
+      "source_note": "General educational description written for MedLens (synthetic-data hackathon project), based on standard lab-medicine terminology. Not patient-specific."
+    },
+    {
+      "id": "erythrocyte_sedimentation_rate",
+      "term": "Erythrocyte Sedimentation Rate",
+      "aliases": [
+        "ESR",
+        "Sed Rate",
+        "Sedimentation Rate"
+      ],
+      "category": "Blood count (CBC)",
+      "plain_explanation": "Measures how fast red blood cells settle to the bottom of a thin tube in one hour.",
+      "source_note": "General educational description written for MedLens (synthetic-data hackathon project), based on standard lab-medicine terminology. Not patient-specific.",
+      "what_it_is_not": "It is a general measurement and does not point to any one specific condition."
+    },
+    {
+      "id": "mean_platelet_volume",
+      "term": "Mean Platelet Volume",
+      "aliases": [
+        "MPV"
+      ],
+      "category": "Blood count (CBC)",
+      "plain_explanation": "The average size of your platelets.",
+      "source_note": "General educational description written for MedLens (synthetic-data hackathon project), based on standard lab-medicine terminology. Not patient-specific."
+    },
+    {
+      "id": "reticulocyte_count",
+      "term": "Reticulocyte Count",
+      "aliases": [
+        "Reticulocytes",
+        "Retic Count"
+      ],
+      "category": "Blood count (CBC)",
+      "plain_explanation": "Counts young, newly made red blood cells.",
+      "source_note": "General educational description written for MedLens (synthetic-data hackathon project), based on standard lab-medicine terminology. Not patient-specific."
+    },
+    {
+      "id": "peripheral_smear",
+      "term": "Peripheral Smear",
+      "aliases": [
+        "Peripheral Blood Smear",
+        "PBS",
+        "Blood Smear"
+      ],
+      "category": "Blood count (CBC)",
+      "plain_explanation": "A drop of blood spread on a glass slide and looked at under a microscope to describe the shape and look of blood cells.",
+      "source_note": "General educational description written for MedLens (synthetic-data hackathon project), based on standard lab-medicine terminology. Not patient-specific."
+    },
+    {
+      "id": "lipid_profile",
+      "term": "Lipid Profile",
+      "aliases": [
+        "Lipid Panel",
+        "Lipid Test"
+      ],
+      "category": "Lipid profile",
+      "plain_explanation": "A group of tests that measures fats (lipids) such as cholesterol and triglycerides in the blood.",
+      "source_note": "General educational description written for MedLens (synthetic-data hackathon project), based on standard lab-medicine terminology. Not patient-specific."
+    },
+    {
+      "id": "total_cholesterol",
+      "term": "Total Cholesterol",
+      "aliases": [
+        "Cholesterol Total",
+        "Serum Cholesterol",
+        "Cholesterol, Total",
+        "Cholesterol"
+      ],
+      "category": "Lipid profile",
+      "plain_explanation": "Measures the total amount of cholesterol, a waxy fat-like substance, carried in your blood.",
+      "source_note": "General educational description written for MedLens (synthetic-data hackathon project), based on standard lab-medicine terminology. Not patient-specific."
+    },
+    {
+      "id": "ldl_cholesterol",
+      "term": "LDL Cholesterol",
+      "aliases": [
+        "LDL",
+        "LDL-C",
+        "Low Density Lipoprotein",
+        "LDL Cholesterol Direct",
+        "LDL-Cholesterol"
+      ],
+      "category": "Lipid profile",
+      "plain_explanation": "Measures cholesterol carried by low-density lipoproteins, one of the particles that move cholesterol through the blood.",
+      "source_note": "General educational description written for MedLens (synthetic-data hackathon project), based on standard lab-medicine terminology. Not patient-specific."
+    },
+    {
+      "id": "hdl_cholesterol",
+      "term": "HDL Cholesterol",
+      "aliases": [
+        "HDL",
+        "HDL-C",
+        "High Density Lipoprotein",
+        "HDL-Cholesterol"
+      ],
+      "category": "Lipid profile",
+      "plain_explanation": "Measures cholesterol carried by high-density lipoproteins, particles that carry cholesterol back to the liver.",
+      "source_note": "General educational description written for MedLens (synthetic-data hackathon project), based on standard lab-medicine terminology. Not patient-specific."
+    },
+    {
+      "id": "vldl_cholesterol",
+      "term": "VLDL Cholesterol",
+      "aliases": [
+        "VLDL",
+        "Very Low Density Lipoprotein",
+        "VLDL-Cholesterol"
+      ],
+      "category": "Lipid profile",
+      "plain_explanation": "Measures cholesterol carried by very-low-density lipoproteins, particles that also carry triglycerides. Often calculated rather than measured.",
+      "source_note": "General educational description written for MedLens (synthetic-data hackathon project), based on standard lab-medicine terminology. Not patient-specific."
+    },
+    {
+      "id": "triglycerides",
+      "term": "Triglycerides",
+      "aliases": [
+        "Triglyceride",
+        "TG",
+        "TGL",
+        "Serum Triglycerides"
+      ],
+      "category": "Lipid profile",
+      "plain_explanation": "Measures triglycerides, a common type of fat in the blood that the body uses for energy.",
+      "source_note": "General educational description written for MedLens (synthetic-data hackathon project), based on standard lab-medicine terminology. Not patient-specific."
+    },
+    {
+      "id": "non_hdl_cholesterol",
+      "term": "Non-HDL Cholesterol",
+      "aliases": [
+        "Non HDL Cholesterol",
+        "Non-HDL"
+      ],
+      "category": "Lipid profile",
+      "plain_explanation": "Total cholesterol minus HDL cholesterol; a calculated number.",
+      "source_note": "General educational description written for MedLens (synthetic-data hackathon project), based on standard lab-medicine terminology. Not patient-specific."
+    },
+    {
+      "id": "cholesterol_hdl_ratio",
+      "term": "Cholesterol/HDL Ratio",
+      "aliases": [
+        "Total Cholesterol/HDL Ratio",
+        "TC/HDL Ratio",
+        "Chol/HDL Ratio"
+      ],
+      "category": "Lipid profile",
+      "plain_explanation": "A calculated ratio that divides total cholesterol by HDL cholesterol.",
+      "source_note": "General educational description written for MedLens (synthetic-data hackathon project), based on standard lab-medicine terminology. Not patient-specific."
+    },
+    {
+      "id": "ldl_hdl_ratio",
+      "term": "LDL/HDL Ratio",
+      "aliases": [
+        "LDL HDL Ratio"
+      ],
+      "category": "Lipid profile",
+      "plain_explanation": "A calculated ratio that divides LDL cholesterol by HDL cholesterol.",
+      "source_note": "General educational description written for MedLens (synthetic-data hackathon project), based on standard lab-medicine terminology. Not patient-specific."
+    },
+    {
+      "id": "liver_function_test",
+      "term": "Liver Function Test",
+      "aliases": [
+        "LFT",
+        "Liver Function Tests",
+        "Liver Panel"
+      ],
+      "category": "Liver function (LFT)",
+      "plain_explanation": "A group of blood tests that measure substances made or processed by the liver.",
+      "source_note": "General educational description written for MedLens (synthetic-data hackathon project), based on standard lab-medicine terminology. Not patient-specific."
+    },
+    {
+      "id": "alanine_aminotransferase",
+      "term": "Alanine Aminotransferase",
+      "aliases": [
+        "ALT",
+        "SGPT",
+        "ALT (SGPT)",
+        "SGPT (ALT)",
+        "Alanine Transaminase"
+      ],
+      "category": "Liver function (LFT)",
+      "plain_explanation": "Measures ALT, an enzyme found mostly in liver cells. SGPT is an older name for the same test.",
+      "source_note": "General educational description written for MedLens (synthetic-data hackathon project), based on standard lab-medicine terminology. Not patient-specific."
+    },
+    {
+      "id": "aspartate_aminotransferase",
+      "term": "Aspartate Aminotransferase",
+      "aliases": [
+        "AST",
+        "SGOT",
+        "AST (SGOT)",
+        "SGOT (AST)",
+        "Aspartate Transaminase"
+      ],
+      "category": "Liver function (LFT)",
+      "plain_explanation": "Measures AST, an enzyme found in the liver, heart and muscles. SGOT is an older name for the same test.",
+      "source_note": "General educational description written for MedLens (synthetic-data hackathon project), based on standard lab-medicine terminology. Not patient-specific."
+    },
+    {
+      "id": "alkaline_phosphatase",
+      "term": "Alkaline Phosphatase",
+      "aliases": [
+        "ALP",
+        "Alk Phos",
+        "Serum Alkaline Phosphatase"
+      ],
+      "category": "Liver function (LFT)",
+      "plain_explanation": "Measures ALP, an enzyme found in the liver, bile ducts and bones.",
+      "source_note": "General educational description written for MedLens (synthetic-data hackathon project), based on standard lab-medicine terminology. Not patient-specific."
+    },
+    {
+      "id": "total_bilirubin",
+      "term": "Total Bilirubin",
+      "aliases": [
+        "Bilirubin Total",
+        "Bilirubin, Total",
+        "Bilirubin (Total)",
+        "Serum Bilirubin Total",
+        "T. Bilirubin"
+      ],
+      "category": "Liver function (LFT)",
+      "plain_explanation": "Measures all bilirubin in the blood. Bilirubin is a yellow substance made when old red blood cells are broken down.",
+      "source_note": "General educational description written for MedLens (synthetic-data hackathon project), based on standard lab-medicine terminology. Not patient-specific."
+    },
+    {
+      "id": "direct_bilirubin",
+      "term": "Direct Bilirubin",
+      "aliases": [
+        "Bilirubin Direct",
+        "Bilirubin, Direct",
+        "Bilirubin (Direct)",
+        "Conjugated Bilirubin",
+        "D. Bilirubin"
+      ],
+      "category": "Liver function (LFT)",
+      "plain_explanation": "Measures the part of bilirubin that the liver has already processed (conjugated).",
+      "source_note": "General educational description written for MedLens (synthetic-data hackathon project), based on standard lab-medicine terminology. Not patient-specific."
+    },
+    {
+      "id": "indirect_bilirubin",
+      "term": "Indirect Bilirubin",
+      "aliases": [
+        "Bilirubin Indirect",
+        "Bilirubin, Indirect",
+        "Bilirubin (Indirect)",
+        "Unconjugated Bilirubin",
+        "I. Bilirubin"
+      ],
+      "category": "Liver function (LFT)",
+      "plain_explanation": "The part of bilirubin not yet processed by the liver; usually calculated as total minus direct bilirubin.",
+      "source_note": "General educational description written for MedLens (synthetic-data hackathon project), based on standard lab-medicine terminology. Not patient-specific."
+    },
+    {
+      "id": "bilirubin",
+      "term": "Bilirubin",
+      "aliases": [
+        "Serum Bilirubin"
+      ],
+      "category": "Liver function (LFT)",
+      "plain_explanation": "A yellow substance made when old red blood cells are broken down; the liver processes it so it can leave the body.",
+      "source_note": "General educational description written for MedLens (synthetic-data hackathon project), based on standard lab-medicine terminology. Not patient-specific."
+    },
+    {
+      "id": "albumin",
+      "term": "Albumin",
+      "aliases": [
+        "Serum Albumin",
+        "ALB"
+      ],
+      "category": "Liver function (LFT)",
+      "plain_explanation": "Measures albumin, the main protein made by the liver; it helps keep fluid inside blood vessels.",
+      "source_note": "General educational description written for MedLens (synthetic-data hackathon project), based on standard lab-medicine terminology. Not patient-specific."
+    },
+    {
+      "id": "globulin",
+      "term": "Globulin",
+      "aliases": [
+        "Serum Globulin",
+        "Globulins"
+      ],
+      "category": "Liver function (LFT)",
+      "plain_explanation": "Measures globulins, a group of blood proteins that includes antibodies. Often calculated as total protein minus albumin.",
+      "source_note": "General educational description written for MedLens (synthetic-data hackathon project), based on standard lab-medicine terminology. Not patient-specific."
+    },
+    {
+      "id": "total_protein",
+      "term": "Total Protein",
+      "aliases": [
+        "Serum Total Protein",
+        "Protein Total",
+        "Total Proteins"
+      ],
+      "category": "Liver function (LFT)",
+      "plain_explanation": "Measures the total amount of protein (albumin plus globulins) in the blood.",
+      "source_note": "General educational description written for MedLens (synthetic-data hackathon project), based on standard lab-medicine terminology. Not patient-specific."
+    },
+    {
+      "id": "a_g_ratio",
+      "term": "A/G Ratio",
+      "aliases": [
+        "Albumin/Globulin Ratio",
+        "A:G Ratio",
+        "AG Ratio",
+        "Albumin Globulin Ratio"
+      ],
+      "category": "Liver function (LFT)",
+      "plain_explanation": "A calculated number that divides albumin by globulin.",
+      "source_note": "General educational description written for MedLens (synthetic-data hackathon project), based on standard lab-medicine terminology. Not patient-specific."
+    },
+    {
+      "id": "gamma_glutamyl_transferase",
+      "term": "Gamma-Glutamyl Transferase",
+      "aliases": [
+        "GGT",
+        "GGTP",
+        "Gamma GT",
+        "Gamma Glutamyl Transferase"
+      ],
+      "category": "Liver function (LFT)",
+      "plain_explanation": "Measures GGT, an enzyme found mainly in the liver and bile ducts.",
+      "source_note": "General educational description written for MedLens (synthetic-data hackathon project), based on standard lab-medicine terminology. Not patient-specific."
+    },
+    {
+      "id": "kidney_function_test",
+      "term": "Kidney Function Test",
+      "aliases": [
+        "KFT",
+        "RFT",
+        "Renal Function Test",
+        "Renal Profile"
+      ],
+      "category": "Kidney function (KFT/RFT)",
+      "plain_explanation": "A group of blood tests that measure waste products and salts that the kidneys help control.",
+      "source_note": "General educational description written for MedLens (synthetic-data hackathon project), based on standard lab-medicine terminology. Not patient-specific."
+    },
+    {
+      "id": "creatinine",
+      "term": "Creatinine",
+      "aliases": [
+        "Serum Creatinine",
+        "S. Creatinine",
+        "Creat"
+      ],
+      "category": "Kidney function (KFT/RFT)",
+      "plain_explanation": "Measures creatinine, a waste product from normal muscle activity that the kidneys filter out of the blood.",
+      "source_note": "General educational description written for MedLens (synthetic-data hackathon project), based on standard lab-medicine terminology. Not patient-specific."
+    },
+    {
+      "id": "blood_urea_nitrogen",
+      "term": "Blood Urea Nitrogen",
+      "aliases": [
+        "BUN",
+        "Urea Nitrogen"
+      ],
+      "category": "Kidney function (KFT/RFT)",
+      "plain_explanation": "Measures the nitrogen part of urea, a waste product the kidneys remove from the blood.",
+      "source_note": "General educational description written for MedLens (synthetic-data hackathon project), based on standard lab-medicine terminology. Not patient-specific."
+    },
+    {
+      "id": "urea",
+      "term": "Urea",
+      "aliases": [
+        "Blood Urea",
+        "Serum Urea"
+      ],
+      "category": "Kidney function (KFT/RFT)",
+      "plain_explanation": "Measures urea, a waste product made when the body breaks down protein; the kidneys remove it.",
+      "source_note": "General educational description written for MedLens (synthetic-data hackathon project), based on standard lab-medicine terminology. Not patient-specific."
+    },
+    {
+      "id": "uric_acid",
+      "term": "Uric Acid",
+      "aliases": [
+        "Serum Uric Acid",
+        "S. Uric Acid"
+      ],
+      "category": "Kidney function (KFT/RFT)",
+      "plain_explanation": "Measures uric acid, a waste product made when the body breaks down substances called purines.",
+      "source_note": "General educational description written for MedLens (synthetic-data hackathon project), based on standard lab-medicine terminology. Not patient-specific."
+    },
+    {
+      "id": "estimated_glomerular_filtration_rate",
+      "term": "Estimated Glomerular Filtration Rate",
+      "aliases": [
+        "eGFR",
+        "GFR",
+        "EGFR",
+        "Estimated GFR"
+      ],
+      "category": "Kidney function (KFT/RFT)",
+      "plain_explanation": "A calculated estimate of how much blood the kidneys filter each minute, based on creatinine, age and sex.",
+      "source_note": "General educational description written for MedLens (synthetic-data hackathon project), based on standard lab-medicine terminology. Not patient-specific.",
+      "what_it_is_not": "It is an estimate from a formula, not a direct measurement."
+    },
+    {
+      "id": "sodium",
+      "term": "Sodium",
+      "aliases": [
+        "Serum Sodium",
+        "Na+",
+        "S. Sodium"
+      ],
+      "category": "Electrolytes",
+      "plain_explanation": "Measures sodium, a salt (electrolyte) that helps control fluid balance and nerve signals.",
+      "source_note": "General educational description written for MedLens (synthetic-data hackathon project), based on standard lab-medicine terminology. Not patient-specific."
+    },
+    {
+      "id": "potassium",
+      "term": "Potassium",
+      "aliases": [
+        "Serum Potassium",
+        "K+",
+        "S. Potassium"
+      ],
+      "category": "Electrolytes",
+      "plain_explanation": "Measures potassium, an electrolyte important for muscles and heart rhythm.",
+      "source_note": "General educational description written for MedLens (synthetic-data hackathon project), based on standard lab-medicine terminology. Not patient-specific."
+    },
+    {
+      "id": "chloride",
+      "term": "Chloride",
+      "aliases": [
+        "Serum Chloride",
+        "Cl-"
+      ],
+      "category": "Electrolytes",
+      "plain_explanation": "Measures chloride, an electrolyte that works with sodium to balance body fluids.",
+      "source_note": "General educational description written for MedLens (synthetic-data hackathon project), based on standard lab-medicine terminology. Not patient-specific."
+    },
+    {
+      "id": "bicarbonate",
+      "term": "Bicarbonate",
+      "aliases": [
+        "HCO3",
+        "Serum Bicarbonate",
+        "Total CO2"
+      ],
+      "category": "Electrolytes",
+      "plain_explanation": "Measures bicarbonate, which helps keep the blood's acid-base balance steady.",
+      "source_note": "General educational description written for MedLens (synthetic-data hackathon project), based on standard lab-medicine terminology. Not patient-specific."
+    },
+    {
+      "id": "calcium",
+      "term": "Calcium",
+      "aliases": [
+        "Serum Calcium",
+        "Total Calcium"
+      ],
+      "category": "Electrolytes",
+      "plain_explanation": "Measures calcium in the blood, a mineral used by bones, muscles and nerves.",
+      "source_note": "General educational description written for MedLens (synthetic-data hackathon project), based on standard lab-medicine terminology. Not patient-specific."
+    },
+    {
+      "id": "phosphorus",
+      "term": "Phosphorus",
+      "aliases": [
+        "Serum Phosphorus",
+        "Phosphate",
+        "Inorganic Phosphorus"
+      ],
+      "category": "Electrolytes",
+      "plain_explanation": "Measures phosphorus, a mineral that works with calcium in bones and energy use.",
+      "source_note": "General educational description written for MedLens (synthetic-data hackathon project), based on standard lab-medicine terminology. Not patient-specific."
+    },
+    {
+      "id": "electrolytes",
+      "term": "Electrolytes",
+      "aliases": [
+        "Serum Electrolytes",
+        "Electrolyte Panel"
+      ],
+      "category": "Electrolytes",
+      "plain_explanation": "Salts and minerals in the blood, such as sodium, potassium and chloride, that carry an electric charge.",
+      "source_note": "General educational description written for MedLens (synthetic-data hackathon project), based on standard lab-medicine terminology. Not patient-specific."
+    },
+    {
+      "id": "bun_creatinine_ratio",
+      "term": "BUN/Creatinine Ratio",
+      "aliases": [
+        "BUN Creatinine Ratio",
+        "Urea/Creatinine Ratio"
+      ],
+      "category": "Kidney function (KFT/RFT)",
+      "plain_explanation": "A calculated ratio comparing blood urea nitrogen with creatinine.",
+      "source_note": "General educational description written for MedLens (synthetic-data hackathon project), based on standard lab-medicine terminology. Not patient-specific."
+    },
+    {
+      "id": "fasting_blood_sugar",
+      "term": "Fasting Blood Sugar",
+      "aliases": [
+        "FBS",
+        "Fasting Glucose",
+        "Fasting Blood Glucose",
+        "Glucose Fasting",
+        "Glucose, Fasting",
+        "Fasting Plasma Glucose",
+        "FPG",
+        "Blood Sugar Fasting",
+        "Plasma Glucose Fasting"
+      ],
+      "category": "Diabetes / glucose",
+      "plain_explanation": "Measures the sugar (glucose) level in blood after not eating for a set time, usually 8–12 hours.",
+      "source_note": "General educational description written for MedLens (synthetic-data hackathon project), based on standard lab-medicine terminology. Not patient-specific."
+    },
+    {
+      "id": "post_prandial_blood_sugar",
+      "term": "Post Prandial Blood Sugar",
+      "aliases": [
+        "PPBS",
+        "PP Blood Sugar",
+        "Post Prandial Glucose",
+        "Glucose Post Prandial",
+        "Glucose, Post Prandial",
+        "PPBG",
+        "Blood Sugar PP",
+        "Postprandial Glucose",
+        "Plasma Glucose PP"
+      ],
+      "category": "Diabetes / glucose",
+      "plain_explanation": "Measures blood sugar (glucose) at a set time, usually 2 hours, after a meal.",
+      "source_note": "General educational description written for MedLens (synthetic-data hackathon project), based on standard lab-medicine terminology. Not patient-specific."
+    },
+    {
+      "id": "random_blood_sugar",
+      "term": "Random Blood Sugar",
+      "aliases": [
+        "RBS",
+        "Random Glucose",
+        "Glucose Random",
+        "Random Plasma Glucose"
+      ],
+      "category": "Diabetes / glucose",
+      "plain_explanation": "Measures blood sugar (glucose) at any time, without fasting.",
+      "source_note": "General educational description written for MedLens (synthetic-data hackathon project), based on standard lab-medicine terminology. Not patient-specific."
+    },
+    {
+      "id": "glucose",
+      "term": "Glucose",
+      "aliases": [
+        "Blood Glucose",
+        "Blood Sugar",
+        "Plasma Glucose"
+      ],
+      "category": "Diabetes / glucose",
+      "plain_explanation": "Glucose is the main sugar in the blood and the body's main source of energy.",
+      "source_note": "General educational description written for MedLens (synthetic-data hackathon project), based on standard lab-medicine terminology. Not patient-specific."
+    },
+    {
+      "id": "hba1c",
+      "term": "HbA1c",
+      "aliases": [
+        "Glycated Hemoglobin",
+        "Glycosylated Hemoglobin",
+        "Hemoglobin A1c",
+        "A1c",
+        "Glycated Haemoglobin",
+        "Glycosylated Haemoglobin",
+        "HbA1C"
+      ],
+      "category": "Diabetes / glucose",
+      "plain_explanation": "Measures how much sugar is attached to hemoglobin. It reflects average blood sugar over roughly the past 2–3 months.",
+      "source_note": "General educational description written for MedLens (synthetic-data hackathon project), based on standard lab-medicine terminology. Not patient-specific."
+    },
+    {
+      "id": "estimated_average_glucose",
+      "term": "Estimated Average Glucose",
+      "aliases": [
+        "eAG",
+        "Mean Blood Glucose",
+        "Estimated Average Glucose (eAG)"
+      ],
+      "category": "Diabetes / glucose",
+      "plain_explanation": "A calculated average blood-sugar level worked out from the HbA1c result.",
+      "source_note": "General educational description written for MedLens (synthetic-data hackathon project), based on standard lab-medicine terminology. Not patient-specific."
+    },
+    {
+      "id": "thyroid_profile",
+      "term": "Thyroid Profile",
+      "aliases": [
+        "Thyroid Function Test",
+        "TFT",
+        "Thyroid Panel"
+      ],
+      "category": "Thyroid",
+      "plain_explanation": "A group of blood tests that measure thyroid hormones and the hormone that controls the thyroid.",
+      "source_note": "General educational description written for MedLens (synthetic-data hackathon project), based on standard lab-medicine terminology. Not patient-specific."
+    },
+    {
+      "id": "thyroid_stimulating_hormone",
+      "term": "Thyroid Stimulating Hormone",
+      "aliases": [
+        "TSH",
+        "Thyrotropin",
+        "TSH Ultrasensitive",
+        "Ultrasensitive TSH"
+      ],
+      "category": "Thyroid",
+      "plain_explanation": "Measures TSH, a hormone made by the pituitary gland in the brain that tells the thyroid gland how much hormone to make.",
+      "source_note": "General educational description written for MedLens (synthetic-data hackathon project), based on standard lab-medicine terminology. Not patient-specific."
+    },
+    {
+      "id": "triiodothyronine",
+      "term": "Triiodothyronine",
+      "aliases": [
+        "T3",
+        "Total T3",
+        "T3 Total"
+      ],
+      "category": "Thyroid",
+      "plain_explanation": "Measures T3, one of the two main hormones made by the thyroid gland.",
+      "source_note": "General educational description written for MedLens (synthetic-data hackathon project), based on standard lab-medicine terminology. Not patient-specific."
+    },
+    {
+      "id": "thyroxine",
+      "term": "Thyroxine",
+      "aliases": [
+        "T4",
+        "Total T4",
+        "T4 Total"
+      ],
+      "category": "Thyroid",
+      "plain_explanation": "Measures T4, the main hormone made by the thyroid gland.",
+      "source_note": "General educational description written for MedLens (synthetic-data hackathon project), based on standard lab-medicine terminology. Not patient-specific."
+    },
+    {
+      "id": "free_t3",
+      "term": "Free T3",
+      "aliases": [
+        "FT3",
+        "Free Triiodothyronine"
+      ],
+      "category": "Thyroid",
+      "plain_explanation": "Measures the 'free' part of T3 that is not attached to proteins in the blood.",
+      "source_note": "General educational description written for MedLens (synthetic-data hackathon project), based on standard lab-medicine terminology. Not patient-specific."
+    },
+    {
+      "id": "free_t4",
+      "term": "Free T4",
+      "aliases": [
+        "FT4",
+        "Free Thyroxine"
+      ],
+      "category": "Thyroid",
+      "plain_explanation": "Measures the 'free' part of T4 that is not attached to proteins in the blood.",
+      "source_note": "General educational description written for MedLens (synthetic-data hackathon project), based on standard lab-medicine terminology. Not patient-specific."
+    },
+    {
+      "id": "anti_tpo_antibodies",
+      "term": "Anti-TPO Antibodies",
+      "aliases": [
+        "Anti TPO",
+        "Anti-TPO",
+        "TPO Antibodies",
+        "Thyroid Peroxidase Antibodies"
+      ],
+      "category": "Thyroid",
+      "plain_explanation": "Measures antibodies against thyroid peroxidase, an enzyme in the thyroid gland.",
+      "source_note": "General educational description written for MedLens (synthetic-data hackathon project), based on standard lab-medicine terminology. Not patient-specific."
+    },
+    {
+      "id": "urine_routine_examination",
+      "term": "Urine Routine Examination",
+      "aliases": [
+        "Urine Routine",
+        "Urine R/M",
+        "Urine Analysis",
+        "Urinalysis",
+        "Urine RE",
+        "Routine Urine Examination",
+        "Urine Routine & Microscopy"
+      ],
+      "category": "Urine routine",
+      "plain_explanation": "A set of checks on a urine sample: its look, chemistry and what is seen under a microscope.",
+      "source_note": "General educational description written for MedLens (synthetic-data hackathon project), based on standard lab-medicine terminology. Not patient-specific."
+    },
+    {
+      "id": "pus_cells",
+      "term": "Pus Cells",
+      "aliases": [
+        "Pus Cell",
+        "WBC (Urine)",
+        "Leukocytes (Urine)"
+      ],
+      "category": "Urine routine",
+      "plain_explanation": "White blood cells seen in urine under the microscope, counted per high-power field (/hpf).",
+      "source_note": "General educational description written for MedLens (synthetic-data hackathon project), based on standard lab-medicine terminology. Not patient-specific."
+    },
+    {
+      "id": "epithelial_cells",
+      "term": "Epithelial Cells",
+      "aliases": [
+        "Epithelial Cell",
+        "Squamous Epithelial Cells",
+        "Epi Cells"
+      ],
+      "category": "Urine routine",
+      "plain_explanation": "Cells from the lining of the urinary tract or skin seen in urine under the microscope.",
+      "source_note": "General educational description written for MedLens (synthetic-data hackathon project), based on standard lab-medicine terminology. Not patient-specific."
+    },
+    {
+      "id": "casts",
+      "term": "Casts",
+      "aliases": [
+        "Cast",
+        "Urinary Casts",
+        "Hyaline Casts",
+        "Granular Casts"
+      ],
+      "category": "Urine routine",
+      "plain_explanation": "Tiny tube-shaped particles formed in the kidney and seen in urine under the microscope.",
+      "source_note": "General educational description written for MedLens (synthetic-data hackathon project), based on standard lab-medicine terminology. Not patient-specific."
+    },
+    {
+      "id": "crystals",
+      "term": "Crystals",
+      "aliases": [
+        "Crystal",
+        "Urinary Crystals"
+      ],
+      "category": "Urine routine",
+      "plain_explanation": "Small mineral particles that can be seen in urine under the microscope.",
+      "source_note": "General educational description written for MedLens (synthetic-data hackathon project), based on standard lab-medicine terminology. Not patient-specific."
+    },
+    {
+      "id": "specific_gravity",
+      "term": "Specific Gravity",
+      "aliases": [
+        "Sp. Gravity",
+        "Sp Gravity",
+        "SG"
+      ],
+      "category": "Urine routine",
+      "plain_explanation": "Measures how concentrated urine is compared with water.",
+      "source_note": "General educational description written for MedLens (synthetic-data hackathon project), based on standard lab-medicine terminology. Not patient-specific."
+    },
+    {
+      "id": "ketones",
+      "term": "Ketones",
+      "aliases": [
+        "Ketone Bodies",
+        "Urine Ketones",
+        "Ketone",
+        "Acetone"
+      ],
+      "category": "Urine routine",
+      "plain_explanation": "Checks urine for ketones, substances made when the body burns fat for energy.",
+      "source_note": "General educational description written for MedLens (synthetic-data hackathon project), based on standard lab-medicine terminology. Not patient-specific."
+    },
+    {
+      "id": "urine_glucose",
+      "term": "Urine Glucose",
+      "aliases": [
+        "Urine Sugar",
+        "Glucose (Urine)",
+        "Sugar (Urine)"
+      ],
+      "category": "Urine routine",
+      "plain_explanation": "Checks whether sugar (glucose) is present in urine.",
+      "source_note": "General educational description written for MedLens (synthetic-data hackathon project), based on standard lab-medicine terminology. Not patient-specific."
+    },
+    {
+      "id": "urine_protein",
+      "term": "Urine Protein",
+      "aliases": [
+        "Albumin (Urine)",
+        "Urine Albumin",
+        "Protein (Urine)",
+        "Proteinuria"
+      ],
+      "category": "Urine routine",
+      "plain_explanation": "Checks whether protein is present in urine.",
+      "source_note": "General educational description written for MedLens (synthetic-data hackathon project), based on standard lab-medicine terminology. Not patient-specific."
+    },
+    {
+      "id": "ph",
+      "term": "pH",
+      "aliases": [
+        "Reaction (pH)",
+        "Urine pH"
+      ],
+      "category": "Urine routine",
+      "plain_explanation": "Measures how acidic or alkaline a fluid (such as urine) is, on a scale of about 0 to 14.",
+      "source_note": "General educational description written for MedLens (synthetic-data hackathon project), based on standard lab-medicine terminology. Not patient-specific."
+    },
+    {
+      "id": "bile_pigments",
+      "term": "Bile Pigments",
+      "aliases": [
+        "Bile Salts",
+        "Bile Pigment",
+        "Urobilinogen"
+      ],
+      "category": "Urine routine",
+      "plain_explanation": "Checks urine for substances related to bilirubin breakdown.",
+      "source_note": "General educational description written for MedLens (synthetic-data hackathon project), based on standard lab-medicine terminology. Not patient-specific."
+    },
+    {
+      "id": "occult_blood",
+      "term": "Occult Blood",
+      "aliases": [
+        "Blood (Urine)",
+        "Urine Blood"
+      ],
+      "category": "Urine routine",
+      "plain_explanation": "Checks for small amounts of blood not visible to the eye.",
+      "source_note": "General educational description written for MedLens (synthetic-data hackathon project), based on standard lab-medicine terminology. Not patient-specific."
+    },
+    {
+      "id": "microscopy",
+      "term": "Microscopy",
+      "aliases": [
+        "Microscopic Examination",
+        "Microscopic"
+      ],
+      "category": "Urine routine",
+      "plain_explanation": "The part of a test where a sample is looked at under a microscope.",
+      "source_note": "General educational description written for MedLens (synthetic-data hackathon project), based on standard lab-medicine terminology. Not patient-specific."
+    },
+    {
+      "id": "physical_examination",
+      "term": "Physical Examination",
+      "aliases": [
+        "Physical Exam",
+        "Physical Examination (Urine)"
+      ],
+      "category": "Report term",
+      "plain_explanation": "In a urine report, this part describes how the sample looks: colour, clarity and volume.",
+      "source_note": "General educational description written for MedLens (synthetic-data hackathon project), based on standard lab-medicine terminology. Not patient-specific."
+    },
+    {
+      "id": "appearance",
+      "term": "Appearance",
+      "aliases": [
+        "Clarity",
+        "Transparency"
+      ],
+      "category": "Urine routine",
+      "plain_explanation": "Describes whether a sample looks clear or cloudy.",
+      "source_note": "General educational description written for MedLens (synthetic-data hackathon project), based on standard lab-medicine terminology. Not patient-specific."
+    },
+    {
+      "id": "colour",
+      "term": "Colour",
+      "aliases": [
+        "Color"
+      ],
+      "category": "Urine routine",
+      "plain_explanation": "Describes the colour of a sample, such as pale yellow for urine.",
+      "source_note": "General educational description written for MedLens (synthetic-data hackathon project), based on standard lab-medicine terminology. Not patient-specific."
+    },
+    {
+      "id": "nitrite",
+      "term": "Nitrite",
+      "aliases": [
+        "Nitrites"
+      ],
+      "category": "Urine routine",
+      "plain_explanation": "A chemical check on urine for nitrite.",
+      "source_note": "General educational description written for MedLens (synthetic-data hackathon project), based on standard lab-medicine terminology. Not patient-specific."
+    },
+    {
+      "id": "leukocyte_esterase",
+      "term": "Leukocyte Esterase",
+      "aliases": [
+        "Leucocyte Esterase"
+      ],
+      "category": "Urine routine",
+      "plain_explanation": "A chemical check on urine for an enzyme released by white blood cells.",
+      "source_note": "General educational description written for MedLens (synthetic-data hackathon project), based on standard lab-medicine terminology. Not patient-specific."
+    },
+    {
+      "id": "hbsag",
+      "term": "HBsAg",
+      "aliases": [
+        "Hepatitis B Surface Antigen",
+        "Australia Antigen"
+      ],
+      "category": "Serology / other",
+      "plain_explanation": "Checks the blood for a protein from the surface of the hepatitis B virus.",
+      "source_note": "General educational description written for MedLens (synthetic-data hackathon project), based on standard lab-medicine terminology. Not patient-specific."
+    },
+    {
+      "id": "hiv",
+      "term": "HIV",
+      "aliases": [
+        "HIV 1 & 2",
+        "HIV I & II",
+        "Anti-HIV"
+      ],
+      "category": "Serology / other",
+      "plain_explanation": "Checks the blood for antibodies or antigens related to the human immunodeficiency virus.",
+      "source_note": "General educational description written for MedLens (synthetic-data hackathon project), based on standard lab-medicine terminology. Not patient-specific."
+    },
+    {
+      "id": "hcv",
+      "term": "HCV",
+      "aliases": [
+        "Anti-HCV",
+        "Hepatitis C Antibody"
+      ],
+      "category": "Serology / other",
+      "plain_explanation": "Checks the blood for antibodies against the hepatitis C virus.",
+      "source_note": "General educational description written for MedLens (synthetic-data hackathon project), based on standard lab-medicine terminology. Not patient-specific."
+    },
+    {
+      "id": "c_reactive_protein",
+      "term": "C-Reactive Protein",
+      "aliases": [
+        "CRP",
+        "hs-CRP",
+        "hsCRP",
+        "High Sensitivity CRP"
+      ],
+      "category": "Serology / other",
+      "plain_explanation": "Measures CRP, a protein made by the liver; its level in blood changes with inflammation in the body.",
+      "source_note": "General educational description written for MedLens (synthetic-data hackathon project), based on standard lab-medicine terminology. Not patient-specific.",
+      "what_it_is_not": "It does not show where in the body inflammation is or why."
+    },
+    {
+      "id": "vitamin_d",
+      "term": "Vitamin D",
+      "aliases": [
+        "25-Hydroxy Vitamin D",
+        "25(OH) Vitamin D",
+        "Vitamin D Total",
+        "25-OH Vitamin D"
+      ],
+      "category": "Serology / other",
+      "plain_explanation": "Measures the main stored form of vitamin D in the blood.",
+      "source_note": "General educational description written for MedLens (synthetic-data hackathon project), based on standard lab-medicine terminology. Not patient-specific."
+    },
+    {
+      "id": "vitamin_b12",
+      "term": "Vitamin B12",
+      "aliases": [
+        "Cobalamin",
+        "Cyanocobalamin",
+        "B12"
+      ],
+      "category": "Serology / other",
+      "plain_explanation": "Measures vitamin B12, a vitamin needed to make red blood cells and keep nerves healthy.",
+      "source_note": "General educational description written for MedLens (synthetic-data hackathon project), based on standard lab-medicine terminology. Not patient-specific."
+    },
+    {
+      "id": "ferritin",
+      "term": "Ferritin",
+      "aliases": [
+        "Serum Ferritin"
+      ],
+      "category": "Serology / other",
+      "plain_explanation": "Measures ferritin, a protein that stores iron in the body.",
+      "source_note": "General educational description written for MedLens (synthetic-data hackathon project), based on standard lab-medicine terminology. Not patient-specific."
+    },
+    {
+      "id": "serum_iron",
+      "term": "Serum Iron",
+      "aliases": [
+        "Iron",
+        "S. Iron"
+      ],
+      "category": "Serology / other",
+      "plain_explanation": "Measures the amount of iron in the blood.",
+      "source_note": "General educational description written for MedLens (synthetic-data hackathon project), based on standard lab-medicine terminology. Not patient-specific."
+    },
+    {
+      "id": "tibc",
+      "term": "TIBC",
+      "aliases": [
+        "Total Iron Binding Capacity"
+      ],
+      "category": "Serology / other",
+      "plain_explanation": "Measures how much iron the blood's carrier proteins could hold.",
+      "source_note": "General educational description written for MedLens (synthetic-data hackathon project), based on standard lab-medicine terminology. Not patient-specific."
+    },
+    {
+      "id": "widal_test",
+      "term": "Widal Test",
+      "aliases": [
+        "Widal"
+      ],
+      "category": "Serology / other",
+      "plain_explanation": "A blood test that looks for antibodies related to typhoid-causing bacteria.",
+      "source_note": "General educational description written for MedLens (synthetic-data hackathon project), based on standard lab-medicine terminology. Not patient-specific."
+    },
+    {
+      "id": "blood_group",
+      "term": "Blood Group",
+      "aliases": [
+        "ABO Group",
+        "Rh Type",
+        "Blood Group & Rh",
+        "Rh Factor"
+      ],
+      "category": "Serology / other",
+      "plain_explanation": "Identifies the type of blood (A, B, AB or O, and Rh positive or negative).",
+      "source_note": "General educational description written for MedLens (synthetic-data hackathon project), based on standard lab-medicine terminology. Not patient-specific."
+    },
+    {
+      "id": "prothrombin_time",
+      "term": "Prothrombin Time",
+      "aliases": [
+        "PT",
+        "PT/INR",
+        "INR",
+        "Prothrombin Time (PT)"
+      ],
+      "category": "Serology / other",
+      "plain_explanation": "Measures how long it takes blood to clot in a test tube; INR is a standardised way of reporting it.",
+      "source_note": "General educational description written for MedLens (synthetic-data hackathon project), based on standard lab-medicine terminology. Not patient-specific."
+    },
+    {
+      "id": "impression",
+      "term": "Impression",
+      "aliases": [
+        "Impressions"
+      ],
+      "category": "Radiology / report language",
+      "plain_explanation": "The section where the reporting doctor writes their overall opinion about the findings.",
+      "source_note": "General educational description written for MedLens (synthetic-data hackathon project), based on standard lab-medicine terminology. Not patient-specific.",
+      "what_it_is_not": "It is a professional opinion, not a final diagnosis; discuss it with your doctor."
+    },
+    {
+      "id": "findings",
+      "term": "Findings",
+      "aliases": [
+        "Finding"
+      ],
+      "category": "Radiology / report language",
+      "plain_explanation": "The section that describes what was seen or measured during the test.",
+      "source_note": "General educational description written for MedLens (synthetic-data hackathon project), based on standard lab-medicine terminology. Not patient-specific."
+    },
+    {
+      "id": "unremarkable",
+      "term": "Unremarkable",
+      "aliases": [
+        "Unremarkable Study"
+      ],
+      "category": "Radiology / report language",
+      "plain_explanation": "Nothing unusual was seen in that area.",
+      "source_note": "General educational description written for MedLens (synthetic-data hackathon project), based on standard lab-medicine terminology. Not patient-specific."
+    },
+    {
+      "id": "lesion",
+      "term": "Lesion",
+      "aliases": [
+        "Lesions"
+      ],
+      "category": "Radiology / report language",
+      "plain_explanation": "A general word for an area of tissue that looks different from the tissue around it.",
+      "source_note": "General educational description written for MedLens (synthetic-data hackathon project), based on standard lab-medicine terminology. Not patient-specific.",
+      "what_it_is_not": "The word alone does not say what the area is."
+    },
+    {
+      "id": "opacity",
+      "term": "Opacity",
+      "aliases": [
+        "Opacities",
+        "Opacification"
+      ],
+      "category": "Radiology / report language",
+      "plain_explanation": "An area on an X-ray or scan that looks whiter or denser than expected.",
+      "source_note": "General educational description written for MedLens (synthetic-data hackathon project), based on standard lab-medicine terminology. Not patient-specific."
+    },
+    {
+      "id": "effusion",
+      "term": "Effusion",
+      "aliases": [
+        "Effusions",
+        "Pleural Effusion"
+      ],
+      "category": "Radiology / report language",
+      "plain_explanation": "A collection of fluid in a space in the body where there is normally little fluid.",
+      "source_note": "General educational description written for MedLens (synthetic-data hackathon project), based on standard lab-medicine terminology. Not patient-specific."
+    },
+    {
+      "id": "hepatomegaly",
+      "term": "Hepatomegaly",
+      "aliases": [],
+      "category": "Radiology / report language",
+      "plain_explanation": "A medical word meaning the liver is larger than the usual size.",
+      "source_note": "General educational description written for MedLens (synthetic-data hackathon project), based on standard lab-medicine terminology. Not patient-specific."
+    },
+    {
+      "id": "splenomegaly",
+      "term": "Splenomegaly",
+      "aliases": [],
+      "category": "Radiology / report language",
+      "plain_explanation": "A medical word meaning the spleen is larger than the usual size.",
+      "source_note": "General educational description written for MedLens (synthetic-data hackathon project), based on standard lab-medicine terminology. Not patient-specific."
+    },
+    {
+      "id": "benign",
+      "term": "Benign",
+      "aliases": [],
+      "category": "Radiology / report language",
+      "plain_explanation": "A word used to describe something that is not cancer.",
+      "source_note": "General educational description written for MedLens (synthetic-data hackathon project), based on standard lab-medicine terminology. Not patient-specific."
+    },
+    {
+      "id": "malignant",
+      "term": "Malignant",
+      "aliases": [
+        "Malignancy"
+      ],
+      "category": "Radiology / report language",
+      "plain_explanation": "A word used to describe something that is cancer.",
+      "source_note": "General educational description written for MedLens (synthetic-data hackathon project), based on standard lab-medicine terminology. Not patient-specific."
+    },
+    {
+      "id": "bilateral",
+      "term": "Bilateral",
+      "aliases": [],
+      "category": "Radiology / report language",
+      "plain_explanation": "On both sides of the body (left and right).",
+      "source_note": "General educational description written for MedLens (synthetic-data hackathon project), based on standard lab-medicine terminology. Not patient-specific."
+    },
+    {
+      "id": "unilateral",
+      "term": "Unilateral",
+      "aliases": [],
+      "category": "Radiology / report language",
+      "plain_explanation": "On one side of the body only.",
+      "source_note": "General educational description written for MedLens (synthetic-data hackathon project), based on standard lab-medicine terminology. Not patient-specific."
+    },
+    {
+      "id": "echogenicity",
+      "term": "Echogenicity",
+      "aliases": [
+        "Echotexture",
+        "Echogenic",
+        "Hyperechoic",
+        "Hypoechoic",
+        "Anechoic",
+        "Echogenic Liver"
+      ],
+      "category": "Radiology / report language",
+      "plain_explanation": "Ultrasound words describing how bright (echoic) a tissue looks on the screen compared with what is usual.",
+      "source_note": "General educational description written for MedLens (synthetic-data hackathon project), based on standard lab-medicine terminology. Not patient-specific."
+    },
+    {
+      "id": "fatty_liver",
+      "term": "Fatty Liver",
+      "aliases": [
+        "Fatty Infiltration",
+        "Hepatic Steatosis",
+        "Steatosis",
+        "Grade I Fatty Liver",
+        "Grade 1 Fatty Liver"
+      ],
+      "category": "Radiology / report language",
+      "plain_explanation": "A term used when the liver looks like it contains extra fat on imaging.",
+      "source_note": "General educational description written for MedLens (synthetic-data hackathon project), based on standard lab-medicine terminology. Not patient-specific."
+    },
+    {
+      "id": "calculus",
+      "term": "Calculus",
+      "aliases": [
+        "Calculi",
+        "Stone",
+        "Stones",
+        "Renal Calculus"
+      ],
+      "category": "Radiology / report language",
+      "plain_explanation": "A medical word for a stone, a hard mass of minerals, for example in the kidney or gallbladder.",
+      "source_note": "General educational description written for MedLens (synthetic-data hackathon project), based on standard lab-medicine terminology. Not patient-specific."
+    },
+    {
+      "id": "cyst",
+      "term": "Cyst",
+      "aliases": [
+        "Cysts",
+        "Cystic"
+      ],
+      "category": "Radiology / report language",
+      "plain_explanation": "A closed sac or pocket, often filled with fluid.",
+      "source_note": "General educational description written for MedLens (synthetic-data hackathon project), based on standard lab-medicine terminology. Not patient-specific."
+    },
+    {
+      "id": "nodule",
+      "term": "Nodule",
+      "aliases": [
+        "Nodules",
+        "Nodular"
+      ],
+      "category": "Radiology / report language",
+      "plain_explanation": "A small rounded lump or growth.",
+      "source_note": "General educational description written for MedLens (synthetic-data hackathon project), based on standard lab-medicine terminology. Not patient-specific."
+    },
+    {
+      "id": "hydronephrosis",
+      "term": "Hydronephrosis",
+      "aliases": [],
+      "category": "Radiology / report language",
+      "plain_explanation": "A medical word for swelling of a kidney due to urine building up.",
+      "source_note": "General educational description written for MedLens (synthetic-data hackathon project), based on standard lab-medicine terminology. Not patient-specific."
+    },
+    {
+      "id": "cortico_medullary_differentiation",
+      "term": "Cortico-Medullary Differentiation",
+      "aliases": [
+        "Corticomedullary Differentiation",
+        "CMD"
+      ],
+      "category": "Radiology / report language",
+      "plain_explanation": "On a kidney ultrasound, how clearly the outer (cortex) and inner (medulla) parts of the kidney can be told apart.",
+      "source_note": "General educational description written for MedLens (synthetic-data hackathon project), based on standard lab-medicine terminology. Not patient-specific."
+    },
+    {
+      "id": "gallbladder",
+      "term": "Gallbladder",
+      "aliases": [
+        "Gall Bladder",
+        "GB"
+      ],
+      "category": "Radiology / report language",
+      "plain_explanation": "A small pouch under the liver that stores bile.",
+      "source_note": "General educational description written for MedLens (synthetic-data hackathon project), based on standard lab-medicine terminology. Not patient-specific."
+    },
+    {
+      "id": "common_bile_duct",
+      "term": "Common Bile Duct",
+      "aliases": [
+        "CBD"
+      ],
+      "category": "Radiology / report language",
+      "plain_explanation": "The tube that carries bile from the liver and gallbladder to the small intestine.",
+      "source_note": "General educational description written for MedLens (synthetic-data hackathon project), based on standard lab-medicine terminology. Not patient-specific."
+    },
+    {
+      "id": "portal_vein",
+      "term": "Portal Vein",
+      "aliases": [],
+      "category": "Radiology / report language",
+      "plain_explanation": "The main blood vessel carrying blood from the gut to the liver.",
+      "source_note": "General educational description written for MedLens (synthetic-data hackathon project), based on standard lab-medicine terminology. Not patient-specific."
+    },
+    {
+      "id": "intrahepatic_biliary_radicles",
+      "term": "Intrahepatic Biliary Radicles",
+      "aliases": [
+        "IHBR",
+        "Intrahepatic Biliary Radicals"
+      ],
+      "category": "Radiology / report language",
+      "plain_explanation": "The small bile ducts inside the liver.",
+      "source_note": "General educational description written for MedLens (synthetic-data hackathon project), based on standard lab-medicine terminology. Not patient-specific."
+    },
+    {
+      "id": "pancreas",
+      "term": "Pancreas",
+      "aliases": [],
+      "category": "Radiology / report language",
+      "plain_explanation": "An organ behind the stomach that makes digestive juices and insulin.",
+      "source_note": "General educational description written for MedLens (synthetic-data hackathon project), based on standard lab-medicine terminology. Not patient-specific."
+    },
+    {
+      "id": "spleen",
+      "term": "Spleen",
+      "aliases": [],
+      "category": "Radiology / report language",
+      "plain_explanation": "An organ in the upper left belly that filters blood and is part of the immune system.",
+      "source_note": "General educational description written for MedLens (synthetic-data hackathon project), based on standard lab-medicine terminology. Not patient-specific."
+    },
+    {
+      "id": "kidney",
+      "term": "Kidney",
+      "aliases": [
+        "Kidneys",
+        "Renal"
+      ],
+      "category": "Radiology / report language",
+      "plain_explanation": "The two bean-shaped organs that filter blood and make urine.",
+      "source_note": "General educational description written for MedLens (synthetic-data hackathon project), based on standard lab-medicine terminology. Not patient-specific."
+    },
+    {
+      "id": "urinary_bladder",
+      "term": "Urinary Bladder",
+      "aliases": [
+        "Bladder"
+      ],
+      "category": "Radiology / report language",
+      "plain_explanation": "The organ that stores urine before it leaves the body.",
+      "source_note": "General educational description written for MedLens (synthetic-data hackathon project), based on standard lab-medicine terminology. Not patient-specific."
+    },
+    {
+      "id": "prostate",
+      "term": "Prostate",
+      "aliases": [],
+      "category": "Radiology / report language",
+      "plain_explanation": "A small gland below the bladder in males.",
+      "source_note": "General educational description written for MedLens (synthetic-data hackathon project), based on standard lab-medicine terminology. Not patient-specific."
+    },
+    {
+      "id": "ascites",
+      "term": "Ascites",
+      "aliases": [],
+      "category": "Radiology / report language",
+      "plain_explanation": "A medical word for fluid collected inside the belly (abdominal cavity).",
+      "source_note": "General educational description written for MedLens (synthetic-data hackathon project), based on standard lab-medicine terminology. Not patient-specific."
+    },
+    {
+      "id": "lymphadenopathy",
+      "term": "Lymphadenopathy",
+      "aliases": [],
+      "category": "Radiology / report language",
+      "plain_explanation": "A medical word for enlarged lymph nodes.",
+      "source_note": "General educational description written for MedLens (synthetic-data hackathon project), based on standard lab-medicine terminology. Not patient-specific."
+    },
+    {
+      "id": "clinical_correlation",
+      "term": "Clinical Correlation",
+      "aliases": [
+        "Correlate Clinically",
+        "Clinical Correlation Advised",
+        "Clinically Correlate",
+        "Suggested Clinical Correlation"
+      ],
+      "category": "Radiology / report language",
+      "plain_explanation": "A note from the reporting doctor asking your treating doctor to compare the test result with your symptoms and examination.",
+      "source_note": "General educational description written for MedLens (synthetic-data hackathon project), based on standard lab-medicine terminology. Not patient-specific.",
+      "what_it_is_not": "It does not mean something is wrong by itself."
+    },
+    {
+      "id": "reference_range",
+      "term": "Reference Range",
+      "aliases": [
+        "Reference Interval",
+        "Biological Reference Interval",
+        "Normal Range",
+        "Bio. Ref. Interval",
+        "Ref. Range"
+      ],
+      "category": "Report term",
+      "plain_explanation": "The range of values the lab printed for comparison. MedLens only uses ranges printed on your report.",
+      "source_note": "General educational description written for MedLens (synthetic-data hackathon project), based on standard lab-medicine terminology. Not patient-specific.",
+      "what_it_is_not": "Being outside it does not by itself mean you are ill; being inside it does not by itself mean you are well."
+    },
+    {
+      "id": "specimen",
+      "term": "Specimen",
+      "aliases": [
+        "Sample Type",
+        "Sample"
+      ],
+      "category": "Report term",
+      "plain_explanation": "The material tested, such as blood, serum, plasma or urine.",
+      "source_note": "General educational description written for MedLens (synthetic-data hackathon project), based on standard lab-medicine terminology. Not patient-specific."
+    },
+    {
+      "id": "serum",
+      "term": "Serum",
+      "aliases": [],
+      "category": "Report term",
+      "plain_explanation": "The clear liquid part of blood left after the blood has clotted.",
+      "source_note": "General educational description written for MedLens (synthetic-data hackathon project), based on standard lab-medicine terminology. Not patient-specific."
+    },
+    {
+      "id": "plasma",
+      "term": "Plasma",
+      "aliases": [],
+      "category": "Report term",
+      "plain_explanation": "The liquid part of blood, collected with an anti-clotting agent.",
+      "source_note": "General educational description written for MedLens (synthetic-data hackathon project), based on standard lab-medicine terminology. Not patient-specific."
+    },
+    {
+      "id": "whole_blood",
+      "term": "Whole Blood",
+      "aliases": [
+        "EDTA Whole Blood",
+        "EDTA Blood"
+      ],
+      "category": "Report term",
+      "plain_explanation": "Blood tested without separating its parts.",
+      "source_note": "General educational description written for MedLens (synthetic-data hackathon project), based on standard lab-medicine terminology. Not patient-specific."
+    },
+    {
+      "id": "method",
+      "term": "Method",
+      "aliases": [
+        "Methodology"
+      ],
+      "category": "Report term",
+      "plain_explanation": "The laboratory technique used to measure the result.",
+      "source_note": "General educational description written for MedLens (synthetic-data hackathon project), based on standard lab-medicine terminology. Not patient-specific."
+    },
+    {
+      "id": "high_power_field",
+      "term": "High Power Field",
+      "aliases": [
+        "/hpf",
+        "HPF",
+        "hpf"
+      ],
+      "category": "Report term",
+      "plain_explanation": "A unit for counting things seen under a microscope at high magnification.",
+      "source_note": "General educational description written for MedLens (synthetic-data hackathon project), based on standard lab-medicine terminology. Not patient-specific."
+    },
+    {
+      "id": "anaemia",
+      "term": "Anaemia",
+      "aliases": [
+        "Anemia"
+      ],
+      "category": "Medical condition word",
+      "plain_explanation": "A general medical word for having fewer red blood cells or less hemoglobin than expected.",
+      "source_note": "General educational description written for MedLens (synthetic-data hackathon project), based on standard lab-medicine terminology. Not patient-specific.",
+      "what_it_is_not": "MedLens does not decide whether this applies to you; only your doctor can."
+    },
+    {
+      "id": "inflammation",
+      "term": "Inflammation",
+      "aliases": [
+        "Inflammatory"
+      ],
+      "category": "Medical condition word",
+      "plain_explanation": "The body's response to injury or infection, which can cause redness, swelling or heat.",
+      "source_note": "General educational description written for MedLens (synthetic-data hackathon project), based on standard lab-medicine terminology. Not patient-specific."
+    },
+    {
+      "id": "infection",
+      "term": "Infection",
+      "aliases": [],
+      "category": "Medical condition word",
+      "plain_explanation": "When germs such as bacteria or viruses enter the body and multiply.",
+      "source_note": "General educational description written for MedLens (synthetic-data hackathon project), based on standard lab-medicine terminology. Not patient-specific."
+    },
+    {
+      "id": "jaundice",
+      "term": "Jaundice",
+      "aliases": [
+        "Icterus"
+      ],
+      "category": "Medical condition word",
+      "plain_explanation": "Yellowing of the skin or eyes, linked to bilirubin.",
+      "source_note": "General educational description written for MedLens (synthetic-data hackathon project), based on standard lab-medicine terminology. Not patient-specific."
+    }
+  ]
+}
