@@ -32,7 +32,10 @@
   button.primary:hover { filter: brightness(1.08); }
   .hint { color: var(--muted); font-size: calc(13px * var(--fs)); }
   .grid { display: grid; grid-template-columns: minmax(0, 46%) minmax(0, 54%); gap: 18px; margin-top: 18px; }
-  @media (max-width: 1000px) { .grid { grid-template-columns: 1fr; } .sticky { position: static !important; max-height: none !important; } }
+  @media (max-width: 1000px) { .grid { grid-template-columns: 1fr; } .sticky { position: static !important; max-height: none !important; }
+    .grid { grid-template-columns: minmax(0, 1fr); }
+    .grid > * { min-width: 0; }
+    #rep-card #report { white-space: pre; overflow-x: auto; } }
   .sticky { position: sticky; top: 52px; max-height: calc(100vh - 70px); overflow: auto; }
   #report { white-space: pre-wrap; font: calc(13px * var(--fs))/1.65 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; overflow-x: auto; }
   #report span[data-seg] { cursor: pointer; border-radius: 3px; }
