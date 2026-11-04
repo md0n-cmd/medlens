@@ -22,9 +22,9 @@ sample                       recognized unrecognized  coverage  unrecognized tok
 TOTAL                               135           14      91%
 ```
 
-**After** (302 entries):
+**After** (352 entries):
 ```
-Glossary entries: 302
+Glossary entries: 352
 sample                       recognized unrecognized  coverage  unrecognized tokens
 01_cbc.txt                           23            0     100%  
 02_lipid_diabetes.txt                14            0     100%  
@@ -34,8 +34,8 @@ sample                       recognized unrecognized  coverage  unrecognized tok
 06_age_bands.txt                      8            1      89%  MAPLE
 07_missing_ranges.txt                13            0     100%  
 08_coag_cardiac.txt                  17            0     100%  
-09_chest_xray_ecg.txt                34            0     100%  
-TOTAL                               187            1      99%
+09_chest_xray_ecg.txt                35            0     100%  
+TOTAL                               188            1      99%
 ```
 
 ## pytest -v

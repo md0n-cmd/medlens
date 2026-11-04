@@ -33,7 +33,7 @@
 | 29 | Ambiguous abbreviation `PCV` | Context keywords resolve it; otherwise all meanings listed | `test_ambiguous_abbreviation_*` |
 | 30 | Unknown term (`cholecystitis`, `QZX`) | Listed as "unrecognized: ask your clinician"; no meaning invented | `test_unrecognized_terms_are_listed_not_explained` |
 | 31 | Diagnostic/treatment wording in generated text | Replaced by safe fallback | `test_safety_blocks_diagnostic_and_treatment_phrasing` |
-| 32 | Glossary content safety | All 302 entries must pass the filter | `test_every_glossary_entry_passes_safety_filter` |
+| 32 | Glossary content safety | All 352 entries must pass the filter | `test_every_glossary_entry_passes_safety_filter` |
 | 33 | CRLF line endings | Normalised; offsets match the returned text | `test_crlf_input_normalised` |
 | 34 | Empty input | HTTP 400 | `test_api.py::test_analyze_rejects_empty` |
 | 35 | Text with no medical content | Warning; empty results | `test_empty_and_garbage_input` |

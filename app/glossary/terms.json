@@ -3689,6 +3689,600 @@
       "kind": "report_word",
       "plain_explanation": "Parasites (such as malaria) looked for in blood on a smear.",
       "source_note": "General educational description written for MedLens (synthetic-data hackathon project), based on standard lab-medicine terminology. Not patient-specific."
+    },
+    {
+      "id": "absolute_neutrophil_count",
+      "term": "Absolute Neutrophil Count",
+      "aliases": [
+        "ANC",
+        "Absolute Neutrophils"
+      ],
+      "category": "Blood count (CBC)",
+      "kind": "test",
+      "plain_explanation": "The number of neutrophils (a type of white blood cell) in a set amount of blood, rather than their percentage.",
+      "source_note": "General educational description written for MedLens (synthetic-data hackathon project), based on standard lab-medicine terminology. Not patient-specific."
+    },
+    {
+      "id": "absolute_lymphocyte_count",
+      "term": "Absolute Lymphocyte Count",
+      "aliases": [
+        "ALC",
+        "Absolute Lymphocytes"
+      ],
+      "category": "Blood count (CBC)",
+      "kind": "test",
+      "plain_explanation": "The number of lymphocytes (a type of white blood cell) in a set amount of blood, rather than their percentage.",
+      "source_note": "General educational description written for MedLens (synthetic-data hackathon project), based on standard lab-medicine terminology. Not patient-specific."
+    },
+    {
+      "id": "neutrophil_lymphocyte_ratio",
+      "term": "Neutrophil-Lymphocyte Ratio",
+      "aliases": [
+        "NLR",
+        "Neutrophil Lymphocyte Ratio"
+      ],
+      "category": "Blood count (CBC)",
+      "kind": "test",
+      "plain_explanation": "A calculated number that divides the neutrophil count by the lymphocyte count.",
+      "source_note": "General educational description written for MedLens (synthetic-data hackathon project), based on standard lab-medicine terminology. Not patient-specific."
+    },
+    {
+      "id": "platelet_distribution_width",
+      "term": "Platelet Distribution Width",
+      "aliases": [
+        "PDW"
+      ],
+      "category": "Blood count (CBC)",
+      "kind": "test",
+      "plain_explanation": "Shows how much platelets vary in size from one another.",
+      "source_note": "General educational description written for MedLens (synthetic-data hackathon project), based on standard lab-medicine terminology. Not patient-specific."
+    },
+    {
+      "id": "plateletcrit",
+      "term": "Plateletcrit",
+      "aliases": [
+        "Platelet Crit"
+      ],
+      "category": "Blood count (CBC)",
+      "kind": "test",
+      "plain_explanation": "The share of blood volume made up of platelets.",
+      "source_note": "General educational description written for MedLens (synthetic-data hackathon project), based on standard lab-medicine terminology. Not patient-specific."
+    },
+    {
+      "id": "nucleated_rbc",
+      "term": "Nucleated RBC",
+      "aliases": [
+        "nRBC",
+        "NRBC",
+        "Nucleated Red Blood Cells"
+      ],
+      "category": "Blood count (CBC)",
+      "kind": "test",
+      "plain_explanation": "Young red blood cells that still have a nucleus, counted on a blood test.",
+      "source_note": "General educational description written for MedLens (synthetic-data hackathon project), based on standard lab-medicine terminology. Not patient-specific."
+    },
+    {
+      "id": "band_forms",
+      "term": "Band Forms",
+      "aliases": [
+        "Band Cells",
+        "Bands",
+        "Stab Cells"
+      ],
+      "category": "Peripheral smear",
+      "kind": "finding",
+      "plain_explanation": "Young neutrophils (a type of white blood cell) seen on a smear.",
+      "source_note": "General educational description written for MedLens (synthetic-data hackathon project), based on standard lab-medicine terminology. Not patient-specific."
+    },
+    {
+      "id": "myelocytes",
+      "term": "Myelocytes",
+      "aliases": [
+        "Metamyelocytes",
+        "Myelocyte"
+      ],
+      "category": "Peripheral smear",
+      "kind": "finding",
+      "plain_explanation": "Immature white blood cells, usually found in the bone marrow, sometimes seen on a smear.",
+      "source_note": "General educational description written for MedLens (synthetic-data hackathon project), based on standard lab-medicine terminology. Not patient-specific."
+    },
+    {
+      "id": "hemoglobin_electrophoresis",
+      "term": "Hemoglobin Electrophoresis",
+      "aliases": [
+        "Hb Electrophoresis",
+        "HPLC for Hemoglobin Variants",
+        "Hb HPLC"
+      ],
+      "category": "Blood count (CBC)",
+      "kind": "test",
+      "plain_explanation": "A test that separates and measures the different types of hemoglobin in the blood.",
+      "source_note": "General educational description written for MedLens (synthetic-data hackathon project), based on standard lab-medicine terminology. Not patient-specific."
+    },
+    {
+      "id": "fetal_hemoglobin",
+      "term": "Fetal Hemoglobin",
+      "aliases": [
+        "HbF",
+        "Hb F",
+        "Foetal Haemoglobin"
+      ],
+      "category": "Blood count (CBC)",
+      "kind": "test",
+      "plain_explanation": "Measures the type of hemoglobin made mostly before birth.",
+      "source_note": "General educational description written for MedLens (synthetic-data hackathon project), based on standard lab-medicine terminology. Not patient-specific."
+    },
+    {
+      "id": "hba2",
+      "term": "HbA2",
+      "aliases": [
+        "Hb A2"
+      ],
+      "category": "Blood count (CBC)",
+      "kind": "test",
+      "plain_explanation": "Measures HbA2, a minor type of adult hemoglobin.",
+      "source_note": "General educational description written for MedLens (synthetic-data hackathon project), based on standard lab-medicine terminology. Not patient-specific."
+    },
+    {
+      "id": "sickling_test",
+      "term": "Sickling Test",
+      "aliases": [
+        "Sickle Cell Test",
+        "Sickling"
+      ],
+      "category": "Blood count (CBC)",
+      "kind": "test",
+      "plain_explanation": "A test that checks whether red blood cells change into a sickle (crescent) shape under certain conditions.",
+      "source_note": "General educational description written for MedLens (synthetic-data hackathon project), based on standard lab-medicine terminology. Not patient-specific."
+    },
+    {
+      "id": "g6pd",
+      "term": "G6PD",
+      "aliases": [
+        "G6PD Assay",
+        "Glucose-6-Phosphate Dehydrogenase"
+      ],
+      "category": "Blood count (CBC)",
+      "kind": "test",
+      "plain_explanation": "Measures G6PD, an enzyme that helps protect red blood cells.",
+      "source_note": "General educational description written for MedLens (synthetic-data hackathon project), based on standard lab-medicine terminology. Not patient-specific."
+    },
+    {
+      "id": "coombs_test",
+      "term": "Coombs Test",
+      "aliases": [
+        "Direct Coombs Test",
+        "Indirect Coombs Test",
+        "DAT",
+        "Antiglobulin Test"
+      ],
+      "category": "Blood count (CBC)",
+      "kind": "test",
+      "plain_explanation": "A test that checks for antibodies attached to red blood cells or floating in the blood.",
+      "source_note": "General educational description written for MedLens (synthetic-data hackathon project), based on standard lab-medicine terminology. Not patient-specific."
+    },
+    {
+      "id": "cystatin_c",
+      "term": "Cystatin C",
+      "aliases": [
+        "Serum Cystatin C"
+      ],
+      "category": "Kidney function (KFT/RFT)",
+      "kind": "test",
+      "plain_explanation": "Measures cystatin C, a small protein that the kidneys filter out of the blood.",
+      "source_note": "General educational description written for MedLens (synthetic-data hackathon project), based on standard lab-medicine terminology. Not patient-specific."
+    },
+    {
+      "id": "urine_sodium",
+      "term": "Urine Sodium",
+      "aliases": [
+        "Spot Urine Sodium"
+      ],
+      "category": "Urine & stool",
+      "kind": "test",
+      "plain_explanation": "Measures sodium in a urine sample.",
+      "source_note": "General educational description written for MedLens (synthetic-data hackathon project), based on standard lab-medicine terminology. Not patient-specific."
+    },
+    {
+      "id": "oral_glucose_tolerance_test",
+      "term": "Oral Glucose Tolerance Test",
+      "aliases": [
+        "OGTT",
+        "GTT",
+        "Glucose Tolerance Test"
+      ],
+      "category": "Diabetes / glucose",
+      "kind": "test",
+      "plain_explanation": "Measures blood sugar before and at set times after drinking a standard sugar drink.",
+      "source_note": "General educational description written for MedLens (synthetic-data hackathon project), based on standard lab-medicine terminology. Not patient-specific."
+    },
+    {
+      "id": "fructosamine",
+      "term": "Fructosamine",
+      "aliases": [],
+      "category": "Diabetes / glucose",
+      "kind": "test",
+      "plain_explanation": "Measures sugar attached to blood proteins; it reflects average blood sugar over about 2–3 weeks.",
+      "source_note": "General educational description written for MedLens (synthetic-data hackathon project), based on standard lab-medicine terminology. Not patient-specific."
+    },
+    {
+      "id": "lipoprotein_a",
+      "term": "Lipoprotein(a)",
+      "aliases": [
+        "Lp(a)",
+        "Lipoprotein a",
+        "Lipoprotein (a)"
+      ],
+      "category": "Lipid profile",
+      "kind": "test",
+      "plain_explanation": "Measures lipoprotein(a), a type of particle that carries cholesterol in the blood.",
+      "source_note": "General educational description written for MedLens (synthetic-data hackathon project), based on standard lab-medicine terminology. Not patient-specific."
+    },
+    {
+      "id": "apolipoprotein_a1",
+      "term": "Apolipoprotein A1",
+      "aliases": [
+        "Apo A1",
+        "ApoA1",
+        "Apo A-I"
+      ],
+      "category": "Lipid profile",
+      "kind": "test",
+      "plain_explanation": "Measures apolipoprotein A1, the main protein in HDL particles.",
+      "source_note": "General educational description written for MedLens (synthetic-data hackathon project), based on standard lab-medicine terminology. Not patient-specific."
+    },
+    {
+      "id": "apolipoprotein_b",
+      "term": "Apolipoprotein B",
+      "aliases": [
+        "Apo B",
+        "ApoB"
+      ],
+      "category": "Lipid profile",
+      "kind": "test",
+      "plain_explanation": "Measures apolipoprotein B, the main protein in LDL and VLDL particles.",
+      "source_note": "General educational description written for MedLens (synthetic-data hackathon project), based on standard lab-medicine terminology. Not patient-specific."
+    },
+    {
+      "id": "hepatosplenomegaly",
+      "term": "Hepatosplenomegaly",
+      "aliases": [],
+      "category": "Finding word",
+      "kind": "finding",
+      "plain_explanation": "A medical term meaning both the liver and the spleen look larger than the usual size.",
+      "source_note": "General educational description written for MedLens (synthetic-data hackathon project), based on standard lab-medicine terminology. Not patient-specific."
+    },
+    {
+      "id": "gallbladder_sludge",
+      "term": "Gallbladder Sludge",
+      "aliases": [
+        "Biliary Sludge",
+        "Sludge"
+      ],
+      "category": "Finding word",
+      "kind": "finding",
+      "plain_explanation": "A word for thick material settled inside the gallbladder, seen on ultrasound.",
+      "source_note": "General educational description written for MedLens (synthetic-data hackathon project), based on standard lab-medicine terminology. Not patient-specific."
+    },
+    {
+      "id": "polyp",
+      "term": "Polyp",
+      "aliases": [
+        "Polyps",
+        "GB Polyp",
+        "Gallbladder Polyp"
+      ],
+      "category": "Finding word",
+      "kind": "finding",
+      "plain_explanation": "A small growth sticking out from the inner lining of an organ.",
+      "source_note": "General educational description written for MedLens (synthetic-data hackathon project), based on standard lab-medicine terminology. Not patient-specific.",
+      "what_it_is_not": "The word alone does not say what the growth is."
+    },
+    {
+      "id": "pericholecystic_fluid",
+      "term": "Pericholecystic Fluid",
+      "aliases": [],
+      "category": "Finding word",
+      "kind": "finding",
+      "plain_explanation": "A word for fluid seen around the gallbladder on a scan.",
+      "source_note": "General educational description written for MedLens (synthetic-data hackathon project), based on standard lab-medicine terminology. Not patient-specific."
+    },
+    {
+      "id": "prostatomegaly",
+      "term": "Prostatomegaly",
+      "aliases": [
+        "Enlarged Prostate"
+      ],
+      "category": "Finding word",
+      "kind": "finding",
+      "plain_explanation": "A medical term meaning the prostate gland looks larger than the usual size.",
+      "source_note": "General educational description written for MedLens (synthetic-data hackathon project), based on standard lab-medicine terminology. Not patient-specific."
+    },
+    {
+      "id": "fibroid",
+      "term": "Fibroid",
+      "aliases": [
+        "Fibroids",
+        "Uterine Fibroid",
+        "Leiomyoma"
+      ],
+      "category": "Finding word",
+      "kind": "finding",
+      "plain_explanation": "A medical term for a lump made of muscle tissue in the wall of the uterus.",
+      "source_note": "General educational description written for MedLens (synthetic-data hackathon project), based on standard lab-medicine terminology. Not patient-specific."
+    },
+    {
+      "id": "bulky_uterus",
+      "term": "Bulky Uterus",
+      "aliases": [],
+      "category": "Finding word",
+      "kind": "finding",
+      "plain_explanation": "A report term meaning the uterus looks larger than usual on a scan.",
+      "source_note": "General educational description written for MedLens (synthetic-data hackathon project), based on standard lab-medicine terminology. Not patient-specific."
+    },
+    {
+      "id": "endometrial_thickness",
+      "term": "Endometrial Thickness",
+      "aliases": [
+        "ET",
+        "Endometrium"
+      ],
+      "category": "Radiology / report language",
+      "kind": "report_word",
+      "plain_explanation": "On a scan, how thick the inner lining of the uterus (the endometrium) is.",
+      "source_note": "General educational description written for MedLens (synthetic-data hackathon project), based on standard lab-medicine terminology. Not patient-specific."
+    },
+    {
+      "id": "ovary",
+      "term": "Ovary",
+      "aliases": [
+        "Ovaries",
+        "Right Ovary",
+        "Left Ovary"
+      ],
+      "category": "Radiology / report language",
+      "kind": "report_word",
+      "plain_explanation": "The two small organs on each side of the uterus that hold eggs and make hormones.",
+      "source_note": "General educational description written for MedLens (synthetic-data hackathon project), based on standard lab-medicine terminology. Not patient-specific."
+    },
+    {
+      "id": "uterus",
+      "term": "Uterus",
+      "aliases": [
+        "Uterine"
+      ],
+      "category": "Radiology / report language",
+      "kind": "report_word",
+      "plain_explanation": "The womb: the organ in the pelvis where a baby grows during pregnancy.",
+      "source_note": "General educational description written for MedLens (synthetic-data hackathon project), based on standard lab-medicine terminology. Not patient-specific."
+    },
+    {
+      "id": "post_void_residual",
+      "term": "Post-Void Residual",
+      "aliases": [
+        "PVR",
+        "Post Void Residual Urine",
+        "Post-Void Residual Volume"
+      ],
+      "category": "Radiology / report language",
+      "kind": "report_word",
+      "plain_explanation": "The amount of urine left in the bladder right after passing urine, measured on ultrasound.",
+      "source_note": "General educational description written for MedLens (synthetic-data hackathon project), based on standard lab-medicine terminology. Not patient-specific."
+    },
+    {
+      "id": "bronchiectasis",
+      "term": "Bronchiectasis",
+      "aliases": [],
+      "category": "Finding word",
+      "kind": "finding",
+      "plain_explanation": "A medical term for airways in the lungs that have become wider than usual.",
+      "source_note": "General educational description written for MedLens (synthetic-data hackathon project), based on standard lab-medicine terminology. Not patient-specific."
+    },
+    {
+      "id": "emphysema",
+      "term": "Emphysema",
+      "aliases": [
+        "Emphysematous"
+      ],
+      "category": "Finding word",
+      "kind": "finding",
+      "plain_explanation": "A medical term for damage to the tiny air sacs in the lungs.",
+      "source_note": "General educational description written for MedLens (synthetic-data hackathon project), based on standard lab-medicine terminology. Not patient-specific."
+    },
+    {
+      "id": "ground_glass_opacity",
+      "term": "Ground-Glass Opacity",
+      "aliases": [
+        "Ground Glass Opacity",
+        "GGO",
+        "Ground-Glass Opacities"
+      ],
+      "category": "Finding word",
+      "kind": "finding",
+      "plain_explanation": "On a CT scan, a hazy area in the lung through which blood vessels can still be seen.",
+      "source_note": "General educational description written for MedLens (synthetic-data hackathon project), based on standard lab-medicine terminology. Not patient-specific."
+    },
+    {
+      "id": "pleural_thickening",
+      "term": "Pleural Thickening",
+      "aliases": [],
+      "category": "Finding word",
+      "kind": "finding",
+      "plain_explanation": "A word for thickening of the thin layer that lines the lungs and chest wall.",
+      "source_note": "General educational description written for MedLens (synthetic-data hackathon project), based on standard lab-medicine terminology. Not patient-specific."
+    },
+    {
+      "id": "spondylosis",
+      "term": "Spondylosis",
+      "aliases": [
+        "Cervical Spondylosis",
+        "Lumbar Spondylosis"
+      ],
+      "category": "Finding word",
+      "kind": "finding",
+      "plain_explanation": "A medical term for wear-and-tear changes in the bones and discs of the spine.",
+      "source_note": "General educational description written for MedLens (synthetic-data hackathon project), based on standard lab-medicine terminology. Not patient-specific."
+    },
+    {
+      "id": "osteophytes",
+      "term": "Osteophytes",
+      "aliases": [
+        "Osteophyte",
+        "Bony Spurs"
+      ],
+      "category": "Finding word",
+      "kind": "finding",
+      "plain_explanation": "Small bony growths at the edges of joints or spine bones.",
+      "source_note": "General educational description written for MedLens (synthetic-data hackathon project), based on standard lab-medicine terminology. Not patient-specific."
+    },
+    {
+      "id": "degenerative_changes",
+      "term": "Degenerative Changes",
+      "aliases": [
+        "Degenerative Change"
+      ],
+      "category": "Finding word",
+      "kind": "finding",
+      "plain_explanation": "A report phrase for wear-and-tear changes, often seen with age.",
+      "source_note": "General educational description written for MedLens (synthetic-data hackathon project), based on standard lab-medicine terminology. Not patient-specific."
+    },
+    {
+      "id": "disc_bulge",
+      "term": "Disc Bulge",
+      "aliases": [
+        "Disc Bulges",
+        "Disc Protrusion",
+        "Disc Herniation"
+      ],
+      "category": "Finding word",
+      "kind": "finding",
+      "plain_explanation": "A word for a spinal disc that extends beyond its usual edge.",
+      "source_note": "General educational description written for MedLens (synthetic-data hackathon project), based on standard lab-medicine terminology. Not patient-specific."
+    },
+    {
+      "id": "fracture",
+      "term": "Fracture",
+      "aliases": [
+        "Fractures"
+      ],
+      "category": "Finding word",
+      "kind": "finding",
+      "plain_explanation": "A medical term for a break or crack in a bone.",
+      "source_note": "General educational description written for MedLens (synthetic-data hackathon project), based on standard lab-medicine terminology. Not patient-specific."
+    },
+    {
+      "id": "parenchyma",
+      "term": "Parenchyma",
+      "aliases": [
+        "Parenchymal"
+      ],
+      "category": "Radiology / report language",
+      "kind": "report_word",
+      "plain_explanation": "The main working tissue of an organ, such as the liver or kidney.",
+      "source_note": "General educational description written for MedLens (synthetic-data hackathon project), based on standard lab-medicine terminology. Not patient-specific."
+    },
+    {
+      "id": "contour",
+      "term": "Contour",
+      "aliases": [
+        "Contours",
+        "Outline"
+      ],
+      "category": "Radiology / report language",
+      "kind": "report_word",
+      "plain_explanation": "The outer edge or shape of an organ on an image.",
+      "source_note": "General educational description written for MedLens (synthetic-data hackathon project), based on standard lab-medicine terminology. Not patient-specific."
+    },
+    {
+      "id": "margins",
+      "term": "Margins",
+      "aliases": [
+        "Margin",
+        "Well-Defined Margins",
+        "Ill-Defined Margins"
+      ],
+      "category": "Radiology / report language",
+      "kind": "report_word",
+      "plain_explanation": "The edges of something seen on an image, described as clear or unclear.",
+      "source_note": "General educational description written for MedLens (synthetic-data hackathon project), based on standard lab-medicine terminology. Not patient-specific."
+    },
+    {
+      "id": "collecting_system",
+      "term": "Collecting System",
+      "aliases": [
+        "Pelvicalyceal System",
+        "PCS"
+      ],
+      "category": "Radiology / report language",
+      "kind": "report_word",
+      "plain_explanation": "The part of the kidney that collects urine before it flows down to the bladder.",
+      "source_note": "General educational description written for MedLens (synthetic-data hackathon project), based on standard lab-medicine terminology. Not patient-specific."
+    },
+    {
+      "id": "corticomedullary",
+      "term": "Corticomedullary",
+      "aliases": [
+        "Cortex",
+        "Medulla"
+      ],
+      "category": "Radiology / report language",
+      "kind": "report_word",
+      "plain_explanation": "The outer (cortex) and inner (medulla) parts of an organ such as the kidney.",
+      "source_note": "General educational description written for MedLens (synthetic-data hackathon project), based on standard lab-medicine terminology. Not patient-specific."
+    },
+    {
+      "id": "grade",
+      "term": "Grade",
+      "aliases": [
+        "Grade I",
+        "Grade II",
+        "Grade III",
+        "Grade 1",
+        "Grade 2",
+        "Grade 3"
+      ],
+      "category": "Radiology / report language",
+      "kind": "report_word",
+      "plain_explanation": "A number or level the reporting doctor uses to describe how much of a change is seen.",
+      "source_note": "General educational description written for MedLens (synthetic-data hackathon project), based on standard lab-medicine terminology. Not patient-specific."
+    },
+    {
+      "id": "zone",
+      "term": "Zone",
+      "aliases": [
+        "Upper Zone",
+        "Mid Zone",
+        "Lower Zone"
+      ],
+      "category": "Radiology / report language",
+      "kind": "report_word",
+      "plain_explanation": "On a chest X-ray, one of the upper, middle or lower areas of each lung.",
+      "source_note": "General educational description written for MedLens (synthetic-data hackathon project), based on standard lab-medicine terminology. Not patient-specific."
+    },
+    {
+      "id": "lobe",
+      "term": "Lobe",
+      "aliases": [
+        "Lobes",
+        "Right Lobe",
+        "Left Lobe"
+      ],
+      "category": "Radiology / report language",
+      "kind": "report_word",
+      "plain_explanation": "A distinct section of an organ such as the lung, liver or thyroid.",
+      "source_note": "General educational description written for MedLens (synthetic-data hackathon project), based on standard lab-medicine terminology. Not patient-specific."
+    },
+    {
+      "id": "thyroid_gland",
+      "term": "Thyroid Gland",
+      "aliases": [
+        "Thyroid Lobes",
+        "Isthmus"
+      ],
+      "category": "Radiology / report language",
+      "kind": "report_word",
+      "plain_explanation": "A butterfly-shaped gland at the front of the neck that makes thyroid hormones.",
+      "source_note": "General educational description written for MedLens (synthetic-data hackathon project), based on standard lab-medicine terminology. Not patient-specific."
     }
   ]
 }
