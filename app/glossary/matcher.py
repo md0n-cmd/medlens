@@ -27,7 +27,14 @@ def load_glossary() -> dict:
     return {t["id"]: t for t in data["terms"]}
 
 
+SHORT_CAPS = re.compile(r"^(?=.*[A-Z])[A-Z0-9/+\-.]{1,4}$")
+
+
 def _alias_pattern(alias: str) -> str:
+    a = alias.strip()
+    if SHORT_CAPS.match(a):
+        # short ALL-CAPS abbreviation (CT, PT, RA, TSH, B/L): exact case only, so "ct", "Ct" never match
+        return f"(?-i:{re.escape(a)})"
     parts = re.split(r"[\s,()\-]+", alias.strip())
     parts = [re.escape(p) for p in parts if p]
     body = r"[\s,()\-]*".join(parts) if len(parts) > 1 else re.escape(alias.strip())
@@ -86,7 +93,7 @@ def find_terms(text: str) -> list[TermMatch]:
             id=f"t{len(out)}", term_id=tid, term=e["term"], matched_text=m.group(0),
             span=Span(start=m.start(), end=m.end(), text=m.group(0)), category=e["category"],
             plain_explanation=expl, what_it_is_not=e.get("what_it_is_not"),
-            source_note=e.get("source_note"), ambiguous=ambiguous, possibilities=poss,
+            source_note=e.get("source_note"), ambiguous=ambiguous, possibilities=poss, kind=e.get("kind", "test"),
         ))
     return out
 

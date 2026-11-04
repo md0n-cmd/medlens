@@ -44,6 +44,7 @@ def _fmt_value(v: LabValue) -> str:
     return f"{v.value_raw}{(' ' + v.unit) if v.unit else ''}"
 
 
+FINDING_NOTE = "This explains the word only. Whether it applies to you is for your doctor to say."
 NO_RANGE_TEXT = ("Your report does not print a reference range for this test, so MedLens does not compare it. "
                  "We never use outside 'normal' values. Ask the lab or your doctor what range applies.")
 PLACEHOLDER_RE = re.compile(
@@ -288,6 +289,8 @@ def analyze(text: str, explain_unknown: Optional[UnknownTermExplainer] = None) -
             body += " Possible meanings: " + "; ".join(t.possibilities) + "."
         if t.what_it_is_not:
             body += " Note: " + t.what_it_is_not
+        if t.kind == "finding":
+            body += " " + FINDING_NOTE
         ln = next(l for l in lines if l.start <= t.span.start <= l.end)
         add(Tag.GENERAL, t.term, body, ln.text.strip(), t.span, t.term_id, origin="glossary")
 

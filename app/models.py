@@ -115,6 +115,7 @@ class TermMatch(BaseModel):
     source_note: Optional[str] = None
     ambiguous: bool = False
     possibilities: list[str] = Field(default_factory=list)
+    kind: Literal["test", "finding", "abbreviation", "report_word"] = "test"
 
 
 class UnrecognizedTerm(BaseModel):

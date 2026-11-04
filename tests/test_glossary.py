@@ -70,3 +70,54 @@ def test_known_terms_not_reported_as_unrecognized():
 def test_synthetic_banner_word_sample_is_not_a_term():
     assert ids("*** SYNTHETIC SAMPLE — not real patient data ***") == []
     assert ids("Sample Type: Serum") == ["specimen", "serum"]
+
+
+# ---------------------------------------------------------------- abbreviation safety
+def test_ct_is_case_sensitive():
+    assert ids("CT scan of abdomen") == ["computed_tomography"]
+    assert ids("ct") == [] and ids("Ct value") == []
+    assert ids("12 ct units") == []
+
+
+def test_short_caps_not_inside_longer_tokens():
+    assert "prothrombin_time" not in ids("PTH 45 pg/mL")             # PT inside PTH
+    assert ids("PT/INR 1.1") and ids("PT/INR 1.1")[0] == "prothrombin_time"
+    assert ids("ERA BRAIN") == []                                     # RA/ERA inside words
+    assert ids("mm/1st hr") == []                                     # HR as a unit, lowercase
+
+
+def test_longest_match_still_first_with_abbreviations():
+    assert ids("CT Scan") == ["computed_tomography"]
+    assert ids("Chest X-ray") == ["x_ray"]
+    assert ids("Normal Sinus Rhythm") == ["sinus_rhythm"]
+
+
+def test_no_duplicate_aliases_across_entries():
+    owner = {}
+    for e in load_glossary().values():
+        for a in {x.strip().lower() for x in [e["term"], *e["aliases"]]}:
+            assert a not in owner, (a, owner.get(a), e["id"])
+            owner[a] = e["id"]
+
+
+def test_no_forbidden_phrases_in_entries():
+    import re
+    bad = re.compile(r"you have|indicates|means you|diagnos|treat", re.I)
+    for e in load_glossary().values():
+        for f in ("plain_explanation", "what_it_is_not"):
+            assert not bad.search(e.get(f) or ""), (e["id"], f)
+
+
+def test_kinds_and_finding_note():
+    from app.pipeline import FINDING_NOTE, analyze
+    gl = load_glossary()
+    assert {e["kind"] for e in gl.values()} <= {"test", "finding", "abbreviation", "report_word"}
+    for tid in ("cholecystitis", "hepatomegaly", "malignant", "cardiomegaly"):
+        assert gl[tid]["kind"] == "finding"
+    r = analyze("IMPRESSION:\nHepatomegaly. Findings suggestive of cholecystitis.")
+    cards = [e for e in r.explanations if e.origin == "glossary"]
+    finding_cards = [e for e in cards if gl[e.related_id]["kind"] == "finding"]
+    assert finding_cards and all(FINDING_NOTE in e.text for e in finding_cards)
+    assert all(FINDING_NOTE not in e.text for e in cards if gl[e.related_id]["kind"] != "finding")
+    # the Impression line itself stays NEEDS_PROFESSIONAL_INTERPRETATION
+    assert any(e.tag.value == "NEEDS_PROFESSIONAL_INTERPRETATION" and e.title.startswith("IMPRESSION") for e in r.explanations)
