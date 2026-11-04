@@ -147,6 +147,9 @@
   .tsearch .inrep { color: var(--in); font-weight: 600; font-size: calc(12px * var(--fs)); }
   .tsearch .def { margin-top: 10px; padding: 10px 12px; background: #e0f4f4; border-radius: 8px; }
   .h-search { background: #ffe066 !important; box-shadow: 0 0 0 2px #e0b800; }
+  .h-passage { outline: 2px solid var(--brand); outline-offset: 1px; background: #eef3ff; }
+  .xcard .pbtns { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; margin-top: 6px; }
+  .xcard .pbtns button { padding: 4px 10px; font-size: calc(12.5px * var(--fs)); }
   @media print {
     header .fs-ctl, #input-card, .review, .controls, button, #rep-card, .group.FACTUAL_FROM_REPORT, .group.GENERAL_INFO, footer, .legend { display: none !important; }
     .disclaimer { position: static; }
@@ -329,7 +332,17 @@ function buildSpans(r) {
     if (v.flag_span) spans.push({start: v.flag_span.start, end: v.flag_span.end, cls: v.flag_disagreement ? "h-flagbad" : "h-flag", eid,
       title: v.flag_disagreement ? "Report flag disagrees with computed comparison" : "Flag printed by the lab"});
   });
+  r.explanations.forEach(e => { if (e.passage) spans.push({start: e.passage.start, end: e.passage.end, cls: "psg", eid: null, title: ""}); });
   return spans.filter(s => s.end > s.start);
+}
+
+function showPassage(p) {
+  document.querySelectorAll("#report .h-passage").forEach(x => x.classList.remove("h-passage"));
+  if (!p) return;
+  document.querySelectorAll("#report span[data-seg]").forEach(seg => {
+    if (+seg.dataset.a >= p.start && +seg.dataset.b <= p.end) seg.classList.add("h-passage");
+  });
+  flashRange(p.start, p.end);
 }
 
 function renderReport(r, spans) {
@@ -345,7 +358,7 @@ function renderReport(r, spans) {
     if (!cover.length) { html += esc(seg); continue; }
     cover.sort((x, y) => (x[0].end - x[0].start) - (y[0].end - y[0].start));   // innermost first
     const cls = [...new Set(cover.map(([s]) => s.cls))].join(" ");
-    const best = cover.find(([s]) => s.eid) || cover[0];
+    const best = cover.find(([s]) => s.eid) || cover.find(([s]) => s.title) || cover[0];
     html += `<span data-seg data-a="${a}" data-b="${b}" data-eid="${best[0].eid || ""}" class="${cls}" title="${esc(best[0].title)}">${esc(seg)}</span>`;
   }
   const el = $("#report");
@@ -406,6 +419,16 @@ function renderTable(r) {
   });
 }
 
+function passageButtons(e) {
+  if (!e.passage) return "";
+  let h = `<div class="pbtns"><button data-show="${e.id}">Show in report</button>`;
+  if (e.origin === "glossary") {
+    const n = result.terms.filter(t => t.term_id === e.related_id).length;
+    if (n > 1) h += `<span class="hint">Appears ${n} times</span><button data-step="-1" data-tid="${esc(e.related_id)}" aria-label="Previous occurrence">‹</button><span class="hint" data-occn="${esc(e.related_id)}">1 of ${n}</span><button data-step="1" data-tid="${esc(e.related_id)}" aria-label="Next occurrence">›</button>`;
+  }
+  return h + "</div>";
+}
+const cardOcc = {};
 function renderCards(r) {
   const byVal = Object.fromEntries(r.values.map(v => [v.id, v]));
   const g = $("#groups");
@@ -419,7 +442,7 @@ function renderCards(r) {
       return `<div class="xcard" id="card-${e.id}" tabindex="0" data-eid="${e.id}">
         <span class="badge b-${tag}">${meta.label}</span>${origin}${filtered}
         <div class="t">${esc(e.title)}</div><div>${esc(e.text)}</div>${notes}
-        <div class="src">${esc(e.source_snippet)}</div></div>`;
+        <div class="src">${esc(e.source_snippet)}</div>${passageButtons(e)}</div>`;
     }).join("") || `<div class="hint">Nothing in this category.</div>`;
     const open = tag === "GENERAL_INFO" ? "" : " open";
     return `<details class="group ${tag}"${open}><summary><h3>${meta.label} (${items.length})</h3></summary><div class="desc">${meta.desc}</div>${cards}</details>`;
@@ -431,8 +454,20 @@ function renderCards(r) {
       const e = r.explanations.find(x => x.id === c.dataset.eid);
       if (e && e.span) flashRange(e.span.start, e.span.end);
     };
-    c.addEventListener("click", go); c.addEventListener("keydown", ev => { if (ev.key === "Enter") go(); });
+    c.addEventListener("click", ev => { if (ev.target.closest("button")) return; go(); });
+    c.addEventListener("keydown", ev => { if (ev.key === "Enter" && !ev.target.closest("button")) go(); });
   });
+  g.querySelectorAll("button[data-show]").forEach(b => b.addEventListener("click", () => {
+    const e = r.explanations.find(x => x.id === b.dataset.show); showPassage(e && e.passage);
+  }));
+  g.querySelectorAll("button[data-step]").forEach(b => b.addEventListener("click", () => {
+    const tid = b.dataset.tid, occs = r.terms.filter(t => t.term_id === tid);
+    cardOcc[tid] = ((cardOcc[tid] || 0) + +b.dataset.step + occs.length) % occs.length;
+    const t = occs[cardOcc[tid]];
+    g.querySelectorAll(`[data-occn="${CSS.escape(tid)}"]`).forEach(x => x.textContent = `${cardOcc[tid] + 1} of ${occs.length}`);
+    const ln = r.explanations.find(x => x.passage && x.passage.start <= t.span.start && t.span.end <= x.passage.end);
+    showPassage(ln ? ln.passage : t.span); flashRange(t.span.start, t.span.end);
+  }));
 }
 
 

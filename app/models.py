@@ -131,6 +131,7 @@ class ExplanationItem(BaseModel):
     text: str
     source_snippet: str
     span: Optional[Span] = None
+    passage: Optional[Span] = None               # whole source line, or whole section block for Impression etc.
     related_id: Optional[str] = None             # id of the LabValue / TermMatch / etc.
     origin: Literal["rule", "glossary", "llm"] = "rule"
     safety_filtered: bool = False

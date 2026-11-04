@@ -233,11 +233,25 @@ def analyze(text: str, explain_unknown: Optional[UnknownTermExplainer] = None) -
     # ---- explanations
     ex: list[ExplanationItem] = []
 
+    def passage_for(span: Optional[Span], block: bool = False) -> Optional[Span]:
+        if span is None:
+            return None
+        if block:
+            sec = next((x for x in sections if x.start <= span.start <= x.end), None)
+            if sec is not None:
+                seg = text[sec.start:sec.end]
+                lead = len(seg) - len(seg.lstrip())
+                body = seg.strip()
+                return Span(start=sec.start + lead, end=sec.start + lead + len(body), text=body)
+        ln = next(l for l in lines if l.start <= span.start <= l.end)
+        return _line_span(ln)
+
     def add(tag: Tag, title: str, body: str, snippet: str, span: Optional[Span], related: Optional[str],
-            origin: str = "rule") -> None:
+            origin: str = "rule", block: bool = False) -> None:
         safe, filtered = sanitize(body)
         ex.append(ExplanationItem(id=f"e{len(ex)}", tag=tag, title=title, text=safe, source_snippet=snippet,
-                                  span=span, related_id=related, origin=origin, safety_filtered=filtered))
+                                  span=span, passage=passage_for(span, block), related_id=related, origin=origin,
+                                  safety_filtered=filtered))
 
     line_by_no = {ln.number: ln for ln in lines}
     for v in values:
@@ -288,7 +302,8 @@ def analyze(text: str, explain_unknown: Optional[UnknownTermExplainer] = None) -
             if hedges:
                 body += " It also uses hedged wording (" + ", ".join(f"'{h.group(0).strip()}'" for h in hedges) + \
                         "), which describes a possibility, not a certainty."
-            add(Tag.PROFESSIONAL, f"{ln.section}: professional opinion", body, ln.text.strip(), _line_span(ln), None)
+            add(Tag.PROFESSIONAL, f"{ln.section}: professional opinion", body, ln.text.strip(), _line_span(ln), None,
+                block=True)
         elif hedges and not ln.interpretive:
             h = hedges[0]
             add(Tag.PROFESSIONAL, "Hedged language",
