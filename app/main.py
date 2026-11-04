@@ -6,8 +6,8 @@ from pathlib import Path
 
 from typing import Optional
 
-from fastapi import FastAPI, File, HTTPException, UploadFile
-from fastapi.responses import FileResponse
+from fastapi import FastAPI, File, HTTPException, Request, UploadFile
+from fastapi.responses import FileResponse, JSONResponse
 from pydantic import BaseModel
 
 from app.ingest.ocr import OCR_MISSING_MSG, TESSERACT_AVAILABLE, OcrUnavailable, ocr_bytes
@@ -15,6 +15,7 @@ from app.ingest.pdf import PdfError, extract_pdf
 
 from app.models import AnalysisResult, AnalyzeRequest
 from app.pipeline import analyze
+from app.ratelimit import LIMITED_PATHS, MESSAGE, limiter
 
 ROOT = Path(__file__).resolve().parent.parent
 SAMPLES = ROOT / "samples"
@@ -22,6 +23,16 @@ FRONTEND = ROOT / "frontend" / "index.html"
 
 app = FastAPI(title="MedLens", version="1.0.0",
               description="Medical report explanation & information navigator (informational only, not diagnosis).")
+
+
+@app.middleware("http")
+async def rate_limit(request: Request, call_next):
+    if request.method == "POST" and request.url.path in LIMITED_PATHS:
+        ip = request.client.host if request.client else "unknown"
+        ok, retry = limiter.allow(ip)
+        if not ok:
+            return JSONResponse(status_code=429, content={"detail": MESSAGE}, headers={"Retry-After": str(retry)})
+    return await call_next(request)
 
 
 def _explainer():

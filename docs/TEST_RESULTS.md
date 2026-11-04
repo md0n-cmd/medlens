@@ -48,7 +48,7 @@ rootdir: /home/d0n/medlens
 configfile: pytest.ini
 testpaths: tests
 plugins: anyio-4.16.0
-collecting ... collected 212 items
+collecting ... collected 215 items
 
 tests/test_age_bands.py::test_age_band_cell_parses_as_multi PASSED
 tests/test_age_bands.py::test_label_bands PASSED
@@ -214,6 +214,9 @@ tests/test_ranges.py::test_censored_values PASSED
 tests/test_ranges.py::test_qualitative_comparison PASSED
 tests/test_ranges.py::test_unit_compatibility PASSED
 tests/test_ranges.py::test_select_alternative_requires_header_sex PASSED
+tests/test_ratelimit.py::test_limiter_window PASSED
+tests/test_ratelimit.py::test_api_returns_429_with_friendly_message PASSED
+tests/test_ratelimit.py::test_llm_fallback_off_by_default PASSED
 tests/test_search.py::test_exact_first PASSED
 tests/test_search.py::test_alias_sgpt_to_alt PASSED
 tests/test_search.py::test_prefix_and_substring_ranked_after_exact PASSED
@@ -263,5 +266,5 @@ tests/test_values.py::test_value_without_range PASSED
 tests/test_values.py::test_non_result_lines_ignored PASSED
 tests/test_values.py::test_sections_and_interpretive_flag PASSED
 
-============================= 212 passed in 47.36s =============================
+======================== 215 passed in 66.50s (0:01:06) ========================
 ```

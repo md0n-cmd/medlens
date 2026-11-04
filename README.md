@@ -9,6 +9,21 @@ MedLens takes the text of a medical report (lab panel or radiology report) and:
 3. **Separates facts from interpretation.** Every explanation is tagged as *Factual (from report)*, *General info*, or *Needs professional interpretation*.
 4. **Links every explanation to its exact source text.** Click a highlight to open its card, or click a card to highlight its span in the report.
 
+## Live demo
+
+**https://medlens-XXXX.onrender.com** _(placeholder: replace with the Render URL after the first deploy)_
+
+> **Demo uses synthetic sample data. Do not upload real medical reports.**
+>
+> Hosted on Render's free tier: the first load after idle takes about a minute (free tier) while the service wakes up.
+
+Deploy your own: push this repo to GitHub, then in Render choose **New → Blueprint** and pick the repo. `render.yaml` defines one free Docker web service (Tesseract OCR included, health check `/api/health`). Public-safety basics:
+* 10 MB upload limit.
+* 30 requests/minute per IP on `/api/analyze` and `/api/extract` (HTTP 429 with a friendly message; `RATE_LIMIT_PER_MIN` to change).
+* Report text and uploads are processed in memory and never logged or stored.
+* The LLM fallback is off (`USE_LLM=0`, no API key).
+* The container runs as a non-root user.
+
 ## Quick start
 
 ```bash
@@ -21,7 +36,7 @@ To open it on your phone (same Wi-Fi), run `./run.sh --lan`. It prints the lapto
 
 Open http://localhost:8000. Pick a sample from the dropdown, or open `http://localhost:8000/?sample=01_cbc` directly.
 
-Run the tests with `pytest -v` (212 tests; see [docs/TEST_RESULTS.md](docs/TEST_RESULTS.md)).
+Run the tests with `pytest -v` (215 tests; see [docs/TEST_RESULTS.md](docs/TEST_RESULTS.md)).
 
 ## Glossary
 

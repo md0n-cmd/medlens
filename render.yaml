@@ -1,0 +1,13 @@
+services:
+  - type: web
+    name: medlens
+    runtime: docker
+    plan: free
+    dockerfilePath: ./Dockerfile
+    healthCheckPath: /api/health
+    autoDeploy: true
+    envVars:
+      - key: USE_LLM          # LLM fallback stays off; no ANTHROPIC_API_KEY is set
+        value: "0"
+      - key: RATE_LIMIT_PER_MIN
+        value: "30"
