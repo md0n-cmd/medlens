@@ -68,7 +68,7 @@ def extract_pdf(data: bytes) -> PdfResult:
         pdf = pdfplumber.open(io.BytesIO(data))
         pages = list(pdf.pages)
     except Exception as exc:
-        name = exc.__class__.__name__.lower()
+        name = (exc.__class__.__name__ + " " + " ".join(type(a).__name__ for a in exc.args)).lower()
         if "password" in name or "encrypt" in name:
             raise PdfError("This PDF is password-protected. Please open it, remove the password, and upload it again.")
         raise PdfError("This file could not be read as a PDF. It may be damaged; please try another copy.")

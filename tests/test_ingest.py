@@ -91,3 +91,13 @@ def test_api_corrupt_pdf_422():
 
 def test_health_reports_ocr():
     assert "ocr_available" in client.get("/api/health").json()
+
+
+def test_password_protected_pdf_friendly_message():
+    from reportlab.pdfgen import canvas
+    buf = io.BytesIO()
+    c = canvas.Canvas(buf, encrypt="secret")
+    c.drawString(50, 700, "Hemoglobin 11.2 g/dL 13-17")
+    c.save()
+    with pytest.raises(PdfError, match="password-protected"):
+        extract_pdf(buf.getvalue())

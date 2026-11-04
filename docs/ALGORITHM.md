@@ -21,7 +21,7 @@
 * **No hallucinated diagnoses.** The core requirement is to *avoid unsupported diagnoses*. A deterministic system can only output sentences we wrote and reviewed.
 * **Reference ranges must come from the report.** An LLM tends to "helpfully" fill in population ranges it has memorised. Our parser has no ranges to fall back on.
 * **Exact provenance.** Every output carries character offsets into the input, which the UI uses for two-way linking. Generative output does not give that reliably.
-* **Testable.** 116 unit and end-to-end tests pin the behaviour, and the same input always gives the same output.
+* **Testable.** 131 unit and end-to-end tests pin the behaviour, and the same input always gives the same output.
 * **Offline, free, fast.** No API key is needed, and a report takes a few milliseconds.
 * An LLM is used only as an **optional, clearly labelled fallback** for glossary misses. It is off by default and goes through the same safety filter.
 

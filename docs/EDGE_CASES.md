@@ -38,3 +38,15 @@
 | 34 | Empty input | HTTP 400 | `test_api.py::test_analyze_rejects_empty` |
 | 35 | Text with no medical content | Warning; empty results | `test_empty_and_garbage_input` |
 | 36 | Span integrity | `text[start:end] == span.text` for all spans in all samples | `test_all_spans_and_text_safe[*]` |
+| 37 | Text PDF vs scanned PDF | Text layer is used when a page has ≥ 20 chars; otherwise the page is rendered at 300 DPI and OCR'd (`source` = `pdf_text` / `pdf_ocr`) | `test_ingest.py::test_text_pdf_matches_txt_exactly`, `test_scanned_pdf_uses_ocr` |
+| 38 | PDF table columns collapsing | Lines rebuilt from word x-positions so the 2+ space column gaps survive; text PDF gives identical values and statuses to the .txt | `test_text_pdf_matches_txt_exactly` |
+| 39 | OCR / PDF merging "unit  range" into one column | Parser splits a leading unit token off a range cell (`million/cumm 4.5 - 5.5`) | `test_clean_png_ocr_recovers_names_and_values` |
+| 40 | Rotated / blurred / noisy phone photo | EXIF transpose, grayscale, upscale to ~2000 px, autocontrast, unsharp mask; confidence and uncertain tokens reported | `test_phone_photo_reports_low_confidence_tokens`, `test_api_extract_image` |
+| 41 | OCR digit confusion (O/0, l/1, lost decimal point) | Never auto-analyzed: review banner lists uncertain tokens and asks the user to check; orange warning below 70% confidence. Real case: `HbA1c`→`HbAlc`, `< 5.7`→`<25.7`, both flagged | `test_scanned_pdf_uses_ocr` |
+| 42 | Multi-page PDFs | All pages extracted; mixed text and scanned pages get a warning saying how many were OCR'd | `app/ingest/pdf.py` |
+| 43 | Password-protected PDF | 422 "This PDF is password-protected…" | `test_password_protected_pdf_friendly_message` |
+| 44 | Corrupt PDF | 422 with a friendly message | `test_corrupt_pdf_is_friendly`, `test_api_corrupt_pdf_422` |
+| 45 | Wrong file type / renamed file | 415; extension AND magic bytes must agree | `test_api_rejects_bad_type` |
+| 46 | File too large (> 10 MB) | 413 | `test_api_rejects_too_large` |
+| 47 | Tesseract not installed | 503 "OCR engine not installed: sudo apt install tesseract-ocr"; PDF text still works; image and camera tabs disabled in UI | `test_health_reports_ocr`, tests skip via `skipif` |
+| 48 | Camera permission denied / no camera | Falls back to `<input type="file" accept="image/*" capture="environment">` | frontend (manual) |
