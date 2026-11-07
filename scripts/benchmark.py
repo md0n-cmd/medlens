@@ -140,18 +140,21 @@ def table(score: Score) -> str:
 def summary(score: Score) -> str:
     out = (f"correct {score.correct}/{score.total} | false alarms {score.false_alarms} | "
            f"misses {score.misses}")
-    cats = sorted({r.category for r in score.rows})
-    if len(cats) > 1:
-        out += " | " + ", ".join(f"{c} {sum(r.outcome == 'correct' for r in score.rows if r.category == c)}/"
-                                 f"{sum(r.category == c for r in score.rows)}" for c in cats)
+    out += " | " + ", ".join(f"{c} {v}" for c, v in by_category(score).items())
     return out
+
+
+def by_category(score: Score) -> dict[str, str]:
+    """correct/total per report category: 'labs' (tables of values) vs 'imaging' (narrative reports)."""
+    return {c: f"{sum(r.outcome == 'correct' for r in score.rows if r.category == c)}/"
+               f"{sum(r.category == c for r in score.rows)}" for c in sorted({r.category for r in score.rows})}
 
 
 SCORE = ROOT / "tests" / "benchmark" / "score.json"
 
 
 # sets that are training data (ratcheted). A set stops being held-out once rules are tuned on it.
-TRAINING_SETS = {"main": "gold.json", "heldout_round1": "heldout.json"}
+TRAINING_SETS = {"main": "gold.json", "heldout_round1": "heldout.json", "heldout_round2": "heldout2.json"}
 
 
 def record(score: Score, note: str, name: str = "main") -> bool:
@@ -166,7 +169,8 @@ def record(score: Score, note: str, name: str = "main") -> bool:
         entry["best_correct"] = max(entry["best_correct"], score.correct)
         entry["total"] = score.total
         entry["history"].append({"correct": score.correct, "false_alarms": score.false_alarms,
-                                 "misses": score.misses, "total": score.total, "note": note})
+                                 "misses": score.misses, "total": score.total, "by_category": by_category(score),
+                                 "note": note})
         SCORE.write_text(json.dumps(data, indent=2) + "\n")
     return improved
 
@@ -203,9 +207,12 @@ if __name__ == "__main__":
         sys.exit(0)
     sc = run()
     print(summary(sc) if "--brief" in sys.argv else table(sc))
+    # every training set, with labs vs imaging
+    others = {name: run(path) for name, path in SETS.items() if name != "main" and path.exists()}
+    for name, osc in others.items():
+        print(f"{name}: {summary(osc)}")
     if "--record" in sys.argv:
         note = sys.argv[sys.argv.index("--record") + 1] if len(sys.argv) > sys.argv.index("--record") + 1 else ""
         print("main:", "recorded new best" if record(sc, note) else "not a new best")
-        hs = run(HELDOUT)
-        print("heldout_round1:", summary(hs), "|",
-              "recorded new best" if record(hs, note, "heldout_round1") else "not a new best")
+        for name, osc in others.items():
+            print(f"{name}:", "recorded new best" if record(osc, note, name) else "not a new best")

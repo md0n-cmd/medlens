@@ -127,8 +127,7 @@ REASSURANCE = [
     r"nothing\s+(?:here\s+)?(?:\w+\s+){0,3}?(?:serious|dangerous|alarming|worrying)", r"nothing\s+to\s+worry\s+about",
     r"(?:generally\s+|usually\s+|very\s+|easily\s+|highly\s+)?treatable", r"(?:generally\s+|usually\s+|easily\s+)?manageable",
     r"good\s+news",
-    # "no obvious signs of a serious or immediate medical problem", "no obvious emergency", "no immediate,
-    # life-threatening red flags", "no definite evidence of an immediate life-threatening problem"
+    # reassurance by absence: no serious/urgent problem, no emergency, no life-threatening findings
     r"no\s+(?:obvious\s+|immediate\s+|clear\s+)?(?:signs?\s+of\s+(?:an?\s+)?)?(?:serious|immediate|urgent)\s+(?:or\s+(?:serious|immediate|urgent)\s+)?"
     r"(?:medical\s+|health\s+)?(?:problems?|concerns?|issues?|danger)",
     r"no\s+(?:obvious\s+|immediate\s+)?emergenc(?:y|ies)",

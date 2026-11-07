@@ -264,3 +264,37 @@ The rule in `claims.py` stays the same as the lists grow. One judgement call dif
 | Noise control | Consecutive interpretation lines in one section (a list, or prose separated only by framing lines) are one *passage*. The summary bar counts passages. Worst answer: 28 flagged sentences → 13 passages. |
 
 **This set is no longer held-out.** The rules above were tuned while looking at these answers, so 63/63 measures fit, not generalisation. Both sets are now training data, ratcheted in `tests/test_benchmark.py` (`score.json` → `sets.heldout_round1`). **A new held-out set, scored once on arrival before any change, is required for the next honest number.** The protocol is in `tests/benchmark/README.md`.
+
+### 9.8 Held-out round 2
+
+**What it was.** Five real chatbot answers from two chatbots ("worried", "plain" and "my father" prompts) about synthetic samples 08 (coagulation/cardiac), 09 (chest X-ray + ECG, the first narrative report in a benchmark) and 10 (lipid/thyroid/LFT/CBC). Hand-labelled by the user (`tests/benchmark/heldout2.json`, `samples/ai/heldout2/`). Scored **once on the unchanged build** `4c71b5e`, and that number was committed first (`483d291`, `tests/benchmark/heldout2_score.json`). The benchmark now reports **labs vs imaging** separately (a report with FINDINGS / IMPRESSION / Opinion sections is imaging).
+
+| Step | Round 2 | False alarms | Misses | Labs | Imaging | Main / round 1 |
+|---|---|---|---|---|---|---|
+| first run, unchanged build | **38/73** | **21** | 14 | 28/43 | **10/30** | 60/60, 63/63, 0 FA |
+| 1 narrative report values | 44/73 | 17 | 12 | 28/43 | 16/30 | unchanged |
+| 2 narrative findings "match your report" | 52/73 | 9 | 12 | 29/43 | 23/30 | unchanged |
+| 3 quote exemption = quoted words only | 53/73 | 9 | 11 | 29/43 | 24/30 | unchanged |
+| 4 never-claims | 58/73 | 5 | 10 | 31/43 | 27/30 | unchanged |
+| 5–6 ranges and binding | 64/73 | **0** | 9 | 37/43 | 27/30 | unchanged |
+| 7 recall | **73/73** | 0 | 0 | 43/43 | 30/30 | unchanged |
+
+The imaging score on first contact (10/30) was the weak spot: the report parser read no values from sentences like "Heart Rate: 88 bpm." and Verify had no notion of a narrative finding, so faithful paraphrases of the report ("The windpipe is centered") were OVERSTEPS through the lexicon.
+
+**The rules, each with a non-benchmark example.**
+
+| Rule | Example → result |
+|---|---|
+| Narrative values (`app/parser/narrative.py`) | Report prose "QRS duration 96 ms. Cardiothoracic ratio is about 0.48" → two values with units and **no range**. Only glossary *test* names count. |
+| Report opinion settles NORMAL | A value without a range in a study section followed by an opinion "ECG within normal limits" (no except/but/borderline): AI "Heart rate 72 – normal" → VERIFIED with the opinion line as evidence. HIGH/LOW stay unverifiable. |
+| General ranges for unranged values | "A normal resting heart rate is 60–100" or "CTR is generally 0.50 or less" → RANGE_NOT_FROM_REPORT (never NOT_IN_REPORT). "X or less / or lower / or below" is an upper range. A head noun ("A standard ratio is under 0.50") refers back to the bullet's test. |
+| Findings with word-level hedges (`app/verify/findings.py`) | Report "Left lower zone opacity, likely infiltrate": opacity stated, infiltrate hedged. "Cardiomegaly." unhedged. Each mention has polarity: finding present/absent; structure normal/abnormal. Plain-language names are data (`LAY_FINDINGS`: windpipe, air leak, hazy patch, enlarged heart …). |
+| Matches your report | Every finding in the AI sentence matches the report, same polarity (absent ≡ normal), same or weaker certainty → VERIFIED "Matches your report: <line>". Overrides lexicon OVERSTEPS that only name or gloss those findings. The sentence with the findings blanked out is re-checked: an added cause, condition or prognosis ("points to pneumonia") still OVERSTEPS. Not for questions, deferrals, safety advice, headings, definitions. Certainty OVERSTEPS fires only when the report states the finding *only* with a hedge. |
+| Quote scope | 'The report says "possible consolidation", which usually means pneumonia.' → the quote is VERIFIED, the text after it is checked → OVERSTEPS. Without quote marks, attributing words to the report stays exempt. |
+| Never-claims | "A normal X-ray does not exclude …", "A high value is not the same as a diagnosis", a test table's Purpose / Why it is useful / Reason / Use column, "an ultrasound can help assess …", "The ECG records the heart's electrical activity". |
+| Value-side bound | Report "0 - 15", value 19: AI "normal is up to 15" → VERIFIED. Report "11.60 - 14.00", value 14.3: AI "up to 14.0" → VERIFIED. Only the bound on the value's side is compared. |
+| Outside thresholds | "Some guidelines use a lower LDL cut-off for older adults", "an age-adjusted threshold" → RANGE_NOT_FROM_REPORT. |
+| Binding | 'Total Cholesterol (212), Triglycerides (168), and LDL "bad" Cholesterol (137.40)': each value binds to its own test (quoted glosses ignored). "Hemoglobin, white cell counts and platelets are all normal" is a group of exactly those three. "Near the lower limit", "toward the upper end" are never LOW/HIGH. |
+| Recall classes (lexicon) | "No obvious emergency here", "no life-threatening red flags", "clinically insignificant", "your kidneys are functioning normally", "core organs", "this confirms the heart is healthy", "rules out" → OVERSTEPS. Lists after "can be associated with:", "can cause:", "risk of:", "What can cause …?" are one cause-list passage. Placing results "into the borderline category" is a health judgement. |
+
+**This set is no longer held-out either.** All three sets are training data, ratcheted in `tests/test_benchmark.py` with 0 false alarms required (`score.json` → `sets.heldout_round2`), and the anti-special-casing guard now scans all three sets' sentences. **Round 3 needs fresh answers that nobody has tuned on** (ideally new report types, e.g. histopathology, a different chatbot), scored once on arrival.

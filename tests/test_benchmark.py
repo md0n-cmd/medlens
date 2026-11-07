@@ -41,7 +41,7 @@ def test_rules_do_not_special_case_benchmark_sentences():
     """Overfitting guard: no gold `find` fragment (3+ words) may appear literally in the Verify rules or lexicon."""
     source = " ".join(p.read_text().lower() for p in (ROOT / "app" / "verify").glob("*.py"))
     files = []
-    for name in ("gold.json", "heldout.json"):
+    for name in ("gold.json", "heldout.json", "heldout2.json"):
         files += json.loads((ROOT / "tests" / "benchmark" / name).read_text())["files"]
     for f in files:
         for c in f["cases"]:
@@ -63,3 +63,28 @@ def test_heldout_round1_is_now_training_no_false_alarms():
 def test_heldout_round1_score_never_drops_below_best_recorded():
     best = BEST["sets"]["heldout_round1"]["best_correct"]
     assert HELDOUT.correct >= best, benchmark.table(HELDOUT)
+
+
+HELDOUT2 = benchmark.run(benchmark.SETS["heldout_round2"])
+
+
+def test_heldout_round2_is_now_training_no_false_alarms():
+    """Held-out round 2 was scored once (38/73, 21 false alarms) on build 4c71b5e before tuning; it is training
+    data now and ratcheted. Round 3 needs fresh answers nobody has tuned on."""
+    alarms = [r for r in HELDOUT2.rows if r.outcome == "false alarm"]
+    assert not alarms, "\n" + "\n".join(f"{r.file}: got {r.got}, expected {r.expected}: {r.what}" for r in alarms)
+
+
+def test_heldout_round2_score_never_drops_below_best_recorded():
+    best = BEST["sets"]["heldout_round2"]["best_correct"]
+    assert HELDOUT2.correct >= best, benchmark.table(HELDOUT2)
+
+
+def test_heldout_files_are_synthetic_samples():
+    for name in ("heldout.json", "heldout2.json"):
+        for f in json.loads((ROOT / "tests" / "benchmark" / name).read_text())["files"]:
+            assert "SYNTHETIC SAMPLE" in (ROOT / f["report"]).read_text()
+
+
+def test_every_category_is_reported():
+    assert set(benchmark.by_category(HELDOUT2)) == {"labs", "imaging"}

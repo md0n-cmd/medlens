@@ -169,7 +169,7 @@ OUTSIDE_RANGES = re.compile(
     r"usual|textbook|population|clinical)\s+(?:clinical\s+|lab(?:oratory)?\s+)?(?:reference\s+)?(?:ranges?|intervals?|"
     r"cut-?offs?|guidelines?)\b"
     r"|\bstandard\s+(?:clinical\s+|lab\s+)?(?:reference\s+)?ranges?\s+(?:usually|typically|generally|say|prefer|are|put)\b"
-    # a threshold from elsewhere: "an age-adjusted D-dimer threshold", "some protocols / guidelines use ... cut-off"
+    # a threshold from elsewhere: "an age-specific PSA cut-off", "some protocols / guidelines use ... cut-off"
     r"|\b(?:age|sex|gender|weight)-(?:adjusted|specific|based)\s+(?:[\w-]+\s+){0,2}?(?:thresholds?|cut-?offs?|ranges?|limits?)\b"
     r"|\b(?:some|many|most|certain|other|newer|international|current)\s+(?:clinical\s+)?(?:protocols|guidelines|labs|"
     r"laboratories|doctors|clinicians)\s+(?:use|apply|recommend|prefer)\s+(?:[\w-]+\s+){0,4}?(?:thresholds?|cut-?offs?|"
@@ -616,7 +616,7 @@ def _is_status_claim(text: str, s: int, e: int, before: str) -> bool:
 
 # ---------------------------------------------------------------- markdown tables
 TABLE_ROLES = [
-    # what a suggested test is for ("| CBC | Look for signs of infection |"): never a claim about the results
+    # what a suggested test is for ("| Ferritin | Checks iron stores |"): never a claim about the results
     ("purpose", re.compile(r"^\W*(?:purpose|why\s+it(?:'s|\s+is)?\s+(?:useful|done|needed|helpful)|reasons?|use|used\s+for|"
                            r"what\s+it\s+(?:checks|shows|does))\W*$", re.I)),
     ("reference", re.compile(r"\b(?:reference|range|normal|ref|interval|limits?)\b", re.I)),
@@ -734,7 +734,7 @@ NEGATED_CERTAINTY = re.compile(r"\b(?:does\s+not|doesn't|do\s+not|don't|cannot|c
                                r"did\s+not)\s+(?:\w+\s+){0,2}?(?:confirm|establish|tell|rule\s+out|prove|show|determine|"
                                r"diagnose|mean|exclude)\b|\b(?:is|are)\s+not\s+(?:\w+\s+)?(?:the\s+same\s+as|equivalent\s+to|"
                                r"equal\s+to)\b", re.I)
-# the AI suggests a test: "an HbA1c test can provide additional information", "A 2D Echo would help determine ..."
+# the AI suggests a test: "a ferritin test can help clarify this", "An echo would help assess ..."
 SUGGESTS_TEST = re.compile(r"^\W*(?:\w+\W+){0,6}?(?:an?|the|your)\s+(?:[\w-]+\s+){0,3}?(?:tests?|scans?|echo(?:cardiogram)?|"
                            r"ultrasound|x-?ray|panel|profile|study|measurement|assessment|evaluation)\s+(?:can|could|may|might|"
                            r"would|will)\s+(?:also\s+)?(?:provide|help|assess|show|check|confirm|clarify|give|determine|tell|"
@@ -908,7 +908,7 @@ def _segment_claims(text: str, m: Mention, a: int, b: int, sent_start: int) -> l
             r = ReferenceRange(raw=am.group(0), kind="lower", low=parse_number(am["n"]), low_inclusive=True)
             used.append((am.start(), am.end()))
             claims.append(Claim(kind="range", span=_sp(text, a + am.start(), a + am.end()), range=r, **base))
-    for om in OR_BELOW_TXT.finditer(seg):            # "generally 0.50 or less"
+    for om in OR_BELOW_TXT.finditer(seg):            # "normally 1.0 or below"
         if free(om.start(), om.end()):
             r = ReferenceRange(raw=om.group(0), kind="upper", high=parse_number(om["n"]), high_inclusive=True)
             used.append((om.start(), om.end()))
@@ -1216,7 +1216,7 @@ def _extract(text: str, original: str) -> list[SentenceClaims]:
                     ra, rb = sp.start + cm2.start("range"), sp.start + cm2.end("range")
                     sc.claims.append(Claim(kind="range", span=_sp(text, ra, rb), range=r, category=cat,
                                            term_id=topic.term_id, term=topic.term, mention=topic.span))
-            elif _head_noun_ref(stext0, topic.term):       # "A standard ratio is under 0.50" after "cardiothoracic ratio"
+            elif _head_noun_ref(stext0, topic.term):       # "a typical ratio is below 1" after "albumin/globulin ratio"
                 sc.claims.extend(_segment_claims(text, topic, sp.start, sp.end, sp.start))
             elif TOPIC_REF.search(stext0) and not lead_mentions:   # e.g. "Your result is on the high side."
                 found = _find_statuses(text, sp.start, sp.end)
