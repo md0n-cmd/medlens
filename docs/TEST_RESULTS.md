@@ -48,7 +48,7 @@ rootdir: /home/d0n/medlens
 configfile: pytest.ini
 testpaths: tests
 plugins: anyio-4.16.0
-collecting ... collected 325 items
+collecting ... collected 373 items
 
 tests/test_age_bands.py::test_age_band_cell_parses_as_multi PASSED
 tests/test_age_bands.py::test_label_bands PASSED
@@ -127,6 +127,7 @@ tests/test_end_to_end.py::test_label_words_only_match_whole_names PASSED
 tests/test_frontend_text.py::test_plain_words_phrases_exist PASSED
 tests/test_frontend_text.py::test_plain_words_phrases_pass_safety_filter PASSED
 tests/test_frontend_text.py::test_doctor_questions_are_questions PASSED
+tests/test_frontend_text.py::test_verify_summary_leads_with_oversteps PASSED
 tests/test_glossary.py::test_glossary_size_and_schema PASSED
 tests/test_glossary.py::test_longest_match_first PASSED
 tests/test_glossary.py::test_aliases_map_to_canonical PASSED
@@ -227,6 +228,22 @@ tests/test_ranges.py::test_select_alternative_requires_header_sex PASSED
 tests/test_ratelimit.py::test_limiter_window PASSED
 tests/test_ratelimit.py::test_api_returns_429_with_friendly_message PASSED
 tests/test_ratelimit.py::test_llm_fallback_off_by_default PASSED
+tests/test_realworld_chatbot.py::test_interpretations_are_oversteps[two main patterns: mild anemia and signs of a mild immune response] PASSED
+tests/test_realworld_chatbot.py::test_interpretations_are_oversteps[points to **mild anemia**] PASSED
+tests/test_realworld_chatbot.py::test_interpretations_are_oversteps[is often an early sign of a nutritional deficiency] PASSED
+tests/test_realworld_chatbot.py::test_interpretations_are_oversteps[usually indicates that the body is reacting to a recent mild infection] PASSED
+tests/test_realworld_chatbot.py::test_interpretations_are_oversteps[indicates normal blood clotting ability] PASSED
+tests/test_realworld_chatbot.py::test_interpretations_are_oversteps[commonly occur together during recovery from a minor illness] PASSED
+tests/test_realworld_chatbot.py::test_mcv_bullet_is_verified_not_contradicted PASSED
+tests/test_realworld_chatbot.py::test_platelet_flag_sentence_verified_as_a_correctly_noted_mismatch PASSED
+tests/test_realworld_chatbot.py::test_low_hemoglobin_rbc_pcv_lead_verified PASSED
+tests/test_realworld_chatbot.py::test_normal_differentials_group_claim_verified PASSED
+tests/test_realworld_chatbot.py::test_not_oversteps[is a general marker for inflammation] PASSED
+tests/test_realworld_chatbot.py::test_not_oversteps[A doctor would review these numbers] PASSED
+tests/test_realworld_chatbot.py::test_doctor_deferral_sentence_is_neutral PASSED
+tests/test_realworld_chatbot.py::test_only_mchc_is_omitted PASSED
+tests/test_realworld_chatbot.py::test_zero_contradicted PASSED
+tests/test_realworld_chatbot.py::test_six_oversteps PASSED
 tests/test_realworld_replica.py::test_lft_group_claim_contradicted_naming_total_protein PASSED
 tests/test_realworld_replica.py::test_cbc_group_claim_contradicted_naming_rdw PASSED
 tests/test_realworld_replica.py::test_dyslipidemia_is_an_overstep_not_missing_from_report PASSED
@@ -322,12 +339,14 @@ tests/test_verify.py::test_negated_status_is_not_a_claim PASSED
 tests/test_verify.py::test_dose_number_is_not_a_test_value PASSED
 tests/test_verify.py::test_value_written_as_span PASSED
 tests/test_verify.py::test_status_judged_against_the_row_whose_value_matched PASSED
+tests/test_verify.py::test_spans_valid_in_both_texts[01_cbc__chatbot_real] PASSED
 tests/test_verify.py::test_spans_valid_in_both_texts[01_cbc__correct] PASSED
 tests/test_verify.py::test_spans_valid_in_both_texts[01_cbc__errors] PASSED
 tests/test_verify.py::test_spans_valid_in_both_texts[03_lft_kft__errors] PASSED
 tests/test_verify.py::test_spans_valid_in_both_texts[06_age_bands__errors] PASSED
 tests/test_verify.py::test_spans_valid_in_both_texts[07_missing_ranges__errors] PASSED
 tests/test_verify.py::test_spans_valid_in_both_texts[10__realistic] PASSED
+tests/test_verify.py::test_medlens_own_messages_pass_safety[01_cbc__chatbot_real] PASSED
 tests/test_verify.py::test_medlens_own_messages_pass_safety[01_cbc__correct] PASSED
 tests/test_verify.py::test_medlens_own_messages_pass_safety[01_cbc__errors] PASSED
 tests/test_verify.py::test_medlens_own_messages_pass_safety[03_lft_kft__errors] PASSED
@@ -375,6 +394,35 @@ tests/test_verify.py::test_all_results_normal_covers_the_whole_report PASSED
 tests/test_verify.py::test_negated_group_claim_is_not_a_claim PASSED
 tests/test_verify.py::test_panel_names_are_groups_not_single_tests PASSED
 tests/test_verify.py::test_heading_bullets_define_the_group_for_a_generic_summary PASSED
+tests/test_verify.py::test_markdown_is_stripped_for_extraction_but_spans_point_into_the_original PASSED
+tests/test_verify.py::test_strip_markdown_keeps_length_and_offsets PASSED
+tests/test_verify.py::test_generic_cells_phrase_is_not_a_status_target_when_a_test_is_the_subject PASSED
+tests/test_verify.py::test_status_word_in_the_bullet_lead_is_checked_for_every_lead_test PASSED
+tests/test_verify.py::test_bullet_subject_carries_over_but_never_contradicts PASSED
+tests/test_verify.py::test_deficiency_is_not_a_low_status PASSED
+tests/test_verify.py::test_negated_and_hypothetical_status_words_are_not_claims[Your hemoglobin hasn't dropped or spiked yet.] PASSED
+tests/test_verify.py::test_negated_and_hypothetical_status_words_are_not_claims[Your ESR is not high.] PASSED
+tests/test_verify.py::test_negated_and_hypothetical_status_words_are_not_claims[There is no increase in your TLC.] PASSED
+tests/test_verify.py::test_negated_and_hypothetical_status_words_are_not_claims[Hemoglobin would be low if you were bleeding.] PASSED
+tests/test_verify.py::test_negated_and_hypothetical_status_words_are_not_claims[If your TSH were high, it would matter.] PASSED
+tests/test_verify.py::test_status_words_describing_cells_or_flags_are_not_claims PASSED
+tests/test_verify.py::test_a_plain_bracketed_status_is_still_a_claim PASSED
+tests/test_verify.py::test_flag_mismatch_noted_correctly_is_verified PASSED
+tests/test_verify.py::test_flag_mismatch_claimed_but_not_on_report_is_contradicted PASSED
+tests/test_verify.py::test_linking_results_to_a_condition_is_an_overstep[The results show two main patterns: mild anemia and signs of a mild immune response.-patterns: mild anemia] PASSED
+tests/test_verify.py::test_linking_results_to_a_condition_is_an_overstep[A high RDW is often an early sign of a nutritional deficiency.-early sign of a nutritional deficiency] PASSED
+tests/test_verify.py::test_linking_results_to_a_condition_is_an_overstep[A raised count usually indicates that the body is reacting to a recent mild infection.-reacting to a recent mild infection] PASSED
+tests/test_verify.py::test_linking_results_to_a_condition_is_an_overstep[These results commonly occur together during recovery from a minor illness.-recovery from a minor illness] PASSED
+tests/test_verify.py::test_linking_results_to_a_condition_is_an_overstep[The high ESR is probably due to inflammation.-due to inflammation] PASSED
+tests/test_verify.py::test_linking_results_to_a_condition_is_an_overstep[This is consistent with leukocytosis.-consistent with leukocytosis] PASSED
+tests/test_verify.py::test_link_message_wording PASSED
+tests/test_verify.py::test_normal_ability_is_an_overstep PASSED
+tests/test_verify.py::test_definitions_and_doctor_deferrals_are_not_oversteps[The Erythrocyte Sedimentation Rate is a general marker for inflammation in the body.] PASSED
+tests/test_verify.py::test_definitions_and_doctor_deferrals_are_not_oversteps[White blood cells fight infection.] PASSED
+tests/test_verify.py::test_definitions_and_doctor_deferrals_are_not_oversteps[A doctor would review these numbers to determine if a simple iron supplement is necessary.] PASSED
+tests/test_verify.py::test_definitions_and_doctor_deferrals_are_not_oversteps[Here is what they generally indicate:] PASSED
+tests/test_verify.py::test_definitions_and_doctor_deferrals_are_not_oversteps[Your ESR aligns with the mildly elevated white blood cell count.] PASSED
+tests/test_verify.py::test_direct_supplement_instruction_is_still_an_overstep PASSED
 
-======================= 325 passed in 109.49s (0:01:49) ========================
+======================= 373 passed in 127.58s (0:02:07) ========================
 ```
