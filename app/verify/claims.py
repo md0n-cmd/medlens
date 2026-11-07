@@ -76,7 +76,7 @@ Status = Literal["LOW", "HIGH", "NORMAL"]
 
 @dataclass
 class Claim:
-    kind: Literal["value", "range", "status", "overstep", "group", "flag"]
+    kind: Literal["value", "range", "status", "overstep", "group", "flag", "outside_range"]
     span: Span                                   # the claim text in the AI explanation
     term_id: Optional[str] = None
     term: Optional[str] = None
@@ -92,6 +92,8 @@ class Claim:
     group: Optional[str] = None                  # group claims: "liver", "cbc", "thyroid", ... or "all"
     group_tests: set = field(default_factory=set)   # tests listed under the AI's own heading for that group
     weak: bool = False                           # status carried over to a sentence that doesn't name the test
+    category: Optional[str] = None               # range claims: the named category ("prediabetes", "normal")
+    anchor_value: Optional[float] = None         # status claims bound by a bold value, not a test name ("**98 mg/dL**")
 
 
 @dataclass
@@ -111,7 +113,7 @@ class SentenceClaims:
 # ------------------------------------------------------------------ patterns
 RANGE_CUE = re.compile(r"\b(?:range|normal|reference|between|should|ideal|healthy|limits?|interval|expected|"
                        r"typical|usual|standard|optimal|desirable|target)\b", re.I)
-INTERVAL_RE = re.compile(rf"(?:between\s+)?(?P<lo>{N})\s*(?:-|–|—|to|and)\s*(?P<hi>{N})", re.I)
+INTERVAL_RE = re.compile(rf"(?:between\s+)?(?P<lo>{N})%?\s*(?:-|–|—|to|and)\s*(?P<hi>{N})", re.I)
 UPPER_RE = re.compile(rf"\b(?P<op>below|under|less\s+than|lower\s+than|up\s*to|not\s+more\s+than|no\s+more\s+than|"
                       rf"max(?:imum)?(?:\s+of)?)\s*(?P<n>{N})|(?P<sym><=|≤|<)\s*(?P<n2>{N})", re.I)
 LOWER_RE = re.compile(rf"\b(?P<op>above|over|more\s+than|greater\s+than|higher\s+than|at\s+least|"
@@ -145,7 +147,21 @@ THRESHOLD_BEFORE = re.compile(r"\b(?:limit|cut-?off|threshold|recommended|recomm
 NOT_A_VALUE_AFTER = re.compile(r"^(?:\s*(?:mg/dl|%|u/l)\s+)?\s*(?:limit|cut-?off|threshold|mark)\b"
                                r"|^[\s-]*(?:months?|weeks?|days?|hours?|hrs?|years?|yrs?|minutes?|mins?)\b"
                                r"|^\s+(?:different\s+)?(?:values?|markers?|tests?|readings?|results?|numbers?|times?)\b", re.I)
-AND_ABOVE_TXT = re.compile(rf"(?P<n>{N})\s*(?:or\s+higher|or\s+more|or\s+above|and\s+above|and\s+higher)\b", re.I)
+AND_ABOVE_TXT = re.compile(rf"(?P<n>{N})%?\s*(?:or\s+higher|or\s+more|or\s+above|and\s+above|and\s+higher)\b", re.I)
+# "using standard clinical reference ranges", "standard ranges usually prefer ...": ranges imported from elsewhere
+OUTSIDE_RANGES = re.compile(
+    r"\b(?:using|use|uses|based\s+on|according\s+to|applying|with)\s+(?:the\s+)?(?:standard|typical|general|common|"
+    r"usual|textbook|population|clinical)\s+(?:clinical\s+|lab(?:oratory)?\s+)?(?:reference\s+)?(?:ranges?|intervals?|"
+    r"cut-?offs?|guidelines?)\b"
+    r"|\bstandard\s+(?:clinical\s+|lab\s+)?(?:reference\s+)?ranges?\s+(?:usually|typically|generally|say|prefer|are|put)\b",
+    re.I)
+# "Prediabetes is between 5.7% and 6.4%": a named category with a threshold
+CATEGORY_RE = re.compile(
+    r"^\W*(?P<cat>normal|healthy|optimal|near[\s-]optimal|desirable|borderline(?:[\s-]high|[\s-]low)?|high|very\s+high|"
+    r"low|pre-?diabetes|pre-?diabetic|diabetes|diabetic|impaired\s+fasting\s+glucose|insufficien(?:t|cy)|"
+    r"deficien(?:t|cy)|sufficient|stage\s+\w+)\s+(?:is|are|range\s+is|=|:|\()", re.I)
+NORMAL_CATEGORIES = {"normal", "healthy", "optimal", "desirable"}
+BOLD_VALUE = re.compile(rf"\*\*\s*(?P<num>{N})\s*(?P<unit>[A-Za-zµμ%/]+(?:/[A-Za-z]+)?)?\s*\*\*")
 COMPARISON_BEFORE = re.compile(r"\b(?:similar\s+to|like|unlike|as\s+with|as\s+for|compared\s+(?:to|with)|same\s+as)\s+$",
                                re.I)
 SUGGEST_TEST = re.compile(r"\b(?:look\s+at|order|recommend|suggest|consider|check|repeat|get|do)\s+(?:an?\s+|the\s+|"
@@ -613,6 +629,7 @@ def _extract(text: str, original: str) -> list[SentenceClaims]:
     heading: Optional[str] = None
     heading_tests: dict[str, set] = {}
     bullet_line, lead_mentions, lead_done, lead_word = -1, [], False, None
+    prev_lead: list[Mention] = []            # the last bullet lead, for follow-on bullets that name no test
     for sp in split_sentences(text):
         sc = SentenceClaims(span=sp)
         ms = [m for m in mentions_all if sp.start <= m.span.start and m.span.end <= sp.end]
@@ -625,6 +642,7 @@ def _extract(text: str, original: str) -> list[SentenceClaims]:
         if hg:
             heading = hg
             heading_tests.setdefault(hg, set())
+            prev_lead = []
             out.append(sc)
             continue
         if heading and heading != "_other" and BULLET_RE.match(whole_line):
@@ -720,6 +738,39 @@ def _extract(text: str, original: str) -> list[SentenceClaims]:
                 for m in lead_mentions:
                     sc.claims.append(Claim(kind="status", span=_sp(text, fa, fb), status=st, term_id=m.term_id,
                                            term=m.term, mention=m.span, weak=True))
+        named = [m for m in ms if m.span.text.lower() not in GENERIC_MENTIONS] or compounds
+        if lead_mentions:
+            prev_lead = lead_mentions
+        # "* Prediabetes is between 5.7% and 6.4%." under a "**High HbA1c (6.4%)**" bullet
+        cm = CATEGORY_RE.match(text[sp.start:sp.end]) if not named else None
+        if cm:
+            subjects_c = lead_mentions or prev_lead
+            cat = re.sub(r"[\s-]+", " ", cm["cat"].lower())
+            if len(subjects_c) == 1:
+                for c in _segment_claims(text, subjects_c[0], sp.start + cm.end(), sp.end, sp.start):
+                    if c.kind == "range":
+                        c.category = cat
+                        sc.claims.append(c)
+            elif cat not in NORMAL_CATEGORIES:
+                pseudo = Mention(term_id="", term="", span=sp)
+                for c in _segment_claims(text, pseudo, sp.start + cm.end(), sp.end, sp.start):
+                    if c.kind == "range":
+                        c.category, c.term_id, c.term, c.mention = cat, None, None, None
+                        sc.claims.append(c)
+            sc.claims = [c for c in sc.claims if not (c.kind == "status" and c.weak)]   # the category word isn't a status
+        # "using standard clinical reference ranges for the missing values"
+        om = OUTSIDE_RANGES.search(text[sp.start:sp.end])
+        if om:
+            sc.claims.append(Claim(kind="outside_range", span=sp, detail=om.group(0)))
+        # "The **98 mg/dL** reading is completely normal": the bold value identifies the report row
+        if not named and not lead_mentions and not cm:
+            raw_sentence = original[sp.start:sp.end]
+            bvs = list(BOLD_VALUE.finditer(raw_sentence))
+            found = _find_statuses(text, sp.start, sp.end)
+            if len(bvs) == 1 and found:
+                st, fa, fb = min(found, key=lambda x: x[1])
+                sc.claims.append(Claim(kind="status", span=_sp(text, fa, fb), status=st, weak=True,
+                                       anchor_value=parse_number(bvs[0]["num"])))
         # "has an H flag next to X, but ... within the range": a claim that the lab's flag disagrees with the range
         if FLAG_MISMATCH_RE.search(sp.text):
             targets = [m for m in ms if m.span.text.lower() not in GENERIC_MENTIONS] or lead_mentions

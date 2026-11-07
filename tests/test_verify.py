@@ -549,3 +549,50 @@ def test_reference_population_is_not_a_health_judgement():
     s = verify(report, "* **Low eGFR (78 mL/min):** A healthy adult typically has a score of 90 or higher.").sentences[0]
     assert s.label != "OVERSTEPS"
     assert [f.label for f in s.findings if f.kind == "range"] == ["VERIFIED"]
+
+
+# ---------------------------------------------------------------- benchmark step 2: ranges from outside the report
+LIPID_DIAB = (SAMPLES / "02_lipid_diabetes.txt").read_text()
+
+
+@pytest.mark.parametrize("ai", ["Here are your results using standard reference ranges where none are printed.",
+                                "Standard ranges usually put this below 3.0.",
+                                "I explained these based on typical clinical cut-offs."])
+def test_announcing_outside_ranges_is_range_not_from_report(ai):
+    assert verify(REPORT, ai).sentences[0].label == "RANGE_NOT_FROM_REPORT"
+
+
+def test_category_thresholds_bind_to_the_previous_bullet_lead():
+    ai = ("* **High HbA1c (6.4%):** The average of blood sugar.\n* Normal is under 5.7%.\n"
+          "* Prediabetes is between 5.7% and 6.4%.\n* Diabetes is diagnosed at 6.5% or higher.")
+    labels_ = [s.label for s in verify(LIPID_DIAB, ai).sentences]
+    assert labels_[1] == "VERIFIED"                                     # matches the printed '< 5.7'
+    assert labels_[2] == labels_[3] == "RANGE_NOT_FROM_REPORT"          # categories the report doesn't print
+
+
+def test_category_printed_on_the_report_is_verified():
+    report = LIPID_DIAB.replace("HbA1c                   6.4       %        < 5.7",
+                                "HbA1c                   6.4       %        < 5.7\nPrediabetes: 5.7 - 6.4")
+    ai = "* **High HbA1c (6.4%):** Average sugar.\n* Prediabetes is between 5.7% and 6.4%."
+    assert verify(report, ai).sentences[1].label == "VERIFIED"
+
+
+def test_value_outside_every_printed_range_settles_the_status():
+    report = (SAMPLES / "03_lft_kft.txt").read_text()          # Uric Acid 7.4; Male 3.4-7.0; Female 2.4-5.7
+    s = verify(report, "* **High Uric Acid (7.4 mg/dL):** It is above the normal limit for both sexes.").sentences[0]
+    assert [f.label for f in s.findings if f.kind == "status"] == ["VERIFIED"]
+    s = verify(report, "Your GGT is high.").sentences[0]        # 55: within male, above female -> not settled
+    assert s.label == "UNVERIFIABLE"
+
+
+def test_bold_value_anchors_a_status_on_a_row_without_a_range():
+    report = (SAMPLES / "07_missing_ranges.txt").read_text()   # FBS 104 (70-100) and 98 (no range)
+    s = verify(report, "* The **98 mg/dL** reading is completely normal.").sentences[0]
+    assert s.label == "UNVERIFIABLE"
+    s = verify(report, "* The **104 mg/dL** reading is high.").sentences[0]
+    assert s.label == "VERIFIED"
+
+
+def test_within_every_printed_range_is_not_treated_as_settled():
+    report = (SAMPLES / "06_age_bands.txt").read_text()       # Free T4 1.1: Adults 0.9-1.7, Pregnancy 0.8-1.5
+    assert verify(report, "Your Free T4 is normal.").sentences[0].label == "UNVERIFIABLE"

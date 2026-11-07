@@ -12,7 +12,7 @@ from app.parser.ranges import units_compatible
 from app.safety import is_safe
 from app.pipeline import analyze
 from app.glossary.matcher import load_glossary
-from app.verify.claims import GROUP_TERMS, GROUPS, Claim, extract, strip_markdown
+from app.verify.claims import GROUP_TERMS, GROUPS, NORMAL_CATEGORIES, Claim, extract, strip_markdown
 from app.verify.names import names_match
 
 Label = Literal["VERIFIED", "CONTRADICTED", "RANGE_NOT_FROM_REPORT", "OVERSTEPS", "NOT_IN_REPORT",
@@ -42,7 +42,7 @@ RELATED_TESTS = {
 
 
 class Finding(BaseModel):
-    kind: Literal["value", "range", "status", "overstep", "mention", "group", "flag"]
+    kind: Literal["value", "range", "status", "overstep", "mention", "group", "flag", "outside_range"]
     label: Label
     message: str
     term: Optional[str] = None
@@ -140,7 +140,27 @@ CLAIM_WORD = {"LOW": "low", "HIGH": "high", "NORMAL": "normal / within range"}
 
 
 def _report_status(v: LabValue) -> Optional[str]:
-    return {Status.ABOVE: "HIGH", Status.BELOW: "LOW", Status.WITHIN: "NORMAL"}.get(v.status)
+    st = {Status.ABOVE: "HIGH", Status.BELOW: "LOW", Status.WITHIN: "NORMAL"}.get(v.status)
+    if st is None and v.status == Status.AMBIGUOUS:
+        return _settled_across_ranges(v)
+    return st
+
+
+def _settled_across_ranges(v: LabValue) -> Optional[str]:
+    """Several printed ranges (M/F, age bands): if the value is on the same side of ALL of them, the report does
+    settle it (Uric Acid 7.4 vs M 3.4-7.0 and F 2.4-5.7 is above both). Within all of them is not treated as
+    settled: a pregnancy or age band may still change what applies."""
+    from app.parser.ranges import compare_numeric
+    r = v.reference
+    if r is None or r.kind != "multi" or v.value_num is None or not r.alternatives:
+        return None
+    results = set()
+    for alt in r.alternatives:
+        if alt.range.kind not in ("interval", "upper", "lower"):
+            return None
+        results.add(compare_numeric(v.value_num, v.value_comparator, alt.range, v.value_high))
+    # only "outside ALL ranges in the same direction" settles it; within all of them stays unsettled
+    return {frozenset({Status.ABOVE}): "HIGH", frozenset({Status.BELOW}): "LOW"}.get(frozenset(results))
 
 
 def _unsettled_reason(v: LabValue) -> str:
@@ -152,6 +172,21 @@ def _unsettled_reason(v: LabValue) -> str:
 
 
 # ------------------------------------------------------------------ checking
+def _check_category(c: Claim, text: str, rows: list[LabValue]) -> Finding:
+    """'Prediabetes is between 5.7% and 6.4%': fine only if the report prints that same category table."""
+    nums = [x for x in (c.range.low, c.range.high) if x is not None]
+    printed = re.search(rf"\b{re.escape(c.category)}\b", text, re.I) and all(
+        re.search(rf"(?<![\d.]){re.escape(f'{n:g}')}(?:0*)(?![\d])", text) for n in nums)
+    rep = _line_span(text, rows[0].value_span.start) if rows else None
+    if printed:
+        return Finding(kind="range", label="VERIFIED", term=c.term, ai_span=c.span, report_span=rep,
+                       message=f"Your report prints this '{c.category}' category.")
+    return Finding(kind="range", label="RANGE_NOT_FROM_REPORT", term=c.term, ai_span=c.span, report_span=rep,
+                   report_value_id=rows[0].id if rows else None,
+                   message=f"AI quotes a '{c.category}' category ({c.range.display()}) that your report does not print. "
+                           "MedLens only uses the ranges printed on your report.")
+
+
 def _check_claim(c: Claim, text: str, rows: list[LabValue], value_row: Optional[LabValue]) -> Finding:
     span = c.span
     if c.kind == "overstep":
@@ -201,6 +236,8 @@ def _check_claim(c: Claim, text: str, rows: list[LabValue], value_row: Optional[
         return Finding(kind="value", label="CONTRADICTED", term=c.term, ai_span=span, report_span=rep_line(rows[0]),
                        report_value_id=rows[0].id, message=f"AI says {c.value_raw}, report says {shown}.")
 
+    if c.kind == "range" and c.category and c.category not in NORMAL_CATEGORIES:
+        return _check_category(c, text, rows)
     if c.kind == "range":
         with_range = [v for v in rows if v.reference is not None and v.reference.kind != "unparseable"]
         for v in with_range:
@@ -236,6 +273,16 @@ def _check_claim(c: Claim, text: str, rows: list[LabValue], value_row: Optional[
         return Finding(kind="status", label="UNVERIFIABLE", term=c.term, ai_span=span, report_span=rep_line(v),
                        report_value_id=v.id, message=f"The report doesn't settle this: {_unsettled_reason(v)}.")
     rng = v.applied_range.display() if v.applied_range else (v.reference_span.text if v.reference_span else "")
+    if v.status == Status.AMBIGUOUS:
+        word = {"HIGH": "above", "LOW": "below", "NORMAL": "within"}[rs]
+        if rs == c.status:
+            return Finding(kind="status", label="VERIFIED", term=c.term, ai_span=span, report_span=rep_line(v),
+                           report_value_id=v.id,
+                           message=f"Matches: {v.value_raw} is {word} every range printed for this test ({rng}).")
+        return Finding(kind="status", label="UNVERIFIABLE" if c.weak else "CONTRADICTED", term=c.term, ai_span=span,
+                       report_span=rep_line(v), report_value_id=v.id,
+                       message=f"AI says {CLAIM_WORD[c.status]}; {v.value_raw} is {word} every range printed for "
+                               f"this test ({rng}).")
     if rs == c.status:
         return Finding(kind="status", label="VERIFIED", term=c.term, ai_span=span, report_span=rep_line(v),
                        report_value_id=v.id,
@@ -339,6 +386,19 @@ def verify(report_text: str, ai_text: str) -> VerifyResult:
         for c in sorted(sc.claims, key=lambda c: c.kind != "value"):
             if c.kind == "group":
                 findings.append(_check_group(c, analysis, idx))
+                continue
+            if c.kind == "outside_range":
+                findings.append(Finding(kind="outside_range", label="RANGE_NOT_FROM_REPORT", ai_span=c.span,
+                                        message=f"The AI says it is using ranges that are not printed on your report "
+                                                f"('{c.detail}'). MedLens only uses the ranges your report prints."))
+                continue
+            if c.anchor_value is not None:      # status bound by a bold value: the one report row with that value
+                hits = [v for v in analysis.values if v.value_num is not None and _same(v.value_num, c.anchor_value)]
+                if len(hits) == 1:
+                    findings.append(_check_claim(c, rtext, hits, hits[0]))
+                continue
+            if c.kind == "range" and c.category and not c.term_id:
+                findings.append(_check_category(c, rtext, []))
                 continue
             rows = _rows_for(c.term_id, idx, analysis.values, c.mention.text if c.mention else "") if c.term_id else []
             key = (c.mention.start, c.mention.end) if c.mention else (-1, -1)
