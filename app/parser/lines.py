@@ -9,12 +9,16 @@ from app.models import Section
 
 INTERPRETIVE_SECTIONS = re.compile(
     r"^(impression|conclusion|opinion|advice|remarks?|comments?|interpretation|suggestions?|"
-    r"recommendations?|clinical\s+(?:notes?|correlation)|summary|diagnosis|final\s+diagnosis|note)s?$",
+    r"recommendations?|clinical\s+(?:notes?|correlation|significance)|summary|diagnosis|final\s+diagnosis|note|"
+    r"risk\s+categor(?:y|ie))s?$",
     re.I,
 )
 # A line like "IMPRESSION:" or "Impression: fatty liver" or "COMPLETE BLOOD COUNT"
 KEYWORD_HEADER_RE = re.compile(r"^\s*(?P<name>[A-Za-z][A-Za-z /&()]{1,40}?)\s*:\s*(?P<rest>.*)$")
-CAPS_HEADER_RE = re.compile(r"^\s*(?P<name>[A-Z][A-Z0-9 /&(),\-]{2,60}?)\s*:?\s*$")
+CAPS_HEADER_RE = re.compile(r"^\s*(?P<name>[A-Z][A-Z0-9 /&(),;.\-]{2,60}?)\s*:?\s*$")   # "COMPLETE BLOOD COUNT;CBC"
+# bare reference headings in lab layouts ("Interpretation", "Risk Category", "Note"): what follows is reference material
+REFERENCE_HEADING_RE = re.compile(
+    r"^\s*(?P<name>interpretation|comments?|notes?|remarks?|risk\s+categor(?:y|ies)|clinical\s+significance)\s*:?\s*$", re.I)
 KNOWN_HEADERS = re.compile(
     r"^(findings|impression|conclusion|opinion|advice|remarks?|comments?|interpretation|"
     r"suggestions?|recommendations?|clinical\s+history|history|technique|summary|note)$",
@@ -46,6 +50,9 @@ def split_lines(text: str) -> list[Line]:
 
 def header_name(line: str) -> Optional[tuple[str, bool]]:
     """Return (section name, has_inline_content) if the line starts a section."""
+    m = REFERENCE_HEADING_RE.match(line)
+    if m:
+        return m["name"].strip().title(), False
     m = KEYWORD_HEADER_RE.match(line)
     if m and KNOWN_HEADERS.match(m["name"].strip()):
         return m["name"].strip(), bool(m["rest"].strip())

@@ -130,3 +130,53 @@ def test_chest_xray_ecg_sample():
     assert {"cardiomegaly", "consolidation", "sinus_rhythm", "electrocardiogram", "qrs_duration"} <= ids
     imp = [e for e in r.explanations if e.title.startswith("IMPRESSION")]
     assert imp and all(e.tag == Tag.PROFESSIONAL for e in imp)
+
+
+# ---------------------------------------------------------------- real-world fix: reference tables are not results
+RISK_REPORT = """LIPID SCREEN, SERUM
+LDL Cholesterol,Calculated         137.40       mg/dL         < 100.00
+
+Interpretation
+| REMARKS          | TOTAL CHOLESTEROL | TRIGLYCERIDE | LDL CHOLESTEROL |
+Optimal              < 200               < 150          < 100
+Near optimal         -                   -              100 - 129
+Borderline High      200 - 239           150 - 199      130 - 159
+High                 >= 240              200 - 499      160 - 189
+
+Risk Category
+Extreme risk group       LDL-C  < 50
+Very high risk group     LDL-C  < 70
+
+THYROID PROFILE, TOTAL, SERUM
+TSH                                2.85         µIU/mL        0.27 - 4.20
+Note
+TSH reference ranges in pregnancy
+1st Trimester                      0.100 - 2.500
+2nd Trimester                      0.200 - 3.000
+COMPLETE BLOOD COUNT;CBC
+Hemoglobin                         14.6         g/dL          13.00 - 17.00
+"""
+
+
+def test_risk_and_trimester_tables_are_not_results():
+    r = analyze(RISK_REPORT)
+    assert [v.test_name for v in r.values] == ["LDL Cholesterol,Calculated", "TSH", "Hemoglobin"]
+    assert "Optimal" in r.text and "1st Trimester" in r.text           # still shown as plain text
+    assert by_name(r, "Hemoglobin").section == "COMPLETE BLOOD COUNT;CBC"
+
+
+def test_value_that_is_itself_a_range_without_unit_is_reference_material():
+    assert analyze("Desirable   < 200").values == []
+    assert analyze("Pregnancy   0.100 - 2.500").values == []
+    r = analyze("Pus Cells   6-8   /hpf   0 - 5")                         # a real span value with a unit stays
+    assert len(r.values) == 1
+
+
+def test_real_result_after_a_bare_note_heading_is_still_parsed():
+    r = analyze("Note\nValues vary between labs.\nCreatinine   0.92   mg/dL   0.70 - 1.30\n")
+    assert [v.test_name for v in r.values] == ["Creatinine"]
+
+
+def test_label_words_only_match_whole_names():
+    r = analyze("Low Density Lipoprotein   137   mg/dL   < 100")
+    assert len(r.values) == 1

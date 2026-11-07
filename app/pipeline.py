@@ -157,6 +157,28 @@ def _to_labvalue(i: int, ln: Line, raw: RawRow) -> LabValue:
     )
 
 
+REFERENCE_SECTION_RE = re.compile(
+    r"^(interpretation|comments?|notes?|remarks?|risk\s+categor(?:y|ies)|clinical\s+significance)$", re.I)
+REFERENCE_LABEL_RE = re.compile(
+    r"(?:(?:extreme|very\s+high|high|moderate|intermediate|low)\s+risk(?:\s+group)?(?:\s+.*)?|risk\s+categor(?:y|ies)|"
+    r"optimal|near\s+optimal|above\s+optimal|borderline(?:\s+high|\s+low)?|high|very\s+high|extreme|low|desirable|"
+    r"undesirable|(?:1st|2nd|3rd|first|second|third)\s+trimester|trimester\s*(?:1|2|3|i|ii|iii)|interpretation|"
+    r"comments?|notes?|remarks?)", re.I)
+
+
+def _reference_row(raw: RawRow) -> bool:
+    """A 'row' that is reference material, not a result: a risk/trimester label, or a value that is
+    itself a range or comparator (<100, 0.100 - 2.500) with no unit."""
+    if REFERENCE_LABEL_RE.fullmatch(raw.test_name.strip()):
+        return True
+    return (raw.value_comparator is not None or raw.value_high is not None) and not raw.unit
+
+
+def _full_result_row(raw: RawRow) -> bool:
+    return (raw.value_num is not None and raw.value_comparator is None and raw.value_high is None and bool(raw.unit)
+            and bool(raw.range_raw) and parse_range(raw.range_raw).kind != "unparseable" and not _reference_row(raw))
+
+
 def _line_span(ln: Line) -> Span:
     lead = len(ln.text) - len(ln.text.lstrip())
     s = ln.text.strip()
@@ -172,6 +194,19 @@ def analyze(text: str, explain_unknown: Optional[UnknownTermExplainer] = None) -
     lines, sections = segment(text)
     sex = detect_sex(text)
     warnings: list[str] = []
+
+    # ---- reference sections ("Interpretation", "Risk Category", "Note") end at the first real result row
+    for sec in sections:
+        if not (sec.interpretive and REFERENCE_SECTION_RE.match(sec.name)):
+            continue
+        sec_lines = [ln for ln in lines if ln.section == sec.name and sec.start <= ln.start <= sec.end]
+        for k, ln in enumerate(sec_lines[1:], start=1):
+            raw = parse_line(ln)
+            if raw and _full_result_row(raw):
+                for later in sec_lines[k:]:
+                    later.section, later.interpretive = None, False
+                sec.end = max(sec.start, ln.start - 1)
+                break
 
     # ---- values
     values: list[LabValue] = []
@@ -200,6 +235,8 @@ def analyze(text: str, explain_unknown: Optional[UnknownTermExplainer] = None) -
                     v.notes.append("The printed range continues on the next line of the report.")
                 continue
         raw = parse_line(ln)
+        if raw and _reference_row(raw):
+            raw = None          # risk tables, trimester ranges...: reference material, shown as plain text
         prev_was_value = bool(raw)
         if raw:
             values.append(_to_labvalue(len(values), ln, raw))
