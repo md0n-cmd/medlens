@@ -32,6 +32,9 @@ DOTTED_ABBR = re.compile(r"(?:^|[\s(\[\"'])(?:(?:[A-Za-z]\.)+[A-Za-z]|[A-Z])$")
 
 
 def _is_abbreviation(before: str) -> bool:
+    line = before[before.rfind("\n") + 1:]
+    if re.fullmatch(r"\s*(?:#{1,6}\s*)?(?:[*\-]\s+)?\d{1,3}", line):
+        return True                                   # "## 2. Hemoglobin", "3. Repeat the test": a list number
     word = re.search(r"(?:^|[\s(\[\"'])([A-Za-z.]+)$", before)
     if word and word.group(1).lower().rstrip(".") in ABBREVIATIONS:
         return True
@@ -640,6 +643,53 @@ def _lex_alt(items) -> re.Pattern:
     return re.compile(r"\b(?:" + "|".join(items) + r")\b", re.I)
 
 
+def never_claim_type(sentence: str, line: str) -> Optional[str]:
+    """Sentence types that are never claims, checked before anything is reported:
+    'question', 'deferral', 'safety' (no claims at all); 'negated' (the negated clause is not a claim);
+    'heading' (status words still checked, never OVERSTEPS); 'definition' (no default-lexicon OVERSTEPS)."""
+    from app.verify import lexicon as L
+    st = sentence.strip()
+    if st.endswith("?") or re.match(L.QUESTION_START, st, re.I):
+        return "question"
+    if re.match(r"^\s*#{1,6}\s", line) or re.match(r"^\s*\*\*[^*]+\*\*\s*:?\s*$", line):
+        return "heading"
+    if not re.search(r"[.!?:]\s*$", st) and len(st.split()) <= 6 and not BULLET_RE.match(line) and not re.search(r"\d", st):
+        return "heading"                            # a line that is only a label ("Subclinical hypothyroidism")
+    if any(re.search(p, st, re.I) for p in L.SAFETY_ADVICE):
+        return "safety"
+    if _lexicon_res()["deferral"].search(st):
+        return "deferral"
+    if NEGATED_CERTAINTY.search(st):
+        return "negated"
+    if re.match(L.DEFINITION_SENTENCE, st, re.I) and not re.search(L.PATIENT_RESULT, st, re.I):
+        return "definition"
+    return None
+
+
+def _apply_never_claim(sc: "SentenceClaims", kind: Optional[str], stext: str, mention_spans) -> None:
+    if kind is None:
+        return
+    if kind in ("question", "deferral", "safety"):
+        sc.claims = []
+        return
+    if kind == "heading":
+        sc.claims = [c for c in sc.claims if c.kind in ("value", "range", "status")]
+        return
+    if kind == "negated":
+        # "X does not confirm Y": drop that clause; whatever else the sentence says is still checked
+        rest = NEGATED_CERTAINTY_CLAUSE.sub(" ", stext)
+        keep = {cat for cat, _ in find_oversteps(rest, [])}
+        sc.claims = [c for c in sc.claims if c.kind not in ("overstep", "certainty") or
+                     (c.kind == "overstep" and c.overstep in keep)]
+        return
+    if kind == "definition":
+        sc.claims = [c for c in sc.claims if not (c.kind == "certainty" or (c.kind == "overstep" and c.overstep == "condition"))]
+
+
+NEGATED_CERTAINTY_CLAUSE = re.compile(r"(?:,?\s*(?:but|however|although|though)\s+)?[^.;,]*\b(?:does\s+not|doesn't|do\s+not|don't|cannot|"
+                                      r"can't|not\s+enough\s+to|unable\s+to|did\s+not)\s+[^.;]*", re.I)
+
+
 def _certainty_candidate(sentence: str, gl: dict) -> list[str]:
     """Finding terms the AI states about this patient without any hedge (checked against the report's hedges)."""
     from app.verify import lexicon as L
@@ -1026,5 +1076,6 @@ def _extract(text: str, original: str) -> list[SentenceClaims]:
         for cat, why in find_oversteps(text[sp.start:sp.end],
                                        [(m.span.start - sp.start, m.span.end - sp.start) for m in sc.mentions]):
             sc.claims.append(Claim(kind="overstep", span=sp, overstep=cat, detail=why))
+        _apply_never_claim(sc, never_claim_type(stext, whole_line), stext, [])
         out.append(sc)
     return out

@@ -99,3 +99,18 @@ PATIENT_REFERENCE = [
 ]
 # the AI attributes a hedged finding to the report ("a mention of possible ...")
 ATTRIBUTION = [r"mention(?:s|ed)?\s+of", r"the\s+report\s+(?:mentions|notes|says)", r"radiologist\s+(?:mentions|notes|says)"]
+
+# ---------------------------------------------------------------- sentence types that are never claims
+QUESTION_START = (r"^\W*(?:\d+[.)]\s*)?(?:[\w' /-]{1,30}:\s*)?(?:have|do|does|is|are|did|can|could|has|was|were|will|would|"
+                  r"should)\s+(?:you|your|the|there|it|this|that|a|an|any|anyone)\b")
+SAFETY_ADVICE = [
+    r"\b(?:don't|do\s+not|never)\s+(?:start|stop|change|take|skip|begin|increase|decrease|double)\b[^.!?]*\bwithout\b",
+    r"\bseek\s+(?:\w+\s+){0,3}?(?:care|attention|help|assessment|evaluation|advice|treatment)\b",
+    r"\bavoid\s+(?:taking\s+)?(?:high|large|extra|mega)\s+doses?\b",
+    r"\b(?:call|go\s+to)\s+(?:an?\s+|the\s+)?(?:emergency|ambulance|er|a&e|hospital)\b",
+]
+# "X means ...", "X is another word for ...", "X is a/an ...": defining a word (no "your"/"you")
+DEFINITION_SENTENCE = (r"^(?!\W*(?:there|it|this|that|these|those|which|here)\b)"
+                       r"\W*(?:an?\s+|the\s+)?[\w'() -]{1,40}?\s+(?:means|refers\s+to|is\s+another\s+(?:word|name|term)\s+for|"
+                       r"is\s+(?:a|an)\s)")
+PATIENT_RESULT = r"\b(?:you|your|yours|this\s+(?:result|value|level|pattern)|these\s+(?:results|values|levels))\b"

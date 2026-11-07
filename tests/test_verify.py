@@ -751,3 +751,33 @@ def test_dropping_the_reports_hedge_is_an_overstep(ai):
                                 "There is also a mention of possible gallbladder inflammation."])  # attributed + hedged
 def test_keeping_the_hedge_is_not_a_certainty_overstep(ai):
     assert not [f for f in verify(US, ai).sentences[0].findings if f.kind == "certainty"]
+
+
+# ---------------------------------------------------------------- held-out round 1, step 4: never claims
+@pytest.mark.parametrize("ai", [
+    "Have you noticed any tiredness or anemia symptoms lately?",                    # question
+    "2. **Diet:** Do you eat much fried food?",                                     # numbered question
+    "Do not stop your iron tablets without asking your doctor.",                    # safety advice
+    "If you get chest pain, seek urgent medical care.",                             # safety advice
+    "Avoid taking high doses of vitamin D on your own.",                            # safety advice
+    "Your doctor may recommend an iron supplement depending on your diet.",         # deferral
+    "This scan alone does not confirm hepatitis.",                                  # negated certainty
+    "Anaemia means having fewer red cells than usual.",                             # definition
+    "Leukocytosis is another word for a raised white cell count.",                  # definition
+])
+def test_sentence_types_that_are_never_claims(ai):
+    assert verify(REPORT, ai).sentences[-1].label == "NEUTRAL"
+
+
+def test_a_definition_that_links_the_result_to_a_condition_still_oversteps():
+    assert verify(REPORT, "Your low hemoglobin means you are anaemic.").sentences[0].label == "OVERSTEPS"
+
+
+def test_headings_keep_status_checks_but_never_overstep():
+    s = verify(REPORT, "## 2. Hemoglobin – Lower than ideal, suggesting anemia").sentences[0]
+    assert s.label == "VERIFIED" and all(f.kind != "overstep" for f in s.findings)
+
+
+def test_there_is_is_not_a_definition():
+    s = verify(US, "There is a 6 mm stone in the gallbladder.").sentences[0]
+    assert s.label == "OVERSTEPS"
