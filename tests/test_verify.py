@@ -238,3 +238,24 @@ def test_different_tests_do_not_normalise_together():
     from app.verify.names import names_match
     assert not names_match("Bilirubin Direct", "Total Bilirubin")
     assert not names_match("HDL Cholesterol", "LDL Cholesterol")
+
+
+# ---------------------------------------------------------------- real-world fixes: sentence splitting
+@pytest.mark.parametrize("text,expected", [
+    ("* E.S.R. (Erythrocyte Sedimentation Rate): 19 mm/hr (Reference: 0 - 15 mm/hr), which is slightly elevated.", 1),
+    ("See Dr. Rao and Mrs. Iyer. Your Hb is 11.2 g/dL. It is low.", 3),
+    ("Some tests (e.g. TSH. T3) are fine. Grade A. Next one.", 2),
+    ("Values i.e. the numbers are listed. No. 5 is here.", 2),
+    ("Your eGFR is 78. Drink water! Really? Yes.", 4),
+])
+def test_sentence_splitting_respects_abbreviations_decimals_parentheses(text, expected):
+    from app.verify.claims import split_sentences
+    assert len(split_sentences(text)) == expected
+
+
+def test_dotted_esr_stays_one_sentence_and_matches_report():
+    report = "HAEMATOLOGY\nE.S.R      19      mm/hr      0 - 15\n"
+    r = verify(report, "E.S.R. (Erythrocyte Sedimentation Rate): 19 mm/hr (Reference: 0 - 15 mm/hr), which is slightly elevated.")
+    assert len(r.sentences) == 1
+    s = r.sentences[0]
+    assert s.label == "VERIFIED" and set(labels(s)) == {"VERIFIED"} and len(labels(s)) == 3

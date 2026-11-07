@@ -25,22 +25,48 @@ MULT = r"(?:\s*(?P<mult>lakhs?|lacs?|thousand|k)\b)?"
 MULTIPLIER = {"lakh": 1e5, "lakhs": 1e5, "lac": 1e5, "lacs": 1e5, "thousand": 1e3, "k": 1e3}
 
 # ------------------------------------------------------------------ sentences
+ABBREVIATIONS = {"dr", "mr", "mrs", "ms", "no", "nos", "vs", "etc", "approx", "fig", "st", "jr", "sr", "dept", "ref",
+                 "e.g", "i.e", "viz", "cf", "max", "min", "avg", "hr", "hrs", "yr", "yrs", "inc", "ltd", "pvt"}
+# a standalone token: dotted abbreviation (E.S.R, i.e) or a single capital letter ("Grade A."), never "U/L"
+DOTTED_ABBR = re.compile(r"(?:^|[\s(\[\"'])(?:(?:[A-Za-z]\.)+[A-Za-z]|[A-Z])$")
+
+
+def _is_abbreviation(before: str) -> bool:
+    word = re.search(r"(?:^|[\s(\[\"'])([A-Za-z.]+)$", before)
+    if word and word.group(1).lower().rstrip(".") in ABBREVIATIONS:
+        return True
+    return bool(DOTTED_ABBR.search(before))
+
+
 def split_sentences(text: str) -> list[Span]:
-    """Sentence spans; a '.' inside a number (11.2) never ends a sentence."""
+    """Sentence spans. Never splits on a decimal (11.2), inside parentheses, or after an abbreviation
+    (E.S.R., Dr., Mrs., i.e., e.g., No., a single capital letter like 'A.'). Newlines always split."""
+    cuts, depth, i, n = [], 0, 0, len(text)
+    while i < n:
+        ch = text[i]
+        if ch == "\n":
+            depth = 0
+            cuts.append(i + 1)
+        elif ch in "([":
+            depth += 1
+        elif ch in ")]":
+            depth = max(0, depth - 1)
+        elif ch in ".!?" and depth == 0:
+            j = i
+            while j + 1 < n and text[j + 1] in ".!?":
+                j += 1
+            if (j + 1 == n or text[j + 1].isspace()) and not (ch == "." and _is_abbreviation(text[:i])):
+                cuts.append(j + 1)
+            i = j
+        i += 1
     out, start = [], 0
-    for m in re.finditer(r"(?<!\d)[.!?]+(?=\s|$)|(?<=\d)[.!?]+(?=\s+[A-Z(\"']|\s*$)|\n+", text):
-        end = m.end()
+    for end in cuts + [n]:
         seg = text[start:end]
-        lead = len(seg) - len(seg.lstrip())
-        s = seg.strip()
-        if s and re.search(r"[A-Za-z0-9]", s):
-            out.append(Span(start=start + lead, end=start + lead + len(s), text=s))
+        if seg.strip() and re.search(r"[A-Za-z0-9]", seg):
+            lead = len(seg) - len(seg.lstrip())
+            body = seg.strip()
+            out.append(Span(start=start + lead, end=start + lead + len(body), text=body))
         start = end
-    seg = text[start:]
-    if seg.strip() and re.search(r"[A-Za-z0-9]", seg):
-        lead = len(seg) - len(seg.lstrip())
-        s = seg.strip()
-        out.append(Span(start=start + lead, end=start + lead + len(s), text=s))
     return out
 
 
