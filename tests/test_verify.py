@@ -996,3 +996,52 @@ def test_suggesting_a_test_and_what_a_test_measures_are_not_claims():
                "A 2D Echo would help determine whether the heart is enlarged.",
                "The ECG evaluates the electrical activity and rhythm of the heart."):
         assert verify(XRAY, ai).sentences[0].label == "NEUTRAL", ai
+
+
+# ---------------------------------------------------------------- round 2, steps 5-6: ranges and binding
+LABS = ("CBC\nHemoglobin           14.6   g/dL       13.00 - 17.00\nRDW-CV               14.3   %          11.60 - 14.00\n"
+        "Total Leukocyte Count  6.80  thou/mm3   4.00 - 10.00\nPlatelet Count       245    thou/mm3   150 - 410\n"
+        "ESR                  19     mm/hr      0 - 15\n\nLIPID SCREEN\nCholesterol, Total   212.00  mg/dL  < 200.00\n"
+        "Triglycerides        168.00  mg/dL  < 150.00\nHDL Cholesterol      41.00   mg/dL  > 40.00\n"
+        "LDL Cholesterol      137.40  mg/dL  < 100.00\nD-dimer              0.62    ug/mL  < 0.50\n")
+
+
+def test_only_the_bound_on_the_values_side_is_compared():
+    r = verify(LABS, "ESR is slightly elevated at 19 mm/hr (normal is up to 15).\n\n"
+                     "RDW-CV is marginally high at 14.3% (normal is up to 14.0%).\n\n"
+                     "Hemoglobin is 14.6 (normal is up to 17).")
+    assert [s.label for s in r.sentences] == ["VERIFIED", "VERIFIED", "RANGE_NOT_FROM_REPORT"]
+
+
+def test_threshold_from_elsewhere_is_range_not_from_report():
+    for ai in ("For someone aged 61, some clinical protocols use an age-adjusted D-dimer threshold.",
+               "Some guidelines use a lower LDL cut-off for older adults."):
+        assert verify(LABS, ai).sentences[0].label == "RANGE_NOT_FROM_REPORT", ai
+
+
+def test_values_bind_to_their_own_tests_and_quoted_glosses_are_ignored():
+    r = verify(LABS, 'His Total Cholesterol (212), Triglycerides (168), and LDL "bad" Cholesterol (137.40) are high.')
+    vals = [f for f in r.sentences[0].findings if f.kind == "value"]
+    assert len(vals) == 3 and all(f.label == "VERIFIED" for f in vals)
+    assert r.sentences[0].label == "VERIFIED"
+
+
+def test_enumerated_group_uses_exactly_its_members():
+    r = verify(LABS, "Hemoglobin, white blood cell counts, and platelets are all normal.")
+    g = next(f for f in r.sentences[0].findings if f.kind == "group")
+    assert g.label == "VERIFIED" and "3 tests" in g.message        # RDW (high) is not one of them
+    assert verify(LABS, "Your blood counts are all normal.").sentences[0].label == "CONTRADICTED"
+
+
+def test_near_a_limit_is_not_low_or_high():
+    r = verify(LABS, "| Test | Value | Range | Status |\n| --- | --- | --- | --- |\n"
+                     "| HDL Cholesterol | 41 | >40 | Normal, but near lower limit |\n\n"
+                     "Your hemoglobin is toward the upper end of the normal range.")
+    row, prose = [s for s in r.sentences if "41" in s.text or "toward" in s.text]
+    assert row.label == "VERIFIED" and prose.label in ("VERIFIED", "NEUTRAL")
+    assert not any(f.kind == "status" and f.label == "CONTRADICTED" for f in row.findings + prose.findings)
+
+
+def test_placing_results_in_a_category_oversteps():
+    r = verify(LABS, "His cholesterol and triglycerides fall into the borderline high category.")
+    assert r.sentences[0].label == "OVERSTEPS"

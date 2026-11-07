@@ -168,7 +168,13 @@ OUTSIDE_RANGES = re.compile(
     r"\b(?:using|use|uses|based\s+on|according\s+to|applying|with)\s+(?:the\s+)?(?:standard|typical|general|common|"
     r"usual|textbook|population|clinical)\s+(?:clinical\s+|lab(?:oratory)?\s+)?(?:reference\s+)?(?:ranges?|intervals?|"
     r"cut-?offs?|guidelines?)\b"
-    r"|\bstandard\s+(?:clinical\s+|lab\s+)?(?:reference\s+)?ranges?\s+(?:usually|typically|generally|say|prefer|are|put)\b",
+    r"|\bstandard\s+(?:clinical\s+|lab\s+)?(?:reference\s+)?ranges?\s+(?:usually|typically|generally|say|prefer|are|put)\b"
+    # a threshold from elsewhere: "an age-adjusted D-dimer threshold", "some protocols / guidelines use ... cut-off"
+    r"|\b(?:age|sex|gender|weight)-(?:adjusted|specific|based)\s+(?:[\w-]+\s+){0,2}?(?:thresholds?|cut-?offs?|ranges?|limits?)\b"
+    r"|\b(?:some|many|most|certain|other|newer|international|current)\s+(?:clinical\s+)?(?:protocols|guidelines|labs|"
+    r"laboratories|doctors|clinicians)\s+(?:use|apply|recommend|prefer)\s+(?:[\w-]+\s+){0,4}?(?:thresholds?|cut-?offs?|"
+    r"ranges?|limits?|targets?)\b"
+    r"|\bguidelines\s+(?:use|apply|recommend)\s+(?:[\w-]+\s+){0,4}?(?:thresholds?|cut-?offs?|ranges?|limits?|targets?)\b",
     re.I)
 # a named category with a threshold, e.g. "Borderline high is 200 to 239"
 CATEGORY_RE = re.compile(
@@ -492,6 +498,27 @@ POSSIBILITY_INTRO = re.compile(r"\b(?:include|includes|including|such\s+as|cause
 QUANTIFIER = re.compile(r"\b(?:most|many|some|a\s+few|several|(?:the\s+)?(?:vast\s+)?majority|nearly\s+all|almost\s+all)\b", re.I)
 
 
+ENUM_FILLER = re.compile(r"^(?:[\s,;/&]|\b(?:and|or|both|the|your|his|her|their|counts?|levels?|values?|numbers?|results?)\b)*$",
+                         re.I)
+
+
+def _enumerated_group(text: str, sp: Span, ms: list) -> Optional[set]:
+    """An explicitly enumerated subject ("A, B, and C are all normal"): exactly those tests, no more."""
+    nm = GROUP_NORMAL_RE.search(sp.text)
+    if not nm:
+        return None
+    end = sp.start + nm.start()
+    subj = sorted((m for m in ms if m.span.end <= end), key=lambda m: m.span.start)
+    if len({m.term_id for m in subj}) < 2:
+        return None
+    gaps = [text[x.span.end:y.span.start] for x, y in zip(subj, subj[1:])] + [text[subj[-1].span.end:end]]
+    if not all(ENUM_FILLER.match(g) for g in gaps) or not any(re.search(r",|\band\b", g) for g in gaps):
+        return None
+    if GROUP_NEGATION.search(sp.text[:nm.start()]) or QUANTIFIER.search(sp.text[:nm.start()]):
+        return None
+    return {m.term_id for m in subj}
+
+
 def _group_claim(sentence: str, heading: Optional[str], mention_spans: list[tuple[int, int]] = ()) -> Optional[str]:
     nm = GROUP_NORMAL_RE.search(sentence)
     if not nm or GROUP_NEGATION.search(sentence[:nm.start()]):
@@ -517,10 +544,14 @@ LEAD_STATUS = {"low": "LOW", "decreased": "LOW", "reduced": "LOW", "high": "HIGH
                "normal": "NORMAL", "borderline": "HIGH"}
 
 
+# a quoted gloss inside a test name: LDL "bad" Cholesterol, HDL "good" cholesterol
+QUOTED_GLOSS = re.compile(r'["“][A-Za-z]+(?:\s[A-Za-z]+)?["”]')
+
+
 def _test_mentions(text: str) -> list[Mention]:
     gl = load_glossary()
     out = []
-    for t in find_terms(text):
+    for t in find_terms(_blank(QUOTED_GLOSS, text)):
         if t.term_id in PANEL_IDS:
             continue                      # "CBC", "lipid profile": a group, not one test
         e = gl.get(t.term_id, {})
@@ -533,10 +564,19 @@ def _sp(text: str, a: int, b: int) -> Span:
     return Span(start=a, end=b, text=text[a:b])
 
 
+# "near the lower limit", "toward the upper end": a position inside the range, not LOW / HIGH
+NEAR_LIMIT = re.compile(r"\b(?:near|close\s+to|towards?|approaching|at)\s+(?:the\s+|its\s+)?(?:lower|upper|higher|high|low)\s+"
+                        r"(?:end|limit|side|boundary|border|edge)(?:\s+of\s+(?:the\s+)?(?:normal\s+)?range)?\b", re.I)
+
+
+def _blank(rx: re.Pattern, s: str) -> str:
+    return rx.sub(lambda m: " " * len(m.group(0)), s)
+
+
 def _find_statuses(text: str, a: int, b: int, used: list[tuple[int, int]] = ()) -> list[tuple[str, int, int]]:
     """Status words in text[a:b] that really are claims about a value: (status, start, end), absolute offsets,
     at most one per status kind."""
-    seg = text[a:b]
+    seg = _blank(NEAR_LIMIT, text[a:b])
     out = []
     for rx, st in ((LOW_RE, "LOW"), (HIGH_RE, "HIGH"), (NORMAL_RE, "NORMAL")):
         for sm in rx.finditer(seg):
@@ -633,6 +673,7 @@ def parse_tables(text: str) -> dict[int, dict]:
 def _cell_status(cell: str) -> Optional[str]:
     if re.search(r"\b(?:not|no|n't)\b", cell, re.I):
         return None
+    cell = _blank(NEAR_LIMIT, cell)
     lo, hi = CELL_LOW.search(cell), CELL_HIGH.search(cell)
     if lo or hi:
         return "LOW" if lo and (not hi or lo.start() < hi.start()) else "HIGH"
@@ -1033,7 +1074,10 @@ def _extract(text: str, original: str) -> list[SentenceClaims]:
             continue
         if heading and heading != "_other" and BULLET_RE.match(whole_line):
             heading_tests[heading].update(m.term_id for m in ms)
-        g = _group_claim(sp.text, heading, [(m.span.start - sp.start, m.span.end - sp.start) for m in ms])
+        enum = _enumerated_group(text, sp, ms)
+        g = None if enum else _group_claim(sp.text, heading, [(m.span.start - sp.start, m.span.end - sp.start) for m in ms])
+        if enum:                                   # "Hemoglobin, white blood cell counts, and platelets are all healthy"
+            sc.claims.append(Claim(kind="group", span=sp, group="enumerated", group_tests=enum))
         if g:
             sc.claims.append(Claim(kind="group", span=sp, group=g, group_tests=set(heading_tests.get(g, set()))))
         # ---- compound mentions: "Bilirubin (Total: 1.6, Direct: 0.4, Indirect: 1.2 mg/dL)" names three tests

@@ -45,6 +45,8 @@ HEALTH_JUDGEMENTS = [
     r"health\s+trends?",
     r"(?:you|your\s+body)\s+(?:is|are|look|seem)s?\s+(?:\w+\s+)?well-balanced",
     r"no\s+active\s+[\w\s]{0,30}?(?:infection|disease|hepatitis)",
+    # placing this patient into a risk category / group
+    r"(?:falls?|falling|puts?|places?)\s+(?:\w+\s+){0,2}?(?:into|in)\s+(?:the|a|an)\s+(?:[\w-]+\s+){0,3}?(?:category|risk\s+group|group)",
 ]
 # causes and prognosis (not when the cause is about the data: a typo, units, rounding)
 CAUSES = [

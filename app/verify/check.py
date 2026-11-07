@@ -143,6 +143,21 @@ def _ranges_equal(ai: ReferenceRange, rep: ReferenceRange) -> bool:
     return False
 
 
+def _same_bound_on_value_side(ai: ReferenceRange, v: LabValue) -> Optional[str]:
+    """Only the bound on the value's side matters: "up to 15" == "0 - 15"; "up to 14.0" vs "11.60 - 14.00"
+    for a value above 14. Returns 'upper' / 'lower' when that one bound is the report's."""
+    rep = v.applied_range or v.reference
+    if rep is None or rep.kind != "interval" or ai.kind not in ("upper", "lower"):
+        return None
+    if ai.kind == "upper" and ai.high is not None and rep.high is not None and _same(ai.high, rep.high):
+        if v.status == Status.ABOVE or (rep.low is not None and _same(rep.low, 0)):
+            return "upper"
+    if ai.kind == "lower" and ai.low is not None and rep.low is not None and _same(ai.low, rep.low):
+        if v.status == Status.BELOW:
+            return "lower"
+    return None
+
+
 STATUS_WORD = {Status.ABOVE: "higher than", Status.BELOW: "lower than", Status.WITHIN: "within",
                Status.DIFFERS: "different from"}
 CLAIM_WORD = {"LOW": "low", "HIGH": "high", "NORMAL": "normal / within range"}
@@ -251,6 +266,11 @@ def _check_claim(c: Claim, text: str, rows: list[LabValue], value_row: Optional[
     if c.kind == "range":
         with_range = [v for v in rows if v.reference is not None and v.reference.kind != "unparseable"]
         for v in with_range:
+            side = _same_bound_on_value_side(c.range, v)
+            if side:
+                return Finding(kind="range", label="VERIFIED", term=c.term, ai_span=span, report_span=rep_line(v),
+                               report_value_id=v.id,
+                               message=f"Matches the {side} limit printed on your report ({v.reference_span.text}).")
             if _ranges_equal(c.range, v.reference):
                 return Finding(kind="range", label="VERIFIED", term=c.term, ai_span=span, report_span=rep_line(v),
                                report_value_id=v.id,
@@ -387,7 +407,7 @@ UNSETTLED = {Status.AMBIGUOUS, Status.NO_RANGE, Status.UNPARSEABLE, Status.UNIT_
 SIDE = {Status.ABOVE: "above", Status.BELOW: "below", Status.DIFFERS: "different from"}
 GROUP_NAME = {"thyroid_hormones": "thyroid hormones", "liver": "liver tests", "kidney": "kidney tests", "cbc": "blood counts", "thyroid": "thyroid tests",
               "lipid": "lipid tests", "sugar": "blood sugar tests", "urine": "urine tests", "dlc": "differential counts",
-              "all": "results"}
+              "all": "results", "enumerated": "tests it names"}
 
 
 def _row_categories(v: LabValue, r: AnalysisResult) -> set[str]:
@@ -401,6 +421,14 @@ def group_rows(group: str, heading_tests: set, r: AnalysisResult, idx: dict[str,
     Creatinine under 'LIVER & KIDNEY PANEL' is not a liver test, and ESR in its own section is not a blood count."""
     if group == "all":
         return list(r.values)
+    if group == "enumerated":                       # exactly the tests the sentence names
+        seen, rows = set(), []
+        for t in heading_tests:
+            for v in _rows_for(t, idx, r.values):
+                if v.id not in seen:
+                    seen.add(v.id)
+                    rows.append(v)
+        return sorted(rows, key=lambda v: v.value_span.start)
     if group in GROUP_TERMS:                       # e.g. differentials: only the differential tests themselves
         return [v for v in r.values if {t for t, vs in idx.items() if v in vs} & GROUP_TERMS[group]]
     _, section_re, cats = GROUPS[group]
@@ -451,7 +479,9 @@ def _check_group(c: Claim, r: AnalysisResult, idx: dict[str, list[LabValue]]) ->
                        message="The report doesn't settle this: " + ", ".join(v.test_name for v in unsettled)
                                + " have no single usable printed range.")
     return Finding(kind="group", label="VERIFIED", ai_span=c.span, term=name, report_span=lines[0], extra_report_spans=lines,
-                   message=f"Matches: all {len(rows)} {name} on your report are within their printed ranges.")
+                   message=(f"Matches: all {len(rows)} tests named here are within the ranges printed on your report."
+                            if c.group == "enumerated" else
+                            f"Matches: all {len(rows)} {name} on your report are within their printed ranges."))
 
 
 # ---------------------------------------------------------------- quotes and certainty

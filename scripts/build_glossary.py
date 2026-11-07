@@ -23,7 +23,7 @@ H = "Blood count (CBC)"
 add("Complete Blood Count", ["CBC", "Hemogram", "Haemogram", "Complete Haemogram", "Full Blood Count", "FBC"], H, "A group of tests that counts and measures the different cells in your blood: red cells, white cells and platelets.")
 add("Hemoglobin", ["Haemoglobin", "Hb", "Hgb"], H, "A protein inside red blood cells that carries oxygen from the lungs to the rest of the body. This test measures how much of it is in your blood.")
 add("Red Blood Cell Count", ["RBC", "RBC Count", "Red Blood Cells", "Total RBC Count", "Erythrocytes", "Erythrocyte Count"], H, "Counts the number of red blood cells, the cells that carry oxygen, in a small amount of blood.")
-add("White Blood Cell Count", ["WBC", "WBC Count", "White Blood Cells", "Leukocytes", "Leucocytes", "Leukocyte Count"], H, "Counts the white blood cells, which are part of the body's defence (immune) system.")
+add("White Blood Cell Count", ["WBC", "WBC Count", "White Blood Cells", "White Blood Cell Counts", "Leukocytes", "Leucocytes", "Leukocyte Count"], H, "Counts the white blood cells, which are part of the body's defence (immune) system.")
 add("Total Leukocyte Count", ["TLC", "Total Leucocyte Count", "Total WBC Count"], H, "Another name for the total white blood cell count: the number of all immune-system white cells in a sample of blood.")
 add("Differential Leukocyte Count", ["DLC", "Differential Count", "Differential Leucocyte Count"], H, "Breaks the white blood cells into their five main types and shows what share (percentage) each type makes up.")
 add("Platelet Count", ["Platelets", "PLT", "Thrombocytes", "Platelet"], H, "Counts platelets, tiny cell fragments that help blood clot and stop bleeding.")
