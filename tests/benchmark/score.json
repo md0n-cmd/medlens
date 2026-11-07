@@ -1,5 +1,5 @@
 {
-  "best_correct": 34,
+  "best_correct": 42,
   "total": 60,
   "history": [
     {
@@ -8,6 +8,13 @@
       "misses": 19,
       "total": 60,
       "note": "baseline: build before benchmark-driven changes (user's harness reported 33/60, 8 false alarms; this harness locates sentences after stripping markdown)"
+    },
+    {
+      "correct": 42,
+      "false_alarms": 0,
+      "misses": 18,
+      "total": 60,
+      "note": "step 1: false alarms -> 0 (thresholds/time spans/counts not values; predicative 'normal'; lead beats comparison; compound leads; suggested tests; reference population)"
     }
   ]
 }

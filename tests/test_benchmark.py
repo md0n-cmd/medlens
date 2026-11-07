@@ -8,8 +8,6 @@ import json
 import sys
 from pathlib import Path
 
-import pytest
-
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT / "scripts"))
 
@@ -19,7 +17,6 @@ SCORE = benchmark.run()
 BEST = json.loads((ROOT / "tests" / "benchmark" / "score.json").read_text())
 
 
-@pytest.mark.xfail(strict=True, reason="7 false alarms at baseline; removed in the step that brings them to 0")
 def test_no_false_alarms():
     alarms = [r for r in SCORE.rows if r.outcome == "false alarm"]
     assert not alarms, "\n" + "\n".join(f"{r.file}: got {r.got}, expected {r.expected}: {r.what}" for r in alarms)

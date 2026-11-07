@@ -122,13 +122,34 @@ UNIT_WORDS = re.compile(r"^(?:g/dl|mg/dl|mg/l|ng/ml|pg/ml|ug/dl|µg/dl|u/l|iu/l|
                         r"/cumm|/hpf|cells/cumm|million/cumm|mm/hr|mm|sec|seconds|min|ms|bpm|x10\^\d+/[a-z]+|10\^\d+/[a-z]+|"
                         r"ml/min(?:/1\.73m2)?|lakhs?|thousand|k)$", re.I)
 
-LOW_RE = re.compile(r"\b(?:low|lower|below\s+(?:the\s+)?(?:normal|reference|printed|range|limit)|decreased|"
+LOW_RE = re.compile(r"\b(?:low|lower|below\s+(?:the\s+|their\s+|its\s+|your\s+)?(?:normal|reference|printed|range|limit)|decreased|"
                     r"reduced|on\s+the\s+lower\s+side)\b", re.I)    # 'deficiency' is interpretation, not a reading
-HIGH_RE = re.compile(r"\b(?:high|higher|above\s+(?:the\s+)?(?:normal|reference|printed|range|limit)|elevated|raised|"
+HIGH_RE = re.compile(r"\b(?:high|higher|above\s+(?:the\s+|their\s+|its\s+|your\s+)?(?:normal|reference|printed|range|limit)|elevated|raised|"
                      r"increased|on\s+the\s+higher\s+side)\b", re.I)
-NORMAL_RE = re.compile(r"\b(?:within\s+(?:the\s+)?(?:normal\s+|reference\s+|printed\s+)?(?:ranges?|limits)|"
-                       r"in\s+(?:the\s+)?(?:normal\s+|reference\s+)?ranges?|normal(?!\s+(?:range|limits?|values?|levels?)\b)|"
-                       r"fine|healthy|okay|ok)\b", re.I)
+# 'normal' is a status only when it predicates the test or its value ("X is normal", "normal at 9.0",
+# "within normal", "normal X level"); attributive uses ("normal breakdown of", "normal part of") are not claims
+NORMAL_WORD = r"(?:normal|fine|healthy|okay|ok)"
+NORMAL_RE = re.compile(
+    r"\b(?:within\s+(?:the\s+)?(?:normal\s+|reference\s+|printed\s+|healthy\s+)?(?:ranges?|limits)"
+    r"|in\s+(?:the\s+)?(?:normal\s+|reference\s+|healthy\s+)?ranges?"
+    r"|(?:is|are|was|were|remains?|stays?|looks?|appears?|seems?|be|being|both|all)\s+"
+    r"(?:(?!higher|lower|than|above|below|not)[\w-]+\s+){0,2}?" + NORMAL_WORD +
+    r"(?!\s+(?:range|limits?|upper|lower|breakdown|function|part|size|average|level\s+is))"
+    r"|normal\s+(?:at|for)\b"
+    r"|normal\s+(?:\w+\s+)?(?:levels?|values?|results?|readings?)(?!\s+(?:is|are)\s+(?:under|below|above|over|between)))\b",
+    re.I)
+# 1a: numbers that are not the AI's value for a test
+THRESHOLD_BEFORE = re.compile(r"\b(?:limit|cut-?off|threshold|recommended|recommends|ideally|ideal|target|goal|"
+                              r"should\s+be|keep(?:ing)?\s+(?:it|this|them)?\s*(?:under|below|above)?)\s+"
+                              r"(?:of\s+|is\s+|at\s+|to\s+)?(?:the\s+)?$", re.I)
+NOT_A_VALUE_AFTER = re.compile(r"^(?:\s*(?:mg/dl|%|u/l)\s+)?\s*(?:limit|cut-?off|threshold|mark)\b"
+                               r"|^[\s-]*(?:months?|weeks?|days?|hours?|hrs?|years?|yrs?|minutes?|mins?)\b"
+                               r"|^\s+(?:different\s+)?(?:values?|markers?|tests?|readings?|results?|numbers?|times?)\b", re.I)
+AND_ABOVE_TXT = re.compile(rf"(?P<n>{N})\s*(?:or\s+higher|or\s+more|or\s+above|and\s+above|and\s+higher)\b", re.I)
+COMPARISON_BEFORE = re.compile(r"\b(?:similar\s+to|like|unlike|as\s+with|as\s+for|compared\s+(?:to|with)|same\s+as)\s+$",
+                               re.I)
+SUGGEST_TEST = re.compile(r"\b(?:look\s+at|order|recommend|suggest|consider|check|repeat|get|do)\s+(?:an?\s+|the\s+|"
+                          r"another\s+)?(?:\w+\s+){0,2}?tests?\b", re.I)
 NEGATION = re.compile(r"(?:\b(?:not|isn't|aren't|wasn't|hasn't|haven't|hadn't|never|no|without)|n't)\s+(?:\w+\s+){0,2}$", re.I)
 HYPOTHETICAL = re.compile(r"\b(?:if|would|could|might|unless|whether|were)\b[^,.;:]*$", re.I)
 DESCRIBES_CELLS = re.compile(r"^\s*(?:\w+\s+){0,2}?(?:size|sizes|shape|shapes|shaped|variation|cells?|ability|function|"
@@ -183,8 +204,8 @@ INTERPRETATION = [
     re.compile(rf"\byour\s+(?:{SYSTEM}|body|metabolism|immune\s+system)\s+(?:is|are|looks?|seems?|appears?)\s+"
                r"(?:to\s+be\s+)?(?:\w+\s+)?(?:healthy|fine|normal|in\s+good\s+(?:shape|health)|working\s+(?:well|normally|fine))\b",
                re.I),
-    re.compile(r"\b(?:you(?:'re|\s+are)\s+in\s+(?:good|excellent)\s+health|(?:a\s+)?healthy\s+(?:person|individual|adult|man|woman))\b",
-               re.I),
+    re.compile(r"\byou(?:'re|\s+are)\s+(?:in\s+(?:good|excellent)\s+health|a\s+healthy\s+(?:person|individual|adult|man|woman))\b",
+               re.I),                    # 'a healthy adult typically has 90+' describes the reference population
 ]
 
 
@@ -416,6 +437,50 @@ def _is_status_claim(text: str, s: int, e: int, before: str) -> bool:
 DOSE_AFTER = re.compile(r"\s*(?:mg|mcg|µg|iu|tablets?|tabs?|capsules?|drops?)(?![/\w])", re.I)
 
 
+COMPOUND_ITEM = re.compile(rf"(?P<sub>[A-Za-z][A-Za-z ]{{0,20}}?)\s*[:=]\s*(?P<num>{N})")
+
+
+def _compound(text: str, m: Mention) -> tuple[list[Mention], list[Claim]]:
+    """'Bilirubin (Total: 1.6, Direct: 0.4, Indirect: 1.2 mg/dL)' -> mentions + value claims for
+    Total, Direct and Indirect Bilirubin. Needs >= 2 'label: number' items naming known tests."""
+    # the bracket may start inside the matched alias ("Bilirubin (Total" matches the alias 'Bilirubin (Total)')
+    open_at = text.find("(", m.span.start, m.span.end)
+    if open_at == -1:
+        pm0 = re.match(r"\s*\(", text[m.span.end:])
+        if not pm0:
+            return [], []
+        open_at = m.span.end + pm0.end() - 1
+    close_at = text.find(")", open_at)
+    if close_at == -1 or close_at - open_at > 120:
+        return [], []
+    base = text[m.span.start:open_at].strip() if open_at < m.span.end else m.span.text
+    inner_start, inner = open_at + 1, text[open_at + 1:close_at]
+    unit_m = re.search(r"(?P<unit>[A-Za-zµμ%][A-Za-z/%µμ0-9.]*)\s*$", inner)
+    unit = unit_m["unit"] if unit_m and UNIT_WORDS.match(unit_m["unit"]) else None
+    gl = load_glossary()
+    mentions, claims = [], []
+    for it in COMPOUND_ITEM.finditer(inner):
+        sub = it["sub"].strip()
+        tid = None
+        for cand in (f"{sub} {base}", f"{base} {sub}", f"{sub} {m.term}"):
+            hit = [t for t in find_terms(cand) if gl.get(t.term_id, {}).get("kind", "test") == "test"
+                   and t.span.end - t.span.start == len(cand)]
+            if hit:
+                tid = hit[0].term_id
+                break
+        if not tid:
+            continue
+        ss = inner_start + it.start("sub") + (len(it["sub"]) - len(it["sub"].lstrip()))
+        mention = Mention(term_id=tid, term=gl[tid]["term"], span=_sp(text, ss, ss + len(sub)))
+        ns, ne = inner_start + it.start("num"), inner_start + it.end("num")
+        mentions.append(mention)
+        claims.append(Claim(kind="value", span=_sp(text, ns, ne), value=parse_number(it["num"]),
+                            value_raw=it["num"], unit=unit, term_id=tid, term=mention.term, mention=mention.span))
+    if len(mentions) < 2:
+        return [], []
+    return mentions, claims
+
+
 def _segment_claims(text: str, m: Mention, a: int, b: int, sent_start: int) -> list[Claim]:
     """Claims in text[a:b], the part of the sentence that belongs to mention m."""
     seg = text[a:b]
@@ -442,6 +507,11 @@ def _segment_claims(text: str, m: Mention, a: int, b: int, sent_start: int) -> l
                 end += mm.end()
             used.append((im.start(), end))
             claims.append(Claim(kind="range", span=_sp(text, a + im.start(), a + end), range=r, **base))
+    for am in AND_ABOVE_TXT.finditer(seg):           # "a score of 90 or higher"
+        if free(am.start(), am.end()):
+            r = ReferenceRange(raw=am.group(0), kind="lower", low=parse_number(am["n"]), low_inclusive=True)
+            used.append((am.start(), am.end()))
+            claims.append(Claim(kind="range", span=_sp(text, a + am.start(), a + am.end()), range=r, **base))
     for rx, kind in ((UPPER_RE, "upper"), (LOWER_RE, "lower")):
         for rm in rx.finditer(seg):
             if not free(rm.start(), rm.end()):
@@ -464,6 +534,8 @@ def _segment_claims(text: str, m: Mention, a: int, b: int, sent_start: int) -> l
             continue
         if DOSE_AFTER.match(seg, vm.end("num")):
             continue                              # "100 mg twice a day" is a dose, not a test value
+        if THRESHOLD_BEFORE.search(seg[:vm.start("num")]) or NOT_A_VALUE_AFTER.search(seg[vm.end("num"):]):
+            continue                              # "the recommended 200 limit", "3 months", "two values"
         span_hi = re.match(rf"\s*[-–]\s*(?P<hi>{N})", seg[vm.end("num"):])
         if span_hi and not vm["mult"]:            # a value written as a span, e.g. pus cells "6-8 /hpf"
             hi_end = vm.end("num") + span_hi.end()
@@ -560,10 +632,51 @@ def _extract(text: str, original: str) -> list[SentenceClaims]:
         g = _group_claim(sp.text, heading, [(m.span.start - sp.start, m.span.end - sp.start) for m in ms])
         if g:
             sc.claims.append(Claim(kind="group", span=sp, group=g, group_tests=set(heading_tests.get(g, set()))))
+        # ---- compound mentions: "Bilirubin (Total: 1.6, Direct: 0.4, Indirect: 1.2 mg/dL)" names three tests
+        compounds, comp_claims, suppressed = [], [], set()
+        for m in ms:
+            cm, cc = _compound(text, m)
+            if cm:
+                compounds += cm
+                comp_claims += cc
+                suppressed.add((m.span.start, m.span.end))
+        sc.mentions = ms + compounds                     # every named test counts as mentioned (omissions)
+        # ---- the bullet's **bold lead** (computed on the first sentence of each line)
+        line_key = line_start
+        if line_key != bullet_line:
+            bullet_line, lead_mentions, lead_done = line_key, [], False
+            lm = LEAD_RE.match(whole_line)
+            if BULLET_RE.match(whole_line) and lm:
+                la, lb = line_start + lm.start("lead"), line_start + lm.end("lead")
+                lead_mentions = [m for m in mentions_all + compounds if la <= m.span.start and m.span.end <= lb
+                                 and m.span.text.lower() not in GENERIC_MENTIONS
+                                 and (m.span.start, m.span.end) not in suppressed]
+                lead_status = LEAD_STATUS_RE.match(text[la:lb].strip())
+                lead_word = (lead_status, la) if lead_status else None
+            else:
+                lead_word = None
+        ms = [m for m in ms if (m.span.start, m.span.end) not in suppressed]
         per_mention: list[list[Claim]] = []
         for i, m in enumerate(ms):
             end = ms[i + 1].span.start if i + 1 < len(ms) else sp.end
+            if compounds:
+                nxt = [c.span.start for c in compounds if c.span.start > m.span.end]
+                end = min([end] + nxt)
             per_mention.append(_segment_claims(text, m, m.span.end, end, sp.start))
+        # "Similar to GGT, this value is normal for a male (range 0.7-1.3)": a test named only for comparison is
+        # not the subject; its ranges and statuses belong to the bullet's lead test
+        for i, m in enumerate(ms):
+            if lead_mentions and m not in lead_mentions and COMPARISON_BEFORE.search(text[sp.start:m.span.start]):
+                moved = []
+                if len(lead_mentions) == 1:
+                    subj = lead_mentions[0]
+                    moved = [Claim(kind=c.kind, span=c.span, status=c.status, range=c.range, term_id=subj.term_id,
+                                   term=subj.term, mention=subj.span) for c in per_mention[i] if c.kind in ("range", "status")]
+                per_mention[i] = moved
+        # a doctor deferral or a suggested test ("a doctor would likely look at an HbA1c test") makes no test claims
+        if DEFERRAL.search(text[sp.start:sp.end]) or SUGGEST_TEST.search(text[sp.start:sp.end]):
+            per_mention = [[] for _ in ms]
+            comp_claims = []
         # "Your MCV and MCH are normal": a mention followed only by a conjunction shares the next one's status
         for i in range(len(ms) - 2, -1, -1):
             gap = text[ms[i].span.end:ms[i + 1].span.start]
@@ -572,22 +685,11 @@ def _extract(text: str, original: str) -> list[SentenceClaims]:
                     if c.kind == "status":
                         per_mention[i].append(Claim(kind="status", span=c.span, status=c.status, term_id=ms[i].term_id,
                                                     term=ms[i].term, mention=ms[i].span))
+        sc.claims.extend(comp_claims)
         # ---- subject binding
-        line_key = line_start
-        if line_key != bullet_line:                       # a new line: is it a bullet with a **bold lead**?
-            bullet_line, lead_mentions, lead_done = line_key, [], False
-            lm = LEAD_RE.match(whole_line)
-            if BULLET_RE.match(whole_line) and lm:
-                la, lb = line_start + lm.start("lead"), line_start + lm.end("lead")
-                lead_mentions = [m for m in mentions_all if la <= m.span.start and m.span.end <= lb
-                                 and m.span.text.lower() not in GENERIC_MENTIONS]
-                lead_status = LEAD_STATUS_RE.match(text[la:lb].strip())
-                lead_word = (lead_status, la) if lead_status else None
-            else:
-                lead_word = None
         value_subjects = [ms[i] for i, cl in enumerate(per_mention) if any(c.kind == "value" for c in cl)
                           and ms[i].span.text.lower() not in GENERIC_MENTIONS]
-        subjects = {m.term_id: m for m in (lead_mentions + value_subjects)}
+        subjects = {m.term_id: m for m in (lead_mentions + value_subjects + compounds)}
         for i, m in enumerate(ms):
             if m.span.text.lower() not in GENERIC_MENTIONS or not subjects:
                 continue

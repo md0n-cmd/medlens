@@ -490,3 +490,62 @@ def test_definitions_and_doctor_deferrals_are_not_oversteps(ai):
 
 def test_direct_supplement_instruction_is_still_an_overstep():
     assert verify(REPORT, "Take iron supplements daily.").sentences[0].label == "OVERSTEPS"
+
+
+# ---------------------------------------------------------------- benchmark step 1: no false alarms (general rules)
+def claims_of(ai, report=REPORT):
+    return [f for s in verify(report, ai).sentences for f in s.findings if f.kind != "mention"]
+
+
+@pytest.mark.parametrize("ai", [
+    "Your hemoglobin should ideally be at least 13 limit.",                 # threshold, not a value
+    "Hemoglobin is tracked over the last 3 months.",                       # time span
+    "Hemoglobin was checked in a 3-month follow-up.",
+    "The report lists two different hemoglobin values.",                   # count
+    "Your hemoglobin exceeds the recommended 15 limit.",
+])
+def test_thresholds_time_spans_and_counts_are_never_values(ai):
+    assert not [f for f in claims_of(ai) if f.kind == "value"]
+
+
+@pytest.mark.parametrize("ai,has_status", [
+    ("Bilirubin is made during the normal breakdown of red blood cells.", False),
+    ("MCV is a normal part of the blood count.", False),
+    ("Your MCV is normal.", True), ("Your MCV of 89.0 is perfectly normal.", True),
+    ("Your MCV is within normal limits.", True), ("Your MCV and MCH are both normal.", True),
+])
+def test_normal_is_a_status_only_when_it_predicates_the_test(ai, has_status):
+    assert bool([f for f in claims_of(ai) if f.kind == "status"]) == has_status
+
+
+def test_bold_lead_test_wins_over_a_test_named_in_comparison():
+    report = (SAMPLES / "03_lft_kft.txt").read_text()
+    ai = "* **Note on Serum Creatinine (1.15 mg/dL):** Similar to GGT, this value is normal for a male (range 0.7-1.3)."
+    fs = claims_of(ai, report)
+    assert all(f.term in (None, "Creatinine") for f in fs if f.kind in ("range", "status"))
+    assert "RANGE_NOT_FROM_REPORT" not in [f.label for f in fs]
+
+
+def test_compound_lead_names_each_test():
+    report = (SAMPLES / "03_lft_kft.txt").read_text()
+    ai = ("* **High Bilirubin (Total: 1.6, Direct: 0.4, Indirect: 1.2 mg/dL):** A yellow pigment. "
+          "All three markers are slightly above their normal ranges.")
+    r = verify(report, ai)
+    vals = {f.term: f.label for f in r.sentences[0].findings if f.kind == "value"}
+    assert vals == {"Total Bilirubin": "VERIFIED", "Direct Bilirubin": "VERIFIED", "Indirect Bilirubin": "VERIFIED"}
+    assert r.sentences[-1].label == "VERIFIED"
+    assert not {"Bilirubin, Direct", "Bilirubin, Indirect", "Bilirubin, Total"} & {o.test_name for o in r.omissions}
+
+
+@pytest.mark.parametrize("ai", ["A doctor would likely look at a vitamin D test to get a clearer picture.",
+                                "You could consider an HbA1c test (a 3-month average)."])
+def test_suggesting_a_test_is_not_a_claim(ai):
+    r = verify(REPORT, ai)
+    assert r.sentences[0].label == "NEUTRAL"
+
+
+def test_reference_population_is_not_a_health_judgement():
+    report = (SAMPLES / "03_lft_kft.txt").read_text()
+    s = verify(report, "* **Low eGFR (78 mL/min):** A healthy adult typically has a score of 90 or higher.").sentences[0]
+    assert s.label != "OVERSTEPS"
+    assert [f.label for f in s.findings if f.kind == "range"] == ["VERIFIED"]
