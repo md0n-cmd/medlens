@@ -157,8 +157,8 @@ def test_spans_valid_in_both_texts(name):
         for f in s.findings:
             assert ai[f.ai_span.start:f.ai_span.end] == f.ai_span.text
             assert s.span.start <= f.ai_span.start and f.ai_span.end <= s.span.end
-            if f.report_span:
-                assert rtext[f.report_span.start:f.report_span.end] == f.report_span.text
+            for sp in ([f.report_span] if f.report_span else []) + f.extra_report_spans:
+                assert rtext[sp.start:sp.end] == sp.text
     for o in r.omissions:
         assert rtext[o.report_span.start:o.report_span.end] == o.report_span.text
 
@@ -294,3 +294,61 @@ def test_overstep_messages_never_repeat_unsafe_phrases():
     r = verify(LIPID, "Overall, you have anemia. Take 100 mg twice a day.")
     for s in r.sentences:
         assert s.label == "OVERSTEPS" and all(is_safe(f.message) for f in s.findings)
+
+
+# ---------------------------------------------------------------- real-world fixes: group claims
+THYROID_OK = "THYROID PROFILE, TOTAL, SERUM\nT3, Total   1.12   ng/mL   0.80 - 2.00\nTSH   2.85   µIU/mL   0.27 - 4.20\n"
+MIXED_PANEL = ("LIVER & KIDNEY PANEL, SERUM\nTotal Protein   7.0   g/dL   6.40 - 8.30\nAlbumin   4.2   g/dL   3.5 - 5.2\n"
+               "Creatinine   2.0   mg/dL   0.70 - 1.30\n")
+
+
+def group_finding(r, i=0):
+    return next(f for f in r.sentences[i].findings if f.kind == "group")
+
+
+def test_group_claim_contradicted_lists_every_exception():
+    r = verify(REPORT, "Your blood counts are all within normal ranges.")
+    f = group_finding(r)
+    assert f.label == "CONTRADICTED" and r.sentences[0].label == "CONTRADICTED"
+    for name in ("Hemoglobin (11.2) is below", "MCHC (30.7) is below", "Total Leukocyte Count (TLC) (11,800) is above"):
+        assert name in f.message, f.message
+    assert len(f.extra_report_spans) >= 6
+
+
+def test_group_claim_verified_when_every_member_is_in_range():
+    f = group_finding(verify(THYROID_OK, "Your thyroid hormones are within standard reference intervals."))
+    assert f.label == "VERIFIED" and "all 2 thyroid tests" in f.message
+
+
+def test_group_claim_unverifiable_when_a_member_has_no_settled_range():
+    report = (SAMPLES / "06_age_bands.txt").read_text()                 # HDL / total cholesterol bands are ambiguous
+    assert group_finding(verify(report, "Your lipid profile is all normal.")).label == "UNVERIFIABLE"
+
+
+def test_category_beats_section_heading():
+    """Creatinine sits under 'LIVER & KIDNEY PANEL' but is not a liver test."""
+    f = group_finding(verify(MIXED_PANEL, "Liver enzymes and proteins are all within normal ranges."))
+    assert f.label == "VERIFIED"
+    f = group_finding(verify(MIXED_PANEL, "Your kidney function tests are all normal."))
+    assert f.label == "CONTRADICTED" and "Creatinine (2.0) is above" in f.message
+
+
+def test_all_results_normal_covers_the_whole_report():
+    f = group_finding(verify(REPORT, "All your results are within normal ranges."))
+    assert f.label == "CONTRADICTED" and "ESR (18) is above" in f.message
+
+
+def test_negated_group_claim_is_not_a_claim():
+    r = verify(REPORT, "Your blood counts are not all within normal ranges.")
+    assert not any(f.kind == "group" for f in r.sentences[0].findings)
+
+
+def test_panel_names_are_groups_not_single_tests():
+    r = verify(REPORT, "Your CBC is normal.")
+    assert [f.kind for f in r.sentences[0].findings] == ["group"]          # no NOT_IN_REPORT for 'CBC'
+
+
+def test_heading_bullets_define_the_group_for_a_generic_summary():
+    ai = "**Thyroid Profile**\n* TSH: 2.85 µIU/mL\n\nThey are all within normal ranges."
+    r = verify(THYROID_OK, ai)
+    assert group_finding(r, len(r.sentences) - 1).label == "VERIFIED"

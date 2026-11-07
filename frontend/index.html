@@ -864,7 +864,7 @@ function renderVerify() {
   // report pane: status colours + every line the AI's findings point at
   const r = v.report_analysis, spans = buildSpans(r).map(sp => ({...sp, eid: null}));
   const lines = [];
-  v.sentences.forEach(sn => sn.findings.forEach(f => { if (f.report_span) lines.push(f.report_span); }));
+  v.sentences.forEach(sn => sn.findings.forEach(f => findingSpans(f).forEach(sp => lines.push(sp))));
   v.omissions.forEach(o => lines.push(o.report_span));
   lines.forEach(l => spans.push({start: l.start, end: l.end, cls: "vline", eid: null, title: "Click to see what the AI said about this line"}));
   renderReport(r, spans, "#vreport", seg => selectReportLine(+seg.dataset.a));
@@ -874,6 +874,12 @@ function renderVerify() {
   $("#vomit").querySelectorAll(".xcard").forEach(c => c.addEventListener("click", () => outlineReport([{start: +c.dataset.a, end: +c.dataset.b}])));
   $("#vfind").innerHTML = "";
   $("#vcard").hidden = false;
+}
+
+function findingSpans(f) {
+  const out = f.report_span ? [f.report_span] : [];
+  (f.extra_report_spans || []).forEach(sp => { if (!out.some(o => o.start === sp.start)) out.push(sp); });
+  return out;
 }
 
 function outlineReport(ranges) {
@@ -895,13 +901,13 @@ function selectSentence(sid) {
     `<div class="xcard"><span class="vbadge vb-${f.label}">${VLABEL[f.label] || "Mention only"}</span>${f.term ? ` <strong>${esc(f.term)}</strong>` : ""}<div>${esc(f.message)}</div>` +
     (f.report_span ? `<div class="src">${esc(f.report_span.text)}</div>` : "") + `</div>`).join("")
     : `<p class="hint">No checkable claim in this sentence (no test value, range, status or advice found). It is shown but not judged.</p>`);
-  outlineReport(sn.findings.filter(f => f.report_span).map(f => f.report_span));
+  outlineReport(sn.findings.flatMap(findingSpans));
 }
 
 function selectReportLine(pos) {
-  const hits = vres.sentences.filter(sn => sn.findings.some(f => f.report_span && f.report_span.start <= pos && pos < f.report_span.end));
+  const hits = vres.sentences.filter(sn => sn.findings.some(f => findingSpans(f).some(sp => sp.start <= pos && pos < sp.end)));
   document.querySelectorAll("#vai .vs").forEach(x => x.classList.toggle("vsel", hits.some(h => h.id === x.dataset.sid)));
-  const line = vres.sentences.flatMap(sn => sn.findings).map(f => f.report_span).find(sp => sp && sp.start <= pos && pos < sp.end)
+  const line = vres.sentences.flatMap(sn => sn.findings).flatMap(findingSpans).find(sp => sp.start <= pos && pos < sp.end)
     || vres.omissions.map(o => o.report_span).find(sp => sp.start <= pos && pos < sp.end);
   if (line) outlineReport([line]);
   $("#vfind").innerHTML = hits.length ? `<p class="hint">${plural(hits.length, "AI sentence mentions", "AI sentences mention")} this line (highlighted).</p>`

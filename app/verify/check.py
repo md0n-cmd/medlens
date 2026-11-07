@@ -12,7 +12,7 @@ from app.parser.ranges import units_compatible
 from app.safety import is_safe
 from app.pipeline import analyze
 from app.glossary.matcher import load_glossary
-from app.verify.claims import Claim, extract
+from app.verify.claims import GROUPS, Claim, extract
 from app.verify.names import names_match
 
 Label = Literal["VERIFIED", "CONTRADICTED", "RANGE_NOT_FROM_REPORT", "OVERSTEPS", "NOT_IN_REPORT",
@@ -40,13 +40,14 @@ RELATED_TESTS = {
 
 
 class Finding(BaseModel):
-    kind: Literal["value", "range", "status", "overstep", "mention"]
+    kind: Literal["value", "range", "status", "overstep", "mention", "group"]
     label: Label
     message: str
     term: Optional[str] = None
     ai_span: Span
     report_span: Optional[Span] = None
     report_value_id: Optional[str] = None
+    extra_report_spans: list[Span] = Field(default_factory=list)    # group claims: every report line involved
 
 
 class VerifiedSentence(BaseModel):
@@ -231,6 +232,76 @@ def _check_claim(c: Claim, text: str, rows: list[LabValue], value_row: Optional[
                            f"{v.value_raw} is {STATUS_WORD[v.status]} it.")
 
 
+# glossary category says CBC, but labs report ESR as its own test: only a CBC section heading makes it a blood count
+CATEGORY_EXCEPTIONS = {"cbc": {"erythrocyte_sedimentation_rate"}}
+UNSETTLED = {Status.AMBIGUOUS, Status.NO_RANGE, Status.UNPARSEABLE, Status.UNIT_MISMATCH, Status.INDETERMINATE}
+SIDE = {Status.ABOVE: "above", Status.BELOW: "below", Status.DIFFERS: "different from"}
+GROUP_NAME = {"liver": "liver tests", "kidney": "kidney tests", "cbc": "blood counts", "thyroid": "thyroid tests",
+              "lipid": "lipid tests", "sugar": "blood sugar tests", "urine": "urine tests", "all": "results"}
+
+
+def _row_categories(v: LabValue, r: AnalysisResult) -> set[str]:
+    gl = load_glossary()
+    return {gl[t.term_id]["category"] for t in r.terms
+            if v.test_span.start <= t.span.start and t.span.end <= v.test_span.end and t.term_id in gl}
+
+
+def group_rows(group: str, heading_tests: set, r: AnalysisResult, idx: dict[str, list[LabValue]]) -> list[LabValue]:
+    """Report rows that a group claim covers. A row's glossary category wins over its section heading, so
+    Creatinine under 'LIVER & KIDNEY PANEL' is not a liver test, and ESR in its own section is not a blood count."""
+    if group == "all":
+        return list(r.values)
+    _, section_re, cats = GROUPS[group]
+    sec_rx = re.compile(section_re, re.I)
+    any_group_section = re.compile("|".join(f"(?:{sr})" for _, sr, _ in GROUPS.values()), re.I)
+    other_cats = {c for k, (_, _, cs) in GROUPS.items() if k != group for c in cs}
+    listed = {id(v) for t in heading_tests for v in idx.get(t, [])}
+    rows = []
+    for v in r.values:
+        vc = _row_categories(v, r)
+        ids = {t for t, vs in idx.items() if v in vs}
+        in_section = bool(v.section and sec_rx.search(v.section))
+        unsorted_section = not v.section or not any_group_section.search(v.section)   # e.g. 'BIOCHEMISTRY'
+        by_category = bool(vc & cats) and not (ids & CATEGORY_EXCEPTIONS.get(group, set()))
+        if (id(v) in listed
+                or (in_section and not (vc & other_cats and not vc & cats))
+                or (unsorted_section and by_category)):
+            rows.append(v)
+    return rows
+
+
+def _range_text(v: LabValue) -> str:
+    t = v.reference_span.text if v.reference_span else (v.applied_range.display() if v.applied_range else "")
+    return re.sub(r"(?<=\d)\s*-\s*(?=\d)", "–", t)
+
+
+def _check_group(c: Claim, r: AnalysisResult, idx: dict[str, list[LabValue]]) -> Finding:
+    rows = group_rows(c.group, c.group_tests, r, idx)
+    name = GROUP_NAME.get(c.group, "results")
+    if not rows:
+        return Finding(kind="group", label="NOT_IN_REPORT", ai_span=c.span, term=name,
+                       message=f"MedLens couldn't find the {name} on your report, so this can't be checked.")
+    lines = [_line_span(r.text, v.value_span.start) for v in rows]
+    out = [v for v in rows if v.status in OUT_OF_RANGE]
+    unsettled = [v for v in rows if v.status in UNSETTLED]
+    if out:
+        parts = [f"{v.test_name} ({v.value_raw}) is {SIDE[v.status]} the range printed on your report ({_range_text(v)})"
+                 for v in out]
+        msg = "The AI says these are all within range, but " + "; ".join(parts) + "."
+        if unsettled:
+            msg += " The report doesn't settle " + ", ".join(v.test_name for v in unsettled) + "."
+        bad = [_line_span(r.text, v.value_span.start) for v in out]
+        return Finding(kind="group", label="CONTRADICTED", ai_span=c.span, term=name, report_span=bad[0],
+                       report_value_id=out[0].id, extra_report_spans=bad, message=msg)
+    if unsettled:
+        return Finding(kind="group", label="UNVERIFIABLE", ai_span=c.span, term=name, report_span=lines[0],
+                       extra_report_spans=lines,
+                       message="The report doesn't settle this: " + ", ".join(v.test_name for v in unsettled)
+                               + " have no single usable printed range.")
+    return Finding(kind="group", label="VERIFIED", ai_span=c.span, term=name, report_span=lines[0], extra_report_spans=lines,
+                   message=f"Matches: all {len(rows)} {name} on your report are within their printed ranges.")
+
+
 def verify(report_text: str, ai_text: str) -> VerifyResult:
     from app.parser.lines import normalize_text
     ai_text = normalize_text(ai_text)
@@ -244,6 +315,9 @@ def verify(report_text: str, ai_text: str) -> VerifyResult:
         # value claims first: a status in the same segment is judged against the row whose value matched
         matched_row: dict[tuple[int, int], LabValue] = {}
         for c in sorted(sc.claims, key=lambda c: c.kind != "value"):
+            if c.kind == "group":
+                findings.append(_check_group(c, analysis, idx))
+                continue
             rows = _rows_for(c.term_id, idx, analysis.values, c.mention.text if c.mention else "") if c.term_id else []
             key = (c.mention.start, c.mention.end) if c.mention else (-1, -1)
             f = _check_claim(c, rtext, rows, matched_row.get(key) if c.kind == "status" else None)

@@ -76,7 +76,7 @@ Status = Literal["LOW", "HIGH", "NORMAL"]
 
 @dataclass
 class Claim:
-    kind: Literal["value", "range", "status", "overstep"]
+    kind: Literal["value", "range", "status", "overstep", "group"]
     span: Span                                   # the claim text in the AI explanation
     term_id: Optional[str] = None
     term: Optional[str] = None
@@ -87,8 +87,10 @@ class Claim:
     unit: Optional[str] = None
     range: Optional[ReferenceRange] = None
     status: Optional[Status] = None
-    overstep: Optional[str] = None               # "diagnosis" | "treatment" | "reassurance"
+    overstep: Optional[str] = None               # "diagnosis" | "treatment" | "reassurance" | "interpretation"
     detail: Optional[str] = None
+    group: Optional[str] = None                  # group claims: "liver", "cbc", "thyroid", ... or "all"
+    group_tests: set = field(default_factory=set)   # tests listed under the AI's own heading for that group
 
 
 @dataclass
@@ -234,10 +236,79 @@ def _num(raw: str, mult: Optional[str]) -> float:
     return parse_number(raw) * MULTIPLIER.get((mult or "").lower(), 1.0)
 
 
+PANEL_IDS = {"complete_blood_count", "lipid_profile", "liver_function_test", "kidney_function_test", "thyroid_profile",
+             "urine_routine_examination", "differential_leukocyte_count", "electrolytes", "stool_routine_examination"}
+
+# group name in the AI text -> (AI phrase, report section heading, glossary categories)
+GROUPS = {
+    "liver": (r"liver\s+(?:enzymes?|function(?:\s+tests?)|panel|tests?|profile|markers?|values?|parameters?|results?)|LFTs?|"
+              r"hepatic\s+(?:panel|function\s+tests?|markers?|enzymes?)",
+              r"liver|\blft\b|hepatic|bilirubin", {"Liver function (LFT)"}),
+    "kidney": (r"kidney\s+(?:function(?:\s+tests?)|panel|tests?|profile|markers?|values?|results?)|renal\s+(?:function\s+tests?|"
+               r"panel|profile|markers?)|KFTs?|RFTs?|electrolytes",
+               r"kidney|renal|\bkft\b|\brft\b|electrolyte", {"Kidney function (KFT/RFT)", "Electrolytes"}),
+    "cbc": (r"(?:complete\s+)?blood\s+counts?|blood\s+cell\s+counts?|CBC|ha?emogram|blood\s+indices",
+            r"blood\s+count|\bcbc\b|ha?emogram|ha?ematology|leu[ck]ocyte\s+count|differential", {"Blood count (CBC)"}),
+    "thyroid": (r"thyroid\s+(?:hormones?|profile|panel|tests?|levels?|function\s+tests?|values?|results?)|TFTs?",
+                r"thyroid", {"Thyroid"}),
+    "lipid": (r"lipid\s+(?:profile|panel|screen|levels?|values?|results?|tests?|numbers?)|lipids|"
+              r"cholesterol\s+(?:levels|values|results|numbers)",
+              r"lipid|cholesterol", {"Lipid profile"}),
+    "sugar": (r"blood\s+sugar(?:\s+(?:levels?|values?|results?|tests?))?|(?:blood\s+)?glucose\s+(?:levels?|values?|results?)|"
+              r"sugar\s+levels?|diabetes\s+(?:panel|tests?|markers?)",
+              r"glucose|sugar|diabet", {"Diabetes / glucose"}),
+    "urine": (r"urine\s+(?:tests?|results?|report|examination|routine|analysis|findings)|urinalysis",
+              r"urine", {"Urine routine"}),
+}
+GROUP_RES = {k: re.compile(rf"\b(?:{v[0]})\b", re.I) for k, v in GROUPS.items()}
+ALL_RE = re.compile(r"\b(?:all\s+(?:of\s+)?(?:your\s+|the\s+|these\s+)?(?:results|values|tests|parameters|numbers|levels|"
+                    r"markers|readings)|everything|every\s+(?:result|value|test))\b", re.I)
+GROUP_NORMAL_RE = re.compile(
+    r"\b(?:within\s+(?:the\s+)?(?:normal\s+|standard\s+|expected\s+|healthy\s+|printed\s+)?(?:reference\s+)?"
+    r"(?:ranges?|limits|intervals?)|(?:are|is|were|look|looks|appear|appears|seem|seems|came\s+back)\s+(?:all\s+|entirely\s+|"
+    r"completely\s+|perfectly\s+)?(?:normal|healthy|fine|good|ok|okay|unremarkable)|all\s+(?:normal|healthy|fine|good)|"
+    r"no\s+abnormalit(?:y|ies)|nothing\s+abnormal)\b", re.I)
+GROUP_NEGATION = re.compile(r"\b(?:not|n't|never)\s+(?:\w+\s+){0,2}$", re.I)
+HEADING_RE = re.compile(r"^\s*(?:#{1,6}\s*|\*\*)?(?P<h>[^\n*#]{2,70}?)(?:\*\*)?\s*:?\s*$")
+BULLET_RE = re.compile(r"^\s*(?:[*\-•·]|\d+[.)])\s+")
+
+
+def _heading_group(line: str) -> Optional[str]:
+    """'**Liver Function Tests (LFT)**' -> 'liver'. A heading is a short line with no sentence punctuation."""
+    if BULLET_RE.match(line) or re.search(r"[.!?]\s*$", line.strip()) or re.search(r"\d", line):
+        return None
+    m = HEADING_RE.match(line)
+    if not m:
+        return None
+    h = m["h"]
+    for key, rx in GROUP_RES.items():
+        if rx.search(h):
+            return key
+    if re.search(r"\bblood\s+sugar\b|\bglucose\b|\bdiabetes\b", h, re.I):
+        return "sugar"
+    return "_other"                       # a heading for something else ends the previous group's context
+
+
+def _group_claim(sentence: str, heading: Optional[str], mention_spans: list[tuple[int, int]] = ()) -> Optional[str]:
+    nm = GROUP_NORMAL_RE.search(sentence)
+    if not nm or GROUP_NEGATION.search(sentence[:nm.start()]):
+        return None
+    for key, rx in GROUP_RES.items():
+        for gm in rx.finditer(sentence):
+            # "fasting blood sugar" is one test, not the blood-sugar group
+            if not any(a < gm.end() and gm.start() < b for a, b in mention_spans):
+                return key
+    if ALL_RE.search(sentence) or re.search(r"\b(?:they|these|those)\s+are\s+all\b|\ball\s+(?:within|normal)", sentence, re.I):
+        return heading if heading and heading != "_other" else "all"
+    return None
+
+
 def _test_mentions(text: str) -> list[Mention]:
     gl = load_glossary()
     out = []
     for t in find_terms(text):
+        if t.term_id in PANEL_IDS:
+            continue                      # "CBC", "lipid profile": a group, not one test
         e = gl.get(t.term_id, {})
         if e.get("kind", "test") == "test" or e.get("possibilities"):     # ambiguous abbreviations like PCV too
             out.append(Mention(term_id=t.term_id, term=t.term, span=t.span))
@@ -335,10 +406,26 @@ def _segment_claims(text: str, m: Mention, a: int, b: int, sent_start: int) -> l
 def extract(text: str) -> list[SentenceClaims]:
     mentions_all = _test_mentions(text)
     out: list[SentenceClaims] = []
+    heading: Optional[str] = None
+    heading_tests: dict[str, set] = {}
     for sp in split_sentences(text):
         sc = SentenceClaims(span=sp)
         ms = [m for m in mentions_all if sp.start <= m.span.start and m.span.end <= sp.end]
         sc.mentions = ms
+        line_start = text.rfind("\n", 0, sp.start) + 1
+        line_end = text.find("\n", sp.end)
+        whole_line = text[line_start:len(text) if line_end == -1 else line_end]
+        hg = _heading_group(whole_line) if whole_line.strip() == sp.text else None
+        if hg:
+            heading = hg
+            heading_tests.setdefault(hg, set())
+            out.append(sc)
+            continue
+        if heading and heading != "_other" and BULLET_RE.match(whole_line):
+            heading_tests[heading].update(m.term_id for m in ms)
+        g = _group_claim(sp.text, heading, [(m.span.start - sp.start, m.span.end - sp.start) for m in ms])
+        if g:
+            sc.claims.append(Claim(kind="group", span=sp, group=g, group_tests=set(heading_tests.get(g, set()))))
         per_mention: list[list[Claim]] = []
         for i, m in enumerate(ms):
             end = ms[i + 1].span.start if i + 1 < len(ms) else sp.end
