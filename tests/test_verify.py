@@ -259,3 +259,38 @@ def test_dotted_esr_stays_one_sentence_and_matches_report():
     assert len(r.sentences) == 1
     s = r.sentences[0]
     assert s.label == "VERIFIED" and set(labels(s)) == {"VERIFIED"} and len(labels(s)) == 3
+
+
+# ---------------------------------------------------------------- real-world fixes: oversteps
+LIPID = "LIPID SCREEN, SERUM\nCholesterol, Total   212.00   mg/dL   < 200.00\nTriglycerides   168.00   mg/dL   < 150.00\n"
+
+
+@pytest.mark.parametrize("ai,phrase", [
+    ("These results indicate dyslipidemia.", "indicate dyslipidemia"),
+    ("Your lipid profile indicates dyslipidemia.", "indicates dyslipidemia"),
+    ("Findings point to hepatomegaly.", "point to hepatomegaly"),
+    ("The pattern is consistent with fatty liver.", "consistent with fatty liver"),
+])
+def test_finding_words_after_indicate_suggest_are_oversteps(ai, phrase):
+    r = verify(LIPID, ai)
+    s = r.sentences[0]
+    assert s.label == "OVERSTEPS" and "NOT_IN_REPORT" not in labels(s)
+    assert phrase in s.findings[-1].message and "diagnosis only your doctor can make" in s.findings[-1].message
+
+
+@pytest.mark.parametrize("ai", ["Your thyroid hormones are fine, indicating normal thyroid function.",
+                                "Your liver is healthy.", "This shows healthy liver function.", "You are in good health."])
+def test_health_interpretations_are_oversteps(ai):
+    s = verify(LIPID, ai).sentences[0]
+    assert s.label == "OVERSTEPS" and "statement about your health" in s.findings[-1].message
+
+
+def test_quoting_the_report_is_not_an_overstep():
+    s = verify(LIPID, "The report's impression says findings suggestive of cholelithiasis.").sentences[0]
+    assert s.label == "NEUTRAL"
+
+
+def test_overstep_messages_never_repeat_unsafe_phrases():
+    r = verify(LIPID, "Overall, you have anemia. Take 100 mg twice a day.")
+    for s in r.sentences:
+        assert s.label == "OVERSTEPS" and all(is_safe(f.message) for f in s.findings)

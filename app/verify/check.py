@@ -9,6 +9,7 @@ from pydantic import BaseModel, Field
 
 from app.models import OUT_OF_RANGE, AnalysisResult, LabValue, ReferenceRange, Span, Status
 from app.parser.ranges import units_compatible
+from app.safety import is_safe
 from app.pipeline import analyze
 from app.glossary.matcher import load_glossary
 from app.verify.claims import Claim, extract
@@ -20,9 +21,11 @@ Label = Literal["VERIFIED", "CONTRADICTED", "RANGE_NOT_FROM_REPORT", "OVERSTEPS"
 SEVERITY: list[str] = ["CONTRADICTED", "OVERSTEPS", "RANGE_NOT_FROM_REPORT", "NOT_IN_REPORT", "UNVERIFIABLE",
                        "VERIFIED", "NEUTRAL"]
 OVERSTEP_MSG = "This goes beyond what a report explanation should say; ask your doctor."
-OVERSTEP_KIND = {"diagnosis": "It states or implies a diagnosis.",
-                 "treatment": "It tells you to take or change a medicine, or how much of it.",
-                 "reassurance": "It gives reassurance that only your doctor can give."}
+OVERSTEP_KIND = {"diagnosis": "It names a condition ('{p}'), which is a diagnosis only your doctor can make.",
+                 "treatment": "It tells you to take or change a medicine, or how much of it ('{p}').",
+                 "reassurance": "It gives reassurance that only your doctor can give ('{p}').",
+                 "interpretation": "It turns the results into a statement about your health ('{p}'), which only "
+                                   "your doctor can make."}
 
 # An AI may name a test more generally (or by a sibling name) than the report does.
 RELATED_TESTS = {
@@ -149,8 +152,13 @@ def _unsettled_reason(v: LabValue) -> str:
 def _check_claim(c: Claim, text: str, rows: list[LabValue], value_row: Optional[LabValue]) -> Finding:
     span = c.span
     if c.kind == "overstep":
-        return Finding(kind="overstep", label="OVERSTEPS", message=f"{OVERSTEP_MSG} {OVERSTEP_KIND[c.overstep]}",
-                       ai_span=span)
+        phrase = c.detail if c.detail and c.detail.lower() in span.text.lower() else ""
+        why = OVERSTEP_KIND[c.overstep]
+        if phrase and is_safe(phrase):
+            why = why.format(p=phrase)
+        else:                           # never repeat an unsafe phrase in MedLens's own words
+            why = re.sub(r"\s*\('\{p\}'\)", "", why)
+        return Finding(kind="overstep", label="OVERSTEPS", message=f"{OVERSTEP_MSG} {why}", ai_span=span)
     if not rows:
         return Finding(kind=c.kind, label="NOT_IN_REPORT", term=c.term, ai_span=span,
                        message=f"Your report has no result for {c.term}, so this can't be checked against it.")

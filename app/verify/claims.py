@@ -160,20 +160,67 @@ SAFETY_KIND = {
 }
 
 
+SUFFIX_FINDING = r"[a-z]+(?:lipidaemia|lipidemia|aemia|emia|itis|osis|pathy|megaly)"
+FINDING_VERB = (r"\b(?:indicat(?:es?|ing)|suggest(?:s|ing)?|suggestive\s+of|confirm(?:s|ing)?|consistent\s+with|"
+                r"points?\s+to|pointing\s+to|(?:is|are)\s+(?:a\s+)?signs?\s+of|signs?\s+of|diagnostic\s+of)\s+"
+                r"(?:that\s+)?(?:you\s+(?:have|are)\s+)?(?:an?\s+|the\s+|some\s+|mild\s+|early\s+)?")
+QUOTING_REPORT = re.compile(r"\b(?:report|impression|radiologist|pathologist|lab)(?:'s)?\s+(?:\w+\s+)?"
+                            r"(?:says|states|mentions|notes|reads|writes|reports|lists)\b", re.I)
+SYSTEM = (r"(?:thyroid|liver|kidney|kidneys|renal|hepatic|heart|cardiac|lung|lungs|pancreatic|pancreas|metabolic|"
+          r"immune|bone\s+marrow|blood\s+sugar|hormonal|cardiovascular)")
+INTERPRETATION = [
+    re.compile(rf"\b(?:normal|healthy|good|proper|optimal|fine|excellent)\s+(?:\w+\s+)?{SYSTEM}\s+"
+               r"(?:function(?:ing)?|health|status|control)\b", re.I),
+    re.compile(rf"\byour\s+(?:{SYSTEM}|body|metabolism|immune\s+system)\s+(?:is|are|looks?|seems?|appears?)\s+"
+               r"(?:to\s+be\s+)?(?:\w+\s+)?(?:healthy|fine|normal|in\s+good\s+(?:shape|health)|working\s+(?:well|normally|fine))\b",
+               re.I),
+    re.compile(r"\b(?:you(?:'re|\s+are)\s+in\s+(?:good|excellent)\s+health|(?:a\s+)?healthy\s+(?:person|individual|adult|man|woman))\b",
+               re.I),
+]
+
+
+def _finding_words() -> str:
+    gl = load_glossary()
+    names = sorted({a.strip() for e in gl.values() if e.get("kind") == "finding"
+                    for a in [e["term"], *e.get("aliases", [])] if len(a.strip()) > 3}, key=len, reverse=True)
+    return "|".join(re.escape(n) for n in names)
+
+
+_FINDING_RE: Optional[re.Pattern] = None
+
+
+def _finding_claim_re() -> re.Pattern:
+    global _FINDING_RE
+    if _FINDING_RE is None:
+        _FINDING_RE = re.compile(FINDING_VERB + rf"(?:[a-z]+[\s-]+){{0,2}}?(?:{_finding_words()}|{SUFFIX_FINDING})\b", re.I)
+    return _FINDING_RE
+
+
 def find_oversteps(sentence: str) -> list[tuple[str, str]]:
-    """[(category, reason)] for diagnosis / treatment / reassurance statements in one sentence."""
+    """[(category, the exact phrase)] for diagnosis / treatment / reassurance / interpretation in one sentence."""
     out: list[tuple[str, str]] = []
     for why in violations(sentence):
         out.append((SAFETY_KIND.get(why, "treatment"), why))
+    if not QUOTING_REPORT.search(sentence):
+        m = _finding_claim_re().search(sentence)
+        if m:
+            out.append(("diagnosis", m.group(0).strip()))
+    for rx in INTERPRETATION:
+        m = rx.search(sentence)
+        if m:
+            out.append(("interpretation", m.group(0).strip()))
     for rx in DIAG_EXTRA:
-        if rx.search(sentence):
-            out.append(("diagnosis", "states or implies a diagnosis"))
+        m = rx.search(sentence)
+        if m:
+            out.append(("diagnosis", m.group(0).strip()))
     for rx in TREAT_EXTRA:
-        if rx.search(sentence):
-            out.append(("treatment", "gives treatment or dosage advice"))
+        m = rx.search(sentence)
+        if m:
+            out.append(("treatment", m.group(0).strip()))
     for rx in REASSURE_EXTRA:
-        if rx.search(sentence):
-            out.append(("reassurance", "gives reassurance only a doctor can give"))
+        m = rx.search(sentence)
+        if m:
+            out.append(("reassurance", m.group(0).strip()))
     seen, uniq = set(), []
     for cat, why in out:
         if cat not in seen:
