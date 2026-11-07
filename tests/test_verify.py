@@ -413,3 +413,40 @@ def test_bullet_subject_carries_over_but_never_contradicts():
 def test_deficiency_is_not_a_low_status():
     s = verify(REPORT, "* **High RDW-CV (14.8%):** RDW variation with a nutritional deficiency.").sentences[0]
     assert all(f.label != "CONTRADICTED" for f in s.findings)
+
+
+# ---------------------------------------------------------------- real-world test 2: not a claim
+@pytest.mark.parametrize("ai", [
+    "Your hemoglobin hasn't dropped or spiked yet.", "Your ESR is not high.", "There is no increase in your TLC.",
+    "Hemoglobin would be low if you were bleeding.", "If your TSH were high, it would matter.",
+])
+def test_negated_and_hypothetical_status_words_are_not_claims(ai):
+    r = verify(REPORT, ai)
+    assert all(f.kind != "status" for s in r.sentences for f in s.findings)
+
+
+def test_status_words_describing_cells_or_flags_are_not_claims():
+    s = verify(REPORT, "* **High RDW-CV (14.8%):** Cells vary (some small, some normal, some large).").sentences[0]
+    assert all(f.label != "CONTRADICTED" for f in s.findings)
+    s = verify(REPORT, "* **MCV (89.0 fL):** Normal average size of cells.").sentences[0]
+    assert not [f for f in s.findings if f.kind == "status"]
+    s = verify(REPORT, 'Your MCV report shows an "L" (Low) flag style marker.').sentences[0]
+    assert not [f for f in s.findings if f.kind == "status"]
+
+
+def test_a_plain_bracketed_status_is_still_a_claim():
+    s = verify(REPORT, "Hemoglobin: 11.2 g/dL (low).").sentences[0]
+    assert [f.label for f in s.findings if f.kind == "status"] == ["VERIFIED"]
+
+
+def test_flag_mismatch_noted_correctly_is_verified():
+    ai = ('* **Platelets (2,10,000 /cumm):** Your report has an "H" (High) flag next to the platelet count, '
+          'but the value falls within the reference range (1,50,000 - 4,10,000).')
+    s = verify(REPORT, ai).sentences[0]
+    f = next(f for f in s.findings if f.kind == "flag")
+    assert s.label == "VERIFIED" and f.message == "The AI correctly noted the lab's flag doesn't match the printed range."
+
+
+def test_flag_mismatch_claimed_but_not_on_report_is_contradicted():
+    s = verify(REPORT, 'Your hemoglobin has an "L" flag, but it is within the reference range.').sentences[0]
+    assert s.label == "CONTRADICTED" and next(f for f in s.findings if f.kind == "flag").label == "CONTRADICTED"

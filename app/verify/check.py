@@ -40,7 +40,7 @@ RELATED_TESTS = {
 
 
 class Finding(BaseModel):
-    kind: Literal["value", "range", "status", "overstep", "mention", "group"]
+    kind: Literal["value", "range", "status", "overstep", "mention", "group", "flag"]
     label: Label
     message: str
     term: Optional[str] = None
@@ -165,6 +165,17 @@ def _check_claim(c: Claim, text: str, rows: list[LabValue], value_row: Optional[
         return Finding(kind=c.kind, label="NOT_IN_REPORT", term=c.term, ai_span=span,
                        message=f"Your report has no result for {c.term}, so this can't be checked against it.")
     rep_line = lambda v: _line_span(text, v.value_span.start)  # noqa: E731
+
+    if c.kind == "flag":
+        mism = [v for v in rows if v.flag_disagreement]
+        if mism:
+            return Finding(kind="flag", label="VERIFIED", term=c.term, ai_span=span, report_span=rep_line(mism[0]),
+                           report_value_id=mism[0].id,
+                           message="The AI correctly noted the lab's flag doesn't match the printed range.")
+        return Finding(kind="flag", label="CONTRADICTED", term=c.term, ai_span=span, report_span=rep_line(rows[0]),
+                       report_value_id=rows[0].id,
+                       message=f"The AI says the lab's flag for {rows[0].test_name} doesn't match the printed range, "
+                               "but on your report the flag and the range agree.")
 
     if c.kind == "value":
         for v in rows:

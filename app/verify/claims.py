@@ -76,7 +76,7 @@ Status = Literal["LOW", "HIGH", "NORMAL"]
 
 @dataclass
 class Claim:
-    kind: Literal["value", "range", "status", "overstep", "group"]
+    kind: Literal["value", "range", "status", "overstep", "group", "flag"]
     span: Span                                   # the claim text in the AI explanation
     term_id: Optional[str] = None
     term: Optional[str] = None
@@ -129,7 +129,13 @@ HIGH_RE = re.compile(r"\b(?:high|higher|above\s+(?:the\s+)?(?:normal|reference|p
 NORMAL_RE = re.compile(r"\b(?:within\s+(?:the\s+)?(?:normal\s+|reference\s+|printed\s+)?(?:ranges?|limits)|"
                        r"in\s+(?:the\s+)?(?:normal\s+|reference\s+)?ranges?|normal(?!\s+(?:range|limits?|values?|levels?)\b)|"
                        r"fine|healthy|okay|ok)\b", re.I)
-NEGATION = re.compile(r"\b(?:not|isn't|aren't|wasn't|n't|never|no)\s+(?:\w+\s+){0,2}$", re.I)
+NEGATION = re.compile(r"(?:\b(?:not|isn't|aren't|wasn't|hasn't|haven't|hadn't|never|no|without)|n't)\s+(?:\w+\s+){0,2}$", re.I)
+HYPOTHETICAL = re.compile(r"\b(?:if|would|could|might|unless|whether|were)\b[^,.;:]*$", re.I)
+DESCRIBES_CELLS = re.compile(r"^\s*(?:\w+\s+){0,2}?(?:size|sizes|shape|shapes|shaped|variation|cells?|ability|function|"
+                             r"health|capacity)\b", re.I)
+FLAG_NEAR = re.compile(r"\bflag", re.I)
+FLAG_MISMATCH_RE = re.compile(r"\bflag(?:ged)?\b.*\b(?:but|however|although|though|yet)\b.*\b(?:within|in)\s+(?:the\s+)?"
+                              r"(?:\w+\s+){0,3}(?:range|limits?|interval)\b", re.I | re.S)
 
 DISEASE = (r"(?:an?\s+|the\s+)?(?:mild\s+|early\s+|severe\s+|some\s+)?(?:[a-z]+\s+){0,2}(?:anaemia|anemia|diabetes|pre-?diabetes|infection|"
            r"disease|disorder|deficiency|cancer|tumou?r|failure|damage|hypothyroidism|hyperthyroidism|thyroid\s+problem|"
@@ -338,11 +344,31 @@ def _find_statuses(text: str, a: int, b: int, used: list[tuple[int, int]] = ()) 
         for sm in rx.finditer(seg):
             if any(not (sm.end() <= us or sm.start() >= ue) for us, ue in used):
                 continue
-            if NEGATION.search(seg[:sm.start()]):
+            if not _is_status_claim(text, a + sm.start(), a + sm.end(), seg[:sm.start()]):
                 continue
             out.append((st, a + sm.start(), a + sm.end()))
             break
     return out
+
+
+def _is_status_claim(text: str, s: int, e: int, before: str) -> bool:
+    """False for status words that are negated, hypothetical, describe the lab's flag, or describe cells/variation."""
+    if NEGATION.search(before) or HYPOTHETICAL.search(before):
+        return False
+    line_a = text.rfind("\n", 0, s) + 1
+    left = text[line_a:s]
+    # inside "quotes" or (brackets) next to the word 'flag': '"H" (High) flag'
+    in_quotes = left.count('"') % 2 == 1
+    in_paren = left.rfind("(") > left.rfind(")")
+    if in_quotes or in_paren:
+        close = text.find(")" if in_paren else '"', e)
+        around = text[max(line_a, s - 30):(close if close != -1 else e) + 30]
+        if FLAG_NEAR.search(around):
+            return False
+    # 'some small, some normal, some large', 'normal average size', 'normal blood clotting ability'
+    if re.search(r"\bsome\s+$", left, re.I) or DESCRIBES_CELLS.match(text[e:e + 40]):
+        return False
+    return True
 
 
 DOSE_AFTER = re.compile(r"\s*(?:mg|mcg|µg|iu|tablets?|tabs?|capsules?|drops?)(?![/\w])", re.I)
@@ -550,6 +576,15 @@ def _extract(text: str, original: str) -> list[SentenceClaims]:
                 for m in lead_mentions:
                     sc.claims.append(Claim(kind="status", span=_sp(text, fa, fb), status=st, term_id=m.term_id,
                                            term=m.term, mention=m.span, weak=True))
+        # "has an H flag next to X, but ... within the range": a claim that the lab's flag disagrees with the range
+        if FLAG_MISMATCH_RE.search(sp.text):
+            targets = [m for m in ms if m.span.text.lower() not in GENERIC_MENTIONS] or lead_mentions
+            seen_t = set()
+            sc.claims = [c for c in sc.claims if c.kind != "status"]          # its status words describe the flag
+            for m in targets:
+                if m.term_id not in seen_t:
+                    seen_t.add(m.term_id)
+                    sc.claims.append(Claim(kind="flag", span=sp, term_id=m.term_id, term=m.term, mention=m.span))
         for cat, why in find_oversteps(sp.text):
             sc.claims.append(Claim(kind="overstep", span=sp, overstep=cat, detail=why))
         out.append(sc)
