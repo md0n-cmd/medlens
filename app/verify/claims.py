@@ -156,7 +156,7 @@ THRESHOLD_BEFORE = re.compile(r"\b(?:limit|cut-?off|threshold|recommended|recomm
                               r"should\s+be|keep(?:ing)?\s+(?:it|this|them)?\s*(?:under|below|above)?)\s+"
                               r"(?:of\s+|is\s+|at\s+|to\s+)?(?:the\s+)?$", re.I)
 NOT_A_VALUE_AFTER = re.compile(r"^(?:\s*(?:mg/dl|%|u/l)\s+)?\s*(?:limit|cut-?off|threshold|mark)\b"
-                               r"|^[\s-]*(?:months?|weeks?|days?|hours?|hrs?|years?|yrs?|minutes?|mins?)\b"
+                               r"|^(?:\s*[-–]\s*\d+(?:\.\d+)?)?[\s-]*(?:months?|weeks?|days?|hours?|hrs?|years?|yrs?|minutes?|mins?)\b"
                                r"|^\s+(?:different\s+)?(?:values?|markers?|tests?|readings?|results?|numbers?|times?)\b", re.I)
 AND_ABOVE_TXT = re.compile(rf"(?P<n>{N})%?\s*(?:or\s+higher|or\s+more|or\s+above|and\s+above|and\s+higher)\b", re.I)
 # "using standard clinical reference ranges", "standard ranges usually prefer ...": ranges imported from elsewhere
@@ -402,7 +402,8 @@ GROUPS = {
                r"kidney|renal|\bkft\b|\brft\b|electrolyte", {"Kidney function (KFT/RFT)", "Electrolytes"}),
     "cbc": (r"(?:complete\s+)?blood\s+counts?|blood\s+cell\s+counts?|CBC|ha?emogram|blood\s+indices",
             r"blood\s+count|\bcbc\b|ha?emogram|ha?ematology|leu[ck]ocyte\s+count|differential", {"Blood count (CBC)"}),
-    "thyroid": (r"thyroid\s+(?:hormones?|profile|panel|tests?|levels?|function\s+tests?|values?|results?)|TFTs?",
+    "thyroid_hormones": (r"thyroid\s+hormones?(?:\s+levels?)?", r"(?!)", set()),
+    "thyroid": (r"thyroid\s+(?:profile|panel|tests?|levels?|function\s+tests?|values?|results?)|TFTs?",
                 r"thyroid", {"Thyroid"}),
     "lipid": (r"lipid\s+(?:profile|panel|screen|levels?|values?|results?|tests?|numbers?)|lipids|"
               r"cholesterol\s+(?:levels|values|results|numbers)",
@@ -415,7 +416,8 @@ GROUPS = {
 }
 GROUPS["dlc"] = (r"differentials?|differential\s+(?:leu[ck]ocyte\s+)?counts?|DLC", r"differential|\bdlc\b", set())
 # groups defined by their member tests rather than by section or category
-GROUP_TERMS = {"dlc": {"neutrophils", "lymphocytes", "eosinophils", "monocytes", "basophils", "absolute_neutrophil_count",
+GROUP_TERMS = {"thyroid_hormones": {"triiodothyronine", "thyroxine", "free_t3", "free_t4"},   # never TSH
+               "dlc": {"neutrophils", "lymphocytes", "eosinophils", "monocytes", "basophils", "absolute_neutrophil_count",
                        "absolute_lymphocyte_count", "band_forms"}}
 GROUP_RES = {k: re.compile(rf"\b(?:{v[0]})\b", re.I) for k, v in GROUPS.items()}
 ALL_RE = re.compile(r"\b(?:all\s+(?:of\s+)?(?:your\s+|the\s+|these\s+)?(?:results|values|tests|parameters|numbers|levels|"
@@ -447,10 +449,15 @@ def _heading_group(line: str) -> Optional[str]:
     return "_other"                       # a heading for something else ends the previous group's context
 
 
+QUANTIFIER = re.compile(r"\b(?:most|many|some|a\s+few|several|(?:the\s+)?(?:vast\s+)?majority|nearly\s+all|almost\s+all)\b", re.I)
+
+
 def _group_claim(sentence: str, heading: Optional[str], mention_spans: list[tuple[int, int]] = ()) -> Optional[str]:
     nm = GROUP_NORMAL_RE.search(sentence)
     if not nm or GROUP_NEGATION.search(sentence[:nm.start()]):
         return None
+    if QUANTIFIER.search(sentence[:nm.start()]):
+        return None                               # "Most of your urine results look normal" is not an 'all' claim
     for key, rx in GROUP_RES.items():
         for gm in rx.finditer(sentence):
             # "fasting blood sugar" is one test, not the blood-sugar group
@@ -751,6 +758,10 @@ def _compound(text: str, m: Mention) -> tuple[list[Mention], list[Claim]]:
     return mentions, claims
 
 
+PRE_ADJ = re.compile(r"(?P<adj>(?:(?:very|mildly|slightly|significantly|markedly|severely|moderately)\s+)?"
+                     r"(?:low|high|elevated|raised|decreased|reduced|increased))\s+$", re.I)
+
+
 def _segment_claims(text: str, m: Mention, a: int, b: int, sent_start: int) -> list[Claim]:
     """Claims in text[a:b], the part of the sentence that belongs to mention m."""
     seg = text[a:b]
@@ -946,6 +957,13 @@ def _extract(text: str, original: str) -> list[SentenceClaims]:
             else:
                 lead_word = None
         ms = [m for m in ms if (m.span.start, m.span.end) not in suppressed]
+        # "HDL (good cholesterol)": a parenthetical gloss after a test is not another test
+        # (a bracket listing tests - "white blood cells (Neutrophils, Lymphocytes, etc.)" - is not a gloss)
+        gloss = [(m.span.end + g.start(1), m.span.end + g.end(1)) for m in ms
+                 if m.span.text.lower() not in GENERIC_MENTIONS
+                 for g in [re.match(r"\s*\(([^()\d,]{2,40})\)", text[m.span.end:])] if g]
+        ms = [m for m in ms if not any(a <= m.span.start and m.span.end <= b for a, b in gloss)]
+        sc.mentions = [m for m in sc.mentions if not any(a <= m.span.start and m.span.end <= b for a, b in gloss)]
         per_mention: list[list[Claim]] = []
         for i, m in enumerate(ms):
             end = ms[i + 1].span.start if i + 1 < len(ms) else sp.end
@@ -967,6 +985,22 @@ def _extract(text: str, original: str) -> list[SentenceClaims]:
         if DEFERRAL.search(text[sp.start:sp.end]) or SUGGEST_TEST.search(text[sp.start:sp.end]):
             per_mention = [[] for _ in ms]
             comp_claims = []
+        # "very low TSH and elevated Free T4": an adjective right before a test belongs to that test
+        pre_adj = []
+        for i, m in enumerate(ms):
+            left_a = ms[i - 1].span.end if i else sp.start
+            am = PRE_ADJ.search(text[left_a:m.span.start])
+            if am:
+                pre_adj.append((i, left_a + am.start("adj"), left_a + am.end("adj"), am["adj"]))
+        for i, aa, ab, _ in pre_adj:                 # first take each adjective away from the previous test ...
+            if i:
+                per_mention[i - 1] = [c for c in per_mention[i - 1]
+                                      if not (c.kind == "status" and aa <= c.span.start < ab + 1)]
+        for i, aa, ab, adj in pre_adj:               # ... then give it to the test right after it
+            if not any(c.kind == "status" for c in per_mention[i]):
+                st = "LOW" if LOW_RE.match(adj.split()[-1]) else "HIGH"
+                per_mention[i].append(Claim(kind="status", span=_sp(text, aa, ab), status=st, term_id=ms[i].term_id,
+                                            term=ms[i].term, mention=ms[i].span))
         # "Your MCV and MCH are normal": a mention followed only by a conjunction shares the next one's status
         for i in range(len(ms) - 2, -1, -1):
             gap = text[ms[i].span.end:ms[i + 1].span.start]

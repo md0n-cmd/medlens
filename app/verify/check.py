@@ -375,7 +375,7 @@ def _assumption_message(v: LabValue, alts, assumed, sex: Optional[str], age: Opt
 
 UNSETTLED = {Status.AMBIGUOUS, Status.NO_RANGE, Status.UNPARSEABLE, Status.UNIT_MISMATCH, Status.INDETERMINATE}
 SIDE = {Status.ABOVE: "above", Status.BELOW: "below", Status.DIFFERS: "different from"}
-GROUP_NAME = {"liver": "liver tests", "kidney": "kidney tests", "cbc": "blood counts", "thyroid": "thyroid tests",
+GROUP_NAME = {"thyroid_hormones": "thyroid hormones", "liver": "liver tests", "kidney": "kidney tests", "cbc": "blood counts", "thyroid": "thyroid tests",
               "lipid": "lipid tests", "sugar": "blood sugar tests", "urine": "urine tests", "dlc": "differential counts",
               "all": "results"}
 

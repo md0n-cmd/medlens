@@ -326,7 +326,7 @@ def test_group_claim_contradicted_lists_every_exception():
 
 
 def test_group_claim_verified_when_every_member_is_in_range():
-    f = group_finding(verify(THYROID_OK, "Your thyroid hormones are within standard reference intervals."))
+    f = group_finding(verify(THYROID_OK, "Your thyroid tests are within standard reference intervals."))
     assert f.label == "VERIFIED" and "all 2 thyroid tests" in f.message
 
 
@@ -781,3 +781,40 @@ def test_headings_keep_status_checks_but_never_overstep():
 def test_there_is_is_not_a_definition():
     s = verify(US, "There is a 6 mm stone in the gallbladder.").sentences[0]
     assert s.label == "OVERSTEPS"
+
+
+# ---------------------------------------------------------------- held-out round 1, step 5: binding fixes
+THYROID = (SAMPLES / "04_thyroid_urine.txt").read_text()     # TSH <0.01 (low), Free T4 2.1 (high), T3/T4 normal
+
+
+def test_adjective_binds_to_the_test_right_after_it():
+    s = verify(THYROID, "Your results show very low TSH and elevated Free T4.").sentences[0]
+    st = {f.term: f.label for f in s.findings if f.kind == "status"}
+    assert st == {"Thyroid Stimulating Hormone": "VERIFIED", "Free T4": "VERIFIED"}
+
+
+def test_parenthetical_gloss_is_not_a_test_mention():
+    s = verify(AGE_BANDS, "**LDL (bad cholesterol)** is not on this report, but **HDL (good cholesterol): 45** is.").sentences[0]
+    assert all(f.term != "Total Cholesterol" for f in s.findings)
+
+
+def test_a_bracket_listing_tests_is_not_a_gloss():
+    s = verify(REPORT, "White blood cells (Neutrophils, Lymphocytes) are within normal ranges.").sentences[0]
+    assert {f.term for f in s.findings if f.kind == "status"} >= {"Neutrophils", "Lymphocytes"}
+
+
+def test_thyroid_hormones_exclude_tsh():
+    f = group_finding(verify(THYROID, "Your thyroid hormones are within the normal range."))
+    # Free T4 (a thyroid hormone) is high, so the claim is wrong; TSH (very low) is not a thyroid hormone
+    assert f.label == "CONTRADICTED" and "Free T4 (2.1)" in f.message and "TSH" not in f.message
+
+
+@pytest.mark.parametrize("q", ["Most", "Many", "Some", "A few", "Several"])
+def test_quantifiers_are_not_group_all_claims(q):
+    r = verify(REPORT, f"{q} of your blood counts look normal.")
+    assert not [f for f in r.sentences[0].findings if f.kind == "group"]
+
+
+@pytest.mark.parametrize("t", ["after 2–3 months", "in 6-8 weeks", "over 3 to 4 days"])
+def test_time_ranges_are_never_values(t):
+    assert not [f for f in claims_of(f"Repeat the hemoglobin test {t}.") if f.kind == "value"]
