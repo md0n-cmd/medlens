@@ -27,3 +27,9 @@ def test_doctor_questions_are_questions():
     for p in plain_phrases():
         if p.endswith("?"):
             assert not re.search(r"\byou should\b", p, re.I)
+
+
+def test_verify_summary_leads_with_oversteps():
+    start = HTML.index("function verifySummary(v)")
+    body = HTML[start:HTML.index("function renderVerify", start)]
+    assert body.index("only a doctor can make") < body.index("claims\")} checked")

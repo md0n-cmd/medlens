@@ -839,7 +839,8 @@ function verifySummary(v) {
   parts.push(`${c.OVERSTEPS} ${c.OVERSTEPS === 1 ? "goes" : "go"} beyond an explanation`);
   if (c.UNVERIFIABLE) parts.push(`${c.UNVERIFIABLE} the report doesn't settle`);
   if (c.NOT_IN_REPORT) parts.push(`${c.NOT_IN_REPORT} ${c.NOT_IN_REPORT === 1 ? "is" : "are"} about tests not in your report`);
-  let t = `${plural(v.claims_checked, "claim", "claims")} checked: ${parts.join(", ")}.`;
+  let t = c.OVERSTEPS ? `The AI made ${plural(c.OVERSTEPS, "interpretation", "interpretations")} only a doctor can make. ` : "";
+  t += `${plural(v.claims_checked, "claim", "claims")} checked: ${parts.join(", ")}.`;
   t += c.OMISSION ? ` The AI didn't mention ${plural(c.OMISSION, "out-of-range result", "out-of-range results")}.` : " The AI mentioned every out-of-range result.";
   return t;
 }
