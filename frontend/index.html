@@ -836,11 +836,14 @@ function verifySummary(v) {
   parts.push(`${c.VERIFIED} match your report`);
   parts.push(`${c.CONTRADICTED} ${c.CONTRADICTED === 1 ? "contradicts" : "contradict"} it`);
   parts.push(`${c.RANGE_NOT_FROM_REPORT} ${c.RANGE_NOT_FROM_REPORT === 1 ? "uses a range" : "use ranges"} not on your report`);
-  parts.push(`${c.OVERSTEPS} ${c.OVERSTEPS === 1 ? "goes" : "go"} beyond an explanation`);
+  const over = c.OVERSTEP_PASSAGES ?? c.OVERSTEPS;          // passages: a merged list of interpretations counts once
+  parts.push(`${over} ${over === 1 ? "passage goes" : "passages go"} beyond an explanation`);
   if (c.UNVERIFIABLE) parts.push(`${c.UNVERIFIABLE} the report doesn't settle`);
   if (c.NOT_IN_REPORT) parts.push(`${c.NOT_IN_REPORT} ${c.NOT_IN_REPORT === 1 ? "is" : "are"} about tests not in your report`);
-  let t = c.OVERSTEPS ? `The AI made ${plural(c.OVERSTEPS, "interpretation", "interpretations")} only a doctor can make. ` : "";
-  t += `${plural(v.claims_checked, "claim", "claims")} checked: ${parts.join(", ")}.`;
+  let t = over ? `The AI made ${plural(over, "interpretation", "interpretations")} only a doctor can make. ` : "";
+  // the total is the sum of what the bar shows (a merged passage counts once)
+  const total = c.VERIFIED + c.CONTRADICTED + c.RANGE_NOT_FROM_REPORT + over + c.UNVERIFIABLE + c.NOT_IN_REPORT;
+  t += `${plural(total, "claim", "claims")} checked: ${parts.join(", ")}.`;
   t += c.OMISSION ? ` The AI didn't mention ${plural(c.OMISSION, "out-of-range result", "out-of-range results")}.` : " The AI mentioned every out-of-range result.";
   return t;
 }
@@ -852,8 +855,12 @@ function renderVerify() {
   let html = "", pos = 0;
   v.sentences.forEach(sn => {
     html += esc(text.slice(pos, sn.span.start));
-    const badge = sn.label !== "NEUTRAL" ? `<span class="vbadge vb-${sn.label}">${VLABEL[sn.label]}</span>` : "";
-    html += `<span class="vs v-${sn.label}" data-sid="${sn.id}" tabindex="0" role="button" aria-label="${esc(VLABEL[sn.label] || "Not judged")}: ${esc(sn.text)}">${esc(text.slice(sn.span.start, sn.span.end))}</span>${badge}`;
+    // a merged passage (consecutive interpretation lines) gets one badge, on its first line
+    const inPassage = sn.passage_id && sn.passage_size > 1;
+    const first = !inPassage || sn.passage_id === sn.id;
+    const label = inPassage ? `⛔ ${sn.passage_size} lines: interpretation` : VLABEL[sn.label];
+    const badge = sn.label !== "NEUTRAL" && first ? `<span class="vbadge vb-${sn.label}">${label}</span>` : "";
+    html += `<span class="vs v-${sn.label}" data-sid="${sn.id}" data-pid="${sn.passage_id || ""}" tabindex="0" role="button" aria-label="${esc(VLABEL[sn.label] || "Not judged")}: ${esc(sn.text)}">${esc(text.slice(sn.span.start, sn.span.end))}</span>${badge}`;
     pos = sn.span.end;
   });
   html += esc(text.slice(pos));
@@ -894,8 +901,10 @@ function outlineReport(ranges) {
 }
 
 function selectSentence(sid) {
-  const sn = vres.sentences.find(x => x.id === sid);
-  document.querySelectorAll("#vai .vs").forEach(x => x.classList.toggle("vsel", x.dataset.sid === sid));
+  let sn = vres.sentences.find(x => x.id === sid);
+  if (sn.passage_id && sn.passage_size > 1) sn = vres.sentences.find(x => x.id === sn.passage_id) || sn;
+  const pid = sn.passage_id && sn.passage_size > 1 ? sn.passage_id : null;
+  document.querySelectorAll("#vai .vs").forEach(x => x.classList.toggle("vsel", pid ? x.dataset.pid === pid : x.dataset.sid === sid));
   const judged = sn.findings.filter(f => f.kind !== "mention");
   const shown = judged.length ? judged : sn.findings;
   $("#vfind").innerHTML = `<h3>Why this sentence got its label</h3>` + (shown.length ? shown.map(f =>

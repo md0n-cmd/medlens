@@ -33,3 +33,9 @@ def test_verify_summary_leads_with_oversteps():
     start = HTML.index("function verifySummary(v)")
     body = HTML[start:HTML.index("function renderVerify", start)]
     assert body.index("only a doctor can make") < body.index("claims\")} checked")
+
+
+def test_verify_summary_counts_passages():
+    start = HTML.index("function verifySummary(v)")
+    body = HTML[start:HTML.index("function renderVerify", start)]
+    assert "OVERSTEP_PASSAGES" in body and "passages go" in body

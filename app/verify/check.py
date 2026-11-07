@@ -44,7 +44,8 @@ RELATED_TESTS = {
 
 
 class Finding(BaseModel):
-    kind: Literal["value", "range", "status", "overstep", "mention", "group", "flag", "outside_range", "quote", "certainty"]
+    kind: Literal["value", "range", "status", "overstep", "mention", "group", "flag", "outside_range", "quote", "certainty",
+                  "passage"]
     label: Label
     message: str
     term: Optional[str] = None
@@ -60,6 +61,8 @@ class VerifiedSentence(BaseModel):
     span: Span
     label: Label
     findings: list[Finding] = Field(default_factory=list)
+    passage_id: Optional[str] = None     # consecutive OVERSTEPS items of one list are one passage
+    passage_size: int = 1
 
 
 class Omission(BaseModel):
@@ -528,6 +531,45 @@ def _families(tid: str, synonyms) -> list[str]:
     return [tid]
 
 
+def _transparent(s: VerifiedSentence) -> bool:
+    """A NEUTRAL line with no claims that only frames the next lines: short, a question, or ending in ':'."""
+    if s.label != "NEUTRAL" or any(f.kind != "mention" for f in s.findings):
+        return False
+    t = s.text.strip()
+    return t.endswith((":", "?")) or len(t.split()) <= 10
+
+
+def _merge_overstep_passages(sentences: list[VerifiedSentence], list_ids: list[Optional[int]],
+                             section_ids: list[int], ai_text: str) -> None:
+    """Noise control: consecutive OVERSTEPS sentences in one section - items of one list, or prose separated only
+    by framing lines (a sub-question, "Possible symptoms include:", a short bullet) - become one passage with one
+    message. Each sentence keeps its own label; a sentence with checked facts breaks a passage."""
+    i = 0
+    while i < len(sentences):
+        if sentences[i].label != "OVERSTEPS":
+            i += 1
+            continue
+        members, j, k = [i], i, i + 1
+        while k < len(sentences) and section_ids[k] == section_ids[i]:
+            if sentences[k].label == "OVERSTEPS":
+                members.append(k)
+                j = k
+            elif not _transparent(sentences[k]):
+                break
+            k += 1
+        if len(members) > 1:
+            n, pid = len(members), sentences[i].id
+            for m in members:
+                sentences[m].passage_id, sentences[m].passage_size = pid, n
+            sentences[i].findings.insert(0, Finding(
+                kind="passage", label="OVERSTEPS",
+                ai_span=Span(start=sentences[i].span.start, end=sentences[j].span.end,
+                             text=ai_text[sentences[i].span.start:sentences[j].span.end]),
+                message=f"These {n} lines list possible causes, symptoms, outcomes or advice. Together they interpret "
+                        "your results, which only your doctor can do."))
+        i = j + 1
+
+
 def verify(report_text: str, ai_text: str) -> VerifyResult:
     from app.parser.lines import normalize_text
     ai_text = normalize_text(ai_text)
@@ -538,6 +580,8 @@ def verify(report_text: str, ai_text: str) -> VerifyResult:
     age_txt = (analysis.structured_summary.report.get("age") or "") if analysis.structured_summary else ""
     patient_age = float(age_txt.split()[0]) if age_txt[:1].isdigit() else None
     sentences: list[VerifiedSentence] = []
+    list_ids: list[Optional[int]] = []
+    section_ids: list[int] = []
     mentioned: set[str] = set()
     for sc in extract(ai_text):
         findings: list[Finding] = []
@@ -609,6 +653,9 @@ def verify(report_text: str, ai_text: str) -> VerifyResult:
         label = min(judged, key=SEVERITY.index) if judged else "NEUTRAL"
         sentences.append(VerifiedSentence(id=f"s{len(sentences)}", text=sc.span.text, span=sc.span, label=label,
                                           findings=findings))
+        list_ids.append(sc.list_id)
+        section_ids.append(sc.section_id)
+    _merge_overstep_passages(sentences, list_ids, section_ids, ai_text)
 
     omissions = []
     lower_text = ai_text.lower()
@@ -626,9 +673,11 @@ def verify(report_text: str, ai_text: str) -> VerifyResult:
     counts = {lab: 0 for lab in SEVERITY}
     for s in sentences:
         for f in s.findings:
-            if f.kind != "mention":
+            if f.kind not in ("mention", "passage"):
                 counts[f.label] += 1
     counts["OMISSION"] = len(omissions)
+    # what the summary bar counts: one per OVERSTEPS passage (a merged list counts once)
+    counts["OVERSTEP_PASSAGES"] = len({s.passage_id or s.id for s in sentences if s.label == "OVERSTEPS"})
     claims_checked = sum(n for k, n in counts.items() if k not in ("NEUTRAL", "OMISSION"))
     return VerifyResult(sentences=sentences, omissions=omissions, counts=counts, claims_checked=claims_checked,
                         report_analysis=analysis)

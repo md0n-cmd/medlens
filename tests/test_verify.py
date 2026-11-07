@@ -161,7 +161,8 @@ def test_spans_valid_in_both_texts(name):
         assert ai[s.span.start:s.span.end] == s.text
         for f in s.findings:
             assert ai[f.ai_span.start:f.ai_span.end] == f.ai_span.text
-            assert s.span.start <= f.ai_span.start and f.ai_span.end <= s.span.end
+            if f.kind != "passage":                 # a merged passage spans several sentences by design
+                assert s.span.start <= f.ai_span.start and f.ai_span.end <= s.span.end
             for sp in ([f.report_span] if f.report_span else []) + f.extra_report_spans:
                 assert rtext[sp.start:sp.end] == sp.text
     for o in r.omissions:
@@ -851,3 +852,28 @@ def test_outside_cutoff_list_and_carried_subject():
 def test_recall_classes_do_not_fire_on_neutral_sentences(ai):
     rows = "| Test | Meaning |\n|---|---|\n" + ai if ai.startswith("|") else ai
     assert verify(REPORT, rows).sentences[-1].label != "OVERSTEPS"
+
+
+# ---------------------------------------------------------------- held-out round 1, step 7: noise control
+def test_consecutive_overstep_bullets_merge_into_one_passage():
+    ai = ("Possible causes include:\n\n- Iron deficiency anemia.\n- A recent infection.\n- Chronic kidney disease.\n\n"
+          "Your hemoglobin is 11.2 g/dL.")
+    r = verify(REPORT, ai)
+    over = [s for s in r.sentences if s.label == "OVERSTEPS"]
+    assert len(over) == 3 and len({s.passage_id for s in over}) == 1 and over[0].passage_size == 3
+    assert over[0].findings[0].kind == "passage" and "These 3 lines" in over[0].findings[0].message
+    assert r.counts["OVERSTEP_PASSAGES"] == 1 and r.counts["OVERSTEPS"] == 3
+    assert r.sentences[-1].label == "VERIFIED"                        # labels of other sentences are untouched
+
+
+def test_a_checked_fact_breaks_a_passage():
+    ai = "- This points to anemia.\n- Your hemoglobin is 11.2 g/dL.\n- This suggests an infection."
+    r = verify(REPORT, ai)
+    assert r.counts["OVERSTEP_PASSAGES"] == 2
+
+
+def test_items_of_a_possibility_list_make_no_test_claims():
+    ai = "Common contributing factors include:\n\n- High cholesterol or triglycerides.\n\nYour MCV is normal."
+    r = verify(REPORT, ai)
+    assert all(f.kind not in ("status", "value") for s in r.sentences[:-1] for f in s.findings)
+    assert r.sentences[-1].label == "VERIFIED"

@@ -119,6 +119,8 @@ class SentenceClaims:
     span: Span
     mentions: list[Mention] = field(default_factory=list)
     claims: list[Claim] = field(default_factory=list)
+    list_id: Optional[int] = None        # consecutive bullets / numbered items / table rows share one list id
+    section_id: int = 0                  # sentences between two headings share one section id
 
 
 # ------------------------------------------------------------------ patterns
@@ -462,6 +464,10 @@ def _cutoff_re() -> re.Pattern:
 
 CUTOFF_RE = _cutoff_re()
 TOPIC_REF = re.compile(r"\b(?:your|this|the)\s+(?:level|result|value|reading|number)s?\b", re.I)
+
+
+POSSIBILITY_INTRO = re.compile(r"\b(?:include|includes|including|such\s+as|causes?|factors?|symptoms?|reasons?|"
+                               r"conditions?|possibilities|experience|could\s+be|might\s+be|can\s+be)\b[^:]*:\s*$", re.I)
 
 
 QUANTIFIER = re.compile(r"\b(?:most|many|some|a\s+few|several|(?:the\s+)?(?:vast\s+)?majority|nearly\s+all|almost\s+all)\b", re.I)
@@ -924,6 +930,9 @@ def _extract(text: str, original: str) -> list[SentenceClaims]:
     prev_lead: list[Mention] = []            # the last bullet lead, for follow-on bullets that name no test
     quote_mode = False                       # after "Your report says:", the following bullets are quotes
     topic: Optional[Mention] = None          # the test a heading or bullet is about
+    list_counter, last_item_line = 0, -1
+    section_counter, last_heading_line = 0, -1
+    possibility_list = False                 # inside a list introduced by "... include:" / "You might experience:"
     tables = parse_tables(text)
     for sp in split_sentences(text):
         sc = SentenceClaims(span=sp)
@@ -933,6 +942,24 @@ def _extract(text: str, original: str) -> list[SentenceClaims]:
         line_end = text.find("\n", sp.end)
         line_end = len(text) if line_end == -1 else line_end
         whole_line = original[line_start:line_end]                 # with its markdown (bullets, **bold**)
+        # items under "Common causes include:" / "You might experience:" are possibilities, not test claims
+        in_possibility_list = possibility_list and bool(BULLET_RE.match(whole_line))
+        if POSSIBILITY_INTRO.search(text[sp.start:sp.end]):
+            possibility_list = True
+        elif not BULLET_RE.match(whole_line):
+            possibility_list = False
+        if re.match(r"^\s*(?:#{1,6}\s|\*\*[^*]+\*\*\s*:?\s*$|-{3,}\s*$)", whole_line) and line_start != last_heading_line:
+            section_counter += 1                       # a markdown heading, a bold-only line or a rule
+            last_heading_line = line_start
+        sc.section_id = section_counter
+        if BULLET_RE.match(whole_line) or whole_line.lstrip().startswith("|"):
+            if line_start != last_item_line:
+                prev_text = original[:line_start].rstrip("\n")
+                prev_line = prev_text[prev_text.rfind("\n") + 1:]
+                if not (BULLET_RE.match(prev_line) or prev_line.lstrip().startswith("|")):
+                    list_counter += 1                  # a new list starts here
+                last_item_line = line_start
+            sc.list_id = list_counter
         trow = tables.get(line_start)
         if trow:                                   # markdown table: header/separator rows are not claims
             if trow["kind"] == "row":
@@ -1159,5 +1186,7 @@ def _extract(text: str, original: str) -> list[SentenceClaims]:
                                        [(m.span.start - sp.start, m.span.end - sp.start) for m in sc.mentions]):
             sc.claims.append(Claim(kind="overstep", span=sp, overstep=cat, detail=why))
         _apply_never_claim(sc, never_claim_type(stext, whole_line), stext, [])
+        if in_possibility_list:                    # "Common causes include:" -> these items are possibilities
+            sc.claims = [c for c in sc.claims if c.kind not in ("value", "range", "status", "group")]
         out.append(sc)
     return out
