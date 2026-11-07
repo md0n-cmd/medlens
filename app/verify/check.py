@@ -175,7 +175,8 @@ def _unsettled_reason(v: LabValue) -> str:
 
 # ------------------------------------------------------------------ checking
 def _check_category(c: Claim, text: str, rows: list[LabValue]) -> Finding:
-    """'Prediabetes is between 5.7% and 6.4%': fine only if the report prints that same category table."""
+    """A named category with a threshold (e.g. 'Borderline high is 200 to 239'): fine only if the report
+    prints that same category table."""
     nums = [x for x in (c.range.low, c.range.high) if x is not None]
     printed = re.search(rf"\b{re.escape(c.category)}\b", text, re.I) and all(
         re.search(rf"(?<![\d.]){re.escape(f'{n:g}')}(?:0*)(?![\d])", text) for n in nums)

@@ -155,7 +155,7 @@ OUTSIDE_RANGES = re.compile(
     r"cut-?offs?|guidelines?)\b"
     r"|\bstandard\s+(?:clinical\s+|lab\s+)?(?:reference\s+)?ranges?\s+(?:usually|typically|generally|say|prefer|are|put)\b",
     re.I)
-# "Prediabetes is between 5.7% and 6.4%": a named category with a threshold
+# a named category with a threshold, e.g. "Borderline high is 200 to 239"
 CATEGORY_RE = re.compile(
     r"^\W*(?P<cat>normal|healthy|optimal|near[\s-]optimal|desirable|borderline(?:[\s-]high|[\s-]low)?|high|very\s+high|"
     r"low|pre-?diabetes|pre-?diabetic|diabetes|diabetic|impaired\s+fasting\s+glucose|insufficien(?:t|cy)|"
@@ -301,7 +301,7 @@ def _default_interpretation(sentence: str, mention_spans: list[tuple[int, int]])
     if lx["definition"].search(sentence) or any(lx["def_after_test"].match(sentence[e:]) for _, e in mention_spans):
         return None
     if CATEGORY_RE.match(sentence) and re.search(r"\d", sentence):
-        return None                               # "Prediabetes is between 5.7% and 6.4%": a range statement
+        return None                               # "Borderline high is 200 to 239": a range statement
     inside = lambda a, b: any(s <= a and b <= e for s, e in mention_spans)  # noqa: E731
     for m in lx["condition"].finditer(sentence):
         word = m.group(0)
@@ -335,7 +335,7 @@ def find_oversteps(sentence: str, mention_spans: list[tuple[int, int]] = ()) -> 
             for lm in _link_re().finditer(sentence):
                 if DEFINITION.search(sentence[:lm.start()]) and not re.search(r"\b(?:because|which|this|these|so)\b",
                                                                              sentence[:lm.start()], re.I):
-                    continue                        # 'ESR is a general marker for inflammation': a definition
+                    continue                        # e.g. 'CRP is a marker of inflammation': a definition
                 out.append(("link", lm.group(0).strip()))
                 break
     if not deferred:
@@ -492,7 +492,7 @@ def _is_status_claim(text: str, s: int, e: int, before: str) -> bool:
         return False
     line_a = text.rfind("\n", 0, s) + 1
     left = text[line_a:s]
-    # inside "quotes" or (brackets) next to the word 'flag': '"H" (High) flag'
+    # inside "quotes" or (brackets) next to the word 'flag', e.g. a lab's "L" (Low) marker
     in_quotes = left.count('"') % 2 == 1
     in_paren = left.rfind("(") > left.rfind(")")
     if in_quotes or in_paren:
@@ -500,7 +500,7 @@ def _is_status_claim(text: str, s: int, e: int, before: str) -> bool:
         around = text[max(line_a, s - 30):(close if close != -1 else e) + 30]
         if FLAG_NEAR.search(around):
             return False
-    # 'some small, some normal, some large', 'normal average size', 'normal blood clotting ability'
+    # describing cells or abilities, e.g. 'some normal, some large', 'normal average size', 'normal pumping ability'
     if re.search(r"\bsome\s+$", left, re.I) or DESCRIBES_CELLS.match(text[e:e + 40]):
         return False
     return True
@@ -737,7 +737,7 @@ def _extract(text: str, original: str) -> list[SentenceClaims]:
                 nxt = [c.span.start for c in compounds if c.span.start > m.span.end]
                 end = min([end] + nxt)
             per_mention.append(_segment_claims(text, m, m.span.end, end, sp.start))
-        # "Similar to GGT, this value is normal for a male (range 0.7-1.3)": a test named only for comparison is
+        # "Like ALT, this value is within range (7-56)": a test named only for comparison is
         # not the subject; its ranges and statuses belong to the bullet's lead test
         for i, m in enumerate(ms):
             if lead_mentions and m not in lead_mentions and COMPARISON_BEFORE.search(text[sp.start:m.span.start]):
@@ -747,7 +747,7 @@ def _extract(text: str, original: str) -> list[SentenceClaims]:
                     moved = [Claim(kind=c.kind, span=c.span, status=c.status, range=c.range, term_id=subj.term_id,
                                    term=subj.term, mention=subj.span) for c in per_mention[i] if c.kind in ("range", "status")]
                 per_mention[i] = moved
-        # a doctor deferral or a suggested test ("a doctor would likely look at an HbA1c test") makes no test claims
+        # a doctor deferral or a suggested test ("your doctor may order a TSH test") makes no test claims
         if DEFERRAL.search(text[sp.start:sp.end]) or SUGGEST_TEST.search(text[sp.start:sp.end]):
             per_mention = [[] for _ in ms]
             comp_claims = []
@@ -797,7 +797,7 @@ def _extract(text: str, original: str) -> list[SentenceClaims]:
         named = [m for m in ms if m.span.text.lower() not in GENERIC_MENTIONS] or compounds
         if lead_mentions:
             prev_lead = lead_mentions
-        # "* Prediabetes is between 5.7% and 6.4%." under a "**High HbA1c (6.4%)**" bullet
+        # "* Borderline high is 200 to 239." under a "**High Total Cholesterol (224)**" bullet
         cm = CATEGORY_RE.match(text[sp.start:sp.end]) if not named else None
         if cm:
             subjects_c = lead_mentions or prev_lead
@@ -814,11 +814,11 @@ def _extract(text: str, original: str) -> list[SentenceClaims]:
                         c.category, c.term_id, c.term, c.mention = cat, None, None, None
                         sc.claims.append(c)
             sc.claims = [c for c in sc.claims if not (c.kind == "status" and c.weak)]   # the category word isn't a status
-        # "using standard clinical reference ranges for the missing values"
+        # e.g. "based on typical lab cut-offs", "standard ranges usually say ..."
         om = OUTSIDE_RANGES.search(text[sp.start:sp.end])
         if om:
             sc.claims.append(Claim(kind="outside_range", span=sp, detail=om.group(0)))
-        # "The **98 mg/dL** reading is completely normal": the bold value identifies the report row
+        # "The **72 U/L** value is fine": the bold value identifies the report row
         if not named and not lead_mentions and not cm:
             raw_sentence = original[sp.start:sp.end]
             bvs = list(BOLD_VALUE.finditer(raw_sentence))

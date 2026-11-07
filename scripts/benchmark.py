@@ -2,6 +2,8 @@
 
     python scripts/benchmark.py            # per-case table + totals
     python scripts/benchmark.py --brief    # totals only
+    python scripts/benchmark.py --record "<what changed>"   # raise the ratchet in score.json if improved
+    python scripts/benchmark.py --heldout  # score tests/benchmark/heldout.json separately (never tuned on)
 
 Scoring (tests/benchmark/gold.json):
   * each case: the sentence containing `find` must get a label in `accept`.
@@ -19,6 +21,7 @@ import json
 import sys
 from dataclasses import dataclass, field
 from pathlib import Path
+from typing import Optional
 
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
@@ -135,7 +138,27 @@ def record(score: Score, note: str) -> bool:
     return improved
 
 
+HELDOUT = ROOT / "tests" / "benchmark" / "heldout.json"
+HELDOUT_LOG = ROOT / "tests" / "benchmark" / "heldout_score.json"
+
+
+def run_heldout() -> Optional[Score]:
+    """Held-out answers: scored and logged, never used for tuning, never a build gate, never in the ratchet."""
+    if not HELDOUT.exists():
+        return None
+    sc = run(HELDOUT)
+    log = json.loads(HELDOUT_LOG.read_text()) if HELDOUT_LOG.exists() else {"history": []}
+    log["history"].append({"correct": sc.correct, "false_alarms": sc.false_alarms, "misses": sc.misses,
+                           "total": sc.total})
+    HELDOUT_LOG.write_text(json.dumps(log, indent=2) + "\n")
+    return sc
+
+
 if __name__ == "__main__":
+    if "--heldout" in sys.argv:
+        hs = run_heldout()
+        print("no tests/benchmark/heldout.json yet" if hs is None else ("HELD-OUT\n" + table(hs)))
+        sys.exit(0)
     sc = run()
     print(summary(sc) if "--brief" in sys.argv else table(sc))
     if "--record" in sys.argv:

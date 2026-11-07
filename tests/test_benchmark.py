@@ -35,3 +35,20 @@ def test_gold_files_are_synthetic_samples():
     for f in gold["files"]:
         assert "SYNTHETIC SAMPLE" in (ROOT / f["report"]).read_text()
         assert (ROOT / f["ai"]).name.endswith("__chatbot_real.txt")
+
+
+def test_rules_do_not_special_case_benchmark_sentences():
+    """Overfitting guard: no gold `find` fragment (3+ words) may appear literally in the Verify rules or lexicon."""
+    gold = json.loads((ROOT / "tests" / "benchmark" / "gold.json").read_text())
+    source = " ".join(p.read_text().lower() for p in (ROOT / "app" / "verify").glob("*.py"))
+    for f in gold["files"]:
+        for c in f["cases"]:
+            frag = " ".join(c["find"].lower().split())
+            if len(frag.split()) >= 3:
+                assert frag not in source, f"rule source contains a benchmark sentence: {frag!r}"
+
+
+def test_heldout_answers_never_gate_the_build():
+    """Held-out answers are scored separately (scripts/benchmark.py --heldout); this test must not assert on them."""
+    assert benchmark.HELDOUT.name == "heldout.json"
+    assert "heldout" not in json.dumps(BEST)
