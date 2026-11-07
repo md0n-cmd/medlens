@@ -932,3 +932,34 @@ def test_head_noun_refers_back_to_the_bullets_test():
                      "under 0.50; this report shows 0.52.")
     assert r.sentences[-1].label == "RANGE_NOT_FROM_REPORT"
     assert any(f.kind == "value" and f.label == "VERIFIED" for f in r.sentences[-1].findings)
+
+
+# ---------------------------------------------------------------- round 2, step 2: narrative findings match the report
+XRAY = ("CHEST X-RAY\nFINDINGS:\nTrachea is central. No pneumothorax. No pleural effusion.\n"
+        "Cardiac silhouette appears enlarged.\nMild hazy opacity in the left lower zone; possible early consolidation.\n"
+        "IMPRESSION:\n1. Cardiomegaly.\n2. Left lower zone opacity, likely infiltrate.\n")
+
+
+def test_word_level_hedge_scope_in_the_report():
+    from app.verify.findings import report_findings, stated_unhedged
+    rep = report_findings(XRAY)
+    assert stated_unhedged(rep, "opacity") and stated_unhedged(rep, "cardiomegaly")
+    assert not stated_unhedged(rep, "infiltrate") and not stated_unhedged(rep, "consolidation")
+    assert {f.polarity for f in rep["pneumothorax"]} == {"absent"} and {f.polarity for f in rep["trachea"]} == {"normal"}
+
+
+def test_faithful_narrative_sentences_match_the_report():
+    ai = ("The windpipe is centered and there is no trapped air or fluid around the lungs.\n\n"
+          "This condition is called **cardiomegaly**.\n\n"
+          "There is a hazy patch in the lower left lung, possibly an early infiltrate.")
+    r = verify(XRAY, ai)
+    assert [s.label for s in r.sentences] == ["VERIFIED"] * 3
+    assert "Matches your report" in r.sentences[0].findings[0].message
+
+
+def test_added_condition_or_stronger_certainty_still_oversteps():
+    ai = ("There is a hazy patch that points to pneumonia.\n\n"
+          "There is consolidation in the left lung.\n\n"
+          "There is an infiltrate in the left lower zone.")
+    r = verify(XRAY, ai)
+    assert [s.label for s in r.sentences] == ["OVERSTEPS"] * 3

@@ -12,7 +12,7 @@ from app.parser.ranges import units_compatible
 from app.safety import is_safe
 from app.pipeline import analyze
 from app.glossary.matcher import find_terms, load_glossary
-from app.verify.claims import GROUP_TERMS, GROUPS, NORMAL_CATEGORIES, Claim, extract, strip_markdown
+from app.verify.claims import GROUP_TERMS, GROUPS, NORMAL_CATEGORIES, Claim, extract, find_oversteps, strip_markdown
 from app.verify.names import names_match
 
 Label = Literal["VERIFIED", "CONTRADICTED", "RANGE_NOT_FROM_REPORT", "OVERSTEPS", "NOT_IN_REPORT",
@@ -46,7 +46,7 @@ RELATED_TESTS = {
 
 
 class Finding(BaseModel):
-    kind: Literal["value", "range", "status", "overstep", "mention", "group", "flag", "outside_range", "quote", "certainty",
+    kind: Literal["value", "range", "status", "overstep", "mention", "group", "flag", "outside_range", "quote", "certainty", "finding",
                   "passage"]
     label: Label
     message: str
@@ -491,6 +491,9 @@ def _meaning_changed(q: str, rep: str) -> bool:
     return nums(q) != nums(rep) or neg(q) != neg(rep) or (bool(find_hedges(rep)) and not find_hedges(q))
 
 
+from app.verify.findings import match_sentence, report_findings, stated_unhedged  # noqa: E402
+
+
 def _check_quote(c: Claim, analysis: AnalysisResult) -> Optional[Finding]:
     ratio, matched, rep_span = _best_quote_match(c.detail or "", analysis.text)
     if ratio >= 0.7 and _meaning_changed(_norm_q(c.detail or ""), matched):   # a changed number, negation or hedge
@@ -577,13 +580,49 @@ def _merge_overstep_passages(sentences: list[VerifiedSentence], list_ids: list[O
         i = j + 1
 
 
+NO_FINDING_MATCH = {"question", "deferral", "safety", "heading", "definition", "purpose", "suggestion"}
+
+
+def _matches_report(sc, fm) -> Finding:
+    """Every finding the sentence states is in the report, same polarity, same or weaker certainty. Overstep
+    phrases that only name or gloss those findings ("cardiomegaly", "air leak causing lung collapse") are the
+    report speaking; anything else (a cause, a condition the report doesn't name) still oversteps."""
+    covered = [(m.start, m.end) for m, _ in fm.matched]
+    by_concept: dict[str, list] = {}
+    for m, _ in fm.matched:
+        by_concept.setdefault(m.concept, []).append(m)
+    covered += [(min(x.start for x in ms), max(x.end for x in ms)) for ms in by_concept.values()]
+    low = sc.span.text.lower()
+
+    def is_covered(c: Claim) -> bool:
+        if c.kind == "certainty":
+            from app.verify import lexicon as L
+            return all(any(f in by_concept for f in _families(t, L.FINDING_SYNONYMS)) for t in (c.detail or "").split(","))
+        if c.kind != "overstep" or not c.detail:
+            return False
+        i = low.find(c.detail.lower())
+        return i != -1 and any(a <= i and i + len(c.detail) <= b for a, b in covered)
+    # the sentence minus the matched findings: anything still interpretive was ADDED by the AI
+    masked = list(sc.span.text)
+    for a, b in covered:
+        masked[a:b] = " " * (b - a)
+    adds = find_oversteps(strip_markdown("".join(masked)), [])
+    sc.claims = [c for c in sc.claims if not is_covered(c) or (c.kind == "overstep" and adds)]
+    m0, rspan = fm.matched[0]
+    return Finding(kind="finding", label="VERIFIED", report_span=rspan,
+                   ai_span=Span(start=sc.span.start + m0.start, end=sc.span.start + m0.end, text=sc.span.text[m0.start:m0.end]),
+                   message=f"Matches your report: '{rspan.text}'." if rspan else "Matches your report.")
+
+
 def verify(report_text: str, ai_text: str) -> VerifyResult:
     from app.parser.lines import normalize_text
     ai_text = normalize_text(ai_text)
     analysis = analyze(report_text)
     rtext = analysis.text
     idx = _index(analysis)
-    hedged = _report_hedged_findings(analysis)
+    rep_findings = report_findings(rtext)
+    # word-level hedge scope: a finding the report also states WITHOUT a hedge is not a hedged finding
+    hedged = {k: v for k, v in _report_hedged_findings(analysis).items() if not stated_unhedged(rep_findings, k)}
     age_txt = (analysis.structured_summary.report.get("age") or "") if analysis.structured_summary else ""
     patient_age = float(age_txt.split()[0]) if age_txt[:1].isdigit() else None
     sentences: list[VerifiedSentence] = []
@@ -592,6 +631,9 @@ def verify(report_text: str, ai_text: str) -> VerifyResult:
     mentioned: set[str] = set()
     for sc in extract(ai_text):
         findings: list[Finding] = []
+        fm = match_sentence(sc.span.text, rep_findings) if sc.never not in NO_FINDING_MATCH else None
+        if fm is not None and fm.ok:
+            findings.append(_matches_report(sc, fm))
         # value claims first: a status in the same segment is judged against the row whose value matched
         matched_row: dict[tuple[int, int], LabValue] = {}
         pairs: list[tuple[Claim, Finding]] = []
@@ -645,6 +687,7 @@ def verify(report_text: str, ai_text: str) -> VerifyResult:
                 phrase = f.message.split("('")[1].split("')")[0].lower() if "('" in f.message else ""
                 return bool(phrase) and any(phrase in q.text.lower() for q in matched_quotes)
             findings = [f for f in findings if not (f.kind in ("overstep", "certainty") and in_quote(f))]
+            findings = [f for f in findings if f.kind != "finding"]      # the accurate quote already says it
         claimed = {(c.mention.start, c.mention.end) for c in sc.claims if c.mention}
         for m in sc.mentions:
             mentioned.add(m.term_id)

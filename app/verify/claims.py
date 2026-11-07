@@ -121,6 +121,7 @@ class SentenceClaims:
     claims: list[Claim] = field(default_factory=list)
     list_id: Optional[int] = None        # consecutive bullets / numbered items / table rows share one list id
     section_id: int = 0                  # sentences between two headings share one section id
+    never: Optional[str] = None          # never-claim type (question, deferral, safety, heading, ...), if any
 
 
 # ------------------------------------------------------------------ patterns
@@ -256,7 +257,7 @@ def _finding_claim_re() -> re.Pattern:
     return _FINDING_RE
 
 
-CONDITION_WORDS = (r"an(?:a)?emia|infections?|inflammation|inflammatory|immune\s+response|deficienc(?:y|ies)|illness(?:es)?|"
+CONDITION_WORDS = (r"an(?:a)?emia|infections?|pneumonia|inflammation|inflammatory|immune\s+response|deficienc(?:y|ies)|illness(?:es)?|"
                    r"diseases?|disorders?|stress|dehydration|insufficiency|failure|damage")
 LINK = (r"\b(?:points?\s+to|pointing\s+to|indicat(?:es?|ing)(?:\s+that)?|suggest(?:s|ing)?(?:\s+that)?|suggestive\s+of|"
         r"(?:is|are)\s+(?:often\s+|usually\s+|commonly\s+|typically\s+)?(?:an?\s+)?(?:early\s+)?signs?\s+of|"
@@ -717,6 +718,7 @@ def never_claim_type(sentence: str, line: str) -> Optional[str]:
 def _apply_never_claim(sc: "SentenceClaims", kind: Optional[str], stext: str, mention_spans) -> None:
     if kind is None:
         return
+    sc.never = kind
     if kind in ("question", "deferral", "safety"):
         sc.claims = []
         return

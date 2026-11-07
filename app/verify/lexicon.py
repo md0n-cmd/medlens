@@ -13,7 +13,7 @@ NOT_CONDITION_WORDS = ["diagnosis", "prognosis", "sympathy", "empathy", "academi
 CONDITIONS = [
     r"an(?:a)?emi(?:a|c)", r"pre-?diabet(?:es|ic)", r"diabet(?:es|ic)", r"impaired\s+fasting\s+glucose",
     r"insulin\s+resistance", r"metabolic\s+syndrome", r"[\w']+\s+syndrome", r"dyslipid(?:a)?emia", r"fatty\s+liver",
-    r"gout", r"kidney\s+stones?", r"gall\s*stones?", r"hepatitis(?:\s+[a-e])?", r"infections?", r"deficienc(?:y|ies)",
+    r"gout", r"kidney\s+stones?", r"gall\s*stones?", r"hepatitis(?:\s+[a-e])?", r"infections?", r"pneumonia", r"heart\s+failure", r"arrhythmias?", r"deficienc(?:y|ies)",
     r"illness(?:es)?", r"diseases?", r"disorders?", r"hypothyroidism", r"hyperthyroidism", r"cancer", r"tumou?rs?",
     # inflammation as a state of the body (not "an inflammation marker")
     r"uti", r"urinary\s+tract\s+infections?", r"hypothyroid", r"hyperthyroid", r"thyrotoxicosis",
@@ -144,3 +144,31 @@ ORGAN_FUNCTION = [
 # OUTSIDE CUT-OFF LISTS: bullets of "<number or range>: <category>", e.g. "- Under 12: Deficient"
 CUTOFF_CATEGORIES = (r"very\s+low|very\s+high|low|normal|adequate|insufficient|insufficiency|deficient|deficiency|desirable|"
                      r"borderline(?:\s+high|\s+low)?|high|optimal|sufficient|toxic|elevated|ideal")
+
+# ---- narrative findings (imaging / ECG): plain-language names for report concepts (glossary id -> patterns)
+LAY_FINDINGS = {
+    "cardiomegaly": [r"enlarged\s+(?:heart|cardiac\s+silhouette)",
+                     r"(?:heart|cardiac\s+silhouette)(?:'s\s+silhouette)?\s+(?:\w+\s+){0,3}?(?:enlarged|(?:larger|bigger)\s+than\s+normal)"],
+    "opacity": [r"(?:hazy|cloudy|white|whitish)\s+(?:\w+\s+)?(?:patch|area|spot|region|opacity|shadow)"],
+    "pneumothorax": [r"air\s+leak", r"trapped\s+air", r"lung\s+collapse", r"collapsed\s+lung"],
+    "effusion": [r"(?:pleural|abnormal|visible)\s+fluid", r"fluid\s+around\s+the\s+lungs?"],
+    "trachea": [r"windpipe"],
+    "mediastinum": [r"central\s+chest\s+structures"],
+    "bony_cage": [r"bones", r"ribs", r"collarbones"],
+    "hilum": [r"central\s+lung\s+regions?"],
+}
+# report words that qualify a finding rather than name a structure or finding
+FINDING_QUALIFIERS = {"findings", "impression", "clinical_correlation", "mild", "unremarkable", "within_normal_limits",
+                      "zone", "diffuse", "focal", "dilated", "distended", "calibre", "echogenicity", "clinical_notes"}
+# a structure described as normal / abnormal (never preceded by "than": "larger than normal" is not normal)
+FINDING_NORMAL = [r"normal", r"central", r"centred", r"centered", r"unremarkable", r"clear", r"intact", r"maintained",
+                  r"preserved", r"regular", r"upright", r"not\s+(?:widened|dilated|enlarged|distended|displaced)",
+                  r"no\s+(?:\w+\s+)?abnormalit(?:y|ies)"]
+FINDING_ABNORMAL = [r"enlarged", r"distended", r"widened", r"dilated", r"thickened", r"displaced", r"deviated", r"blunted"]
+# word-level hedges: before the finding (within a few words) or right after it
+FINDING_HEDGE_BEFORE = [r"possible", r"possibly", r"probable", r"probably", r"likely", r"may", r"might", r"could",
+                        r"suggest\w*", r"suspect\w*", r"suspicion\s+of", r"query", r"\?", r"concern\s+for",
+                        r"consistent\s+with", r"in\s+keeping\s+with"]
+FINDING_HEDGE_AFTER = [r"cannot\s+be\s+ruled\s+out", r"can\s*not\s+be\s+excluded", r"not\s+(?:be\s+)?excluded",
+                       r"is\s+(?:possible|likely|suspected)", r"\?"]
+FINDING_NEGATION = [r"no", r"not", r"without", r"absent", r"negative\s+for", r"free\s+of"]
