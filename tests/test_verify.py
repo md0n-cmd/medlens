@@ -963,3 +963,13 @@ def test_added_condition_or_stronger_certainty_still_oversteps():
           "There is an infiltrate in the left lower zone.")
     r = verify(XRAY, ai)
     assert [s.label for s in r.sentences] == ["OVERSTEPS"] * 3
+
+
+def test_quote_exemption_covers_only_the_quoted_words():
+    r = verify(XRAY, 'The radiologist notes "possible early consolidation", which is fluid in the air spaces, '
+                     'commonly pointing to a lung infection.')
+    s = r.sentences[0]
+    assert s.label == "OVERSTEPS" and any(f.kind == "quote" and f.label == "VERIFIED" for f in s.findings)
+    # the quote alone, or the report's words without quote marks: still the report speaking
+    assert verify(XRAY, 'The radiologist notes "possible early consolidation".').sentences[0].label == "VERIFIED"
+    assert verify(XRAY, "The radiologist mentions that consolidation cannot be ruled out.").sentences[0].label != "OVERSTEPS"

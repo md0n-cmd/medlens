@@ -350,14 +350,17 @@ def find_oversteps(sentence: str, mention_spans: list[tuple[int, int]] = ()) -> 
         cat = SAFETY_KIND.get(why, "treatment")
         if not (deferred and cat == "treatment"):
             out.append((cat, why))
-    if not QUOTING_REPORT.search(sentence) and not deferred:
-        m = _finding_claim_re().search(sentence)
+    # the quote exemption covers only the quoted words: what follows a quote is the AI speaking again
+    quotes = list(QUOTE_RE.finditer(sentence))
+    scope = sentence[quotes[-1].end():] if quotes else sentence
+    if (quotes or not QUOTING_REPORT.search(sentence)) and not deferred:
+        m = _finding_claim_re().search(scope)
         if m:
             out.append(("link", m.group(0).strip()))
         else:
-            for lm in _link_re().finditer(sentence):
-                if DEFINITION.search(sentence[:lm.start()]) and not re.search(r"\b(?:because|which|this|these|so)\b",
-                                                                             sentence[:lm.start()], re.I):
+            for lm in _link_re().finditer(scope):
+                if DEFINITION.search(scope[:lm.start()]) and not re.search(r"\b(?:because|which|this|these|so)\b",
+                                                                          scope[:lm.start()], re.I):
                     continue                        # e.g. 'CRP is a marker of inflammation': a definition
                 out.append(("link", lm.group(0).strip()))
                 break
