@@ -205,13 +205,13 @@ def test_api_verify_is_rate_limited():
 
 def test_api_ai_samples_listed():
     s = client.get("/api/ai-samples").json()
-    assert len(s) == 7 and sum(x["kind"] == "correct" for x in s) == 1
+    assert len(s) == 10 and sum(x["kind"] == "correct" for x in s) == 1
     real = [x for x in s if x["kind"] == "chatbot_real"]
-    assert len(real) == 1 and real[0]["title"].startswith("Real chatbot answer")
+    assert len(real) == 4 and all(x["title"].startswith("Real chatbot answer") for x in real)
     assert {x["report_id"] for x in s} <= {p.stem for p in SAMPLES.glob("*.txt")}       # every AI sample has its report
     # the real chatbot answer is kept verbatim (it is about synthetic sample 01, so it has no header of ours)
     assert all("SYNTHETIC AI EXPLANATION" in x["text"] for x in s if x["kind"] != "chatbot_real")
-    assert "synthetic lab report" in real[0]["text"]
+    assert all("synthetic" in x["text"].lower() for x in real)
 
 
 def test_range_in_lakh_matches_report_range():

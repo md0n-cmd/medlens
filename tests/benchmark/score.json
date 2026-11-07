@@ -1,0 +1,13 @@
+{
+  "best_correct": 34,
+  "total": 60,
+  "history": [
+    {
+      "correct": 34,
+      "false_alarms": 7,
+      "misses": 19,
+      "total": 60,
+      "note": "baseline: build before benchmark-driven changes (user's harness reported 33/60, 8 false alarms; this harness locates sentences after stripping markdown)"
+    }
+  ]
+}

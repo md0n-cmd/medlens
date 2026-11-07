@@ -1,0 +1,92 @@
+{
+  "_about": "Hand-labelled expectations for real chatbot answers about SYNTHETIC MedLens samples. Each case: the sentence containing `find` must get a label in `accept`. `forbid_omissions` lists tests the AI DID mention, so they must not be reported as omitted. Precision first: a sentence must never get a label outside `accept`.",
+  "files": [
+    {
+      "report": "samples/01_cbc.txt",
+      "ai": "samples/ai/01_cbc__chatbot_real.txt",
+      "expect_omissions": ["MCHC"],
+      "cases": [
+        {"find": "two main patterns: mild anemia", "accept": ["OVERSTEPS"]},
+        {"find": "this points to", "accept": ["OVERSTEPS"]},
+        {"find": "Normal MCV (89.0 fL)", "accept": ["VERIFIED"]},
+        {"find": "early sign of a nutritional deficiency", "accept": ["OVERSTEPS"]},
+        {"find": "reacting to a recent mild infection", "accept": ["OVERSTEPS"]},
+        {"find": "Normal Differentials", "accept": ["VERIFIED"]},
+        {"find": "general marker for inflammation", "accept": ["VERIFIED", "NEUTRAL"]},
+        {"find": "\"H\" (High) flag", "accept": ["VERIFIED"]},
+        {"find": "normal blood clotting ability", "accept": ["OVERSTEPS"]},
+        {"find": "recovery from a minor illness", "accept": ["OVERSTEPS"]},
+        {"find": "A doctor would review these numbers", "accept": ["NEUTRAL"]}
+      ]
+    },
+    {
+      "report": "samples/02_lipid_diabetes.txt",
+      "ai": "samples/ai/02_lipid_diabetes__chatbot_real.txt",
+      "expect_omissions": [],
+      "cases": [
+        {"find": "results indicate two connected health trends", "accept": ["OVERSTEPS"]},
+        {"find": "High LDL (156 mg/dL)", "accept": ["VERIFIED"]},
+        {"find": "The lab recommends keeping this under 100", "accept": ["VERIFIED"]},
+        {"find": "Low HDL (38 mg/dL)", "accept": ["VERIFIED"]},
+        {"find": "A healthy level is above 40", "accept": ["VERIFIED", "NEUTRAL"]},
+        {"find": "exceeds the recommended 200 limit", "accept": ["VERIFIED", "NEUTRAL"], "note": "200 is the threshold, not the AI's value; was falsely CONTRADICTED"},
+        {"find": "Cholesterol/HDL ratio of 5.9", "accept": ["VERIFIED"]},
+        {"find": "right on the borderline of the recommended limit", "accept": ["NEUTRAL", "UNVERIFIABLE"], "note": "report prints <150, so 150 is above; AI makes no direct status claim"},
+        {"find": "118 indicates impaired fasting glucose", "accept": ["OVERSTEPS"]},
+        {"find": "blood sugar over the last 3 months", "accept": ["NEUTRAL", "VERIFIED"], "note": "'3 months' is a time span, not a value; was falsely CONTRADICTED"},
+        {"find": "Normal is under 5.7%", "accept": ["VERIFIED", "NEUTRAL"]},
+        {"find": "Prediabetes is between 5.7% and 6.4%", "accept": ["RANGE_NOT_FROM_REPORT"]},
+        {"find": "Diabetes is typically diagnosed at 6.5%", "accept": ["RANGE_NOT_FROM_REPORT", "OVERSTEPS"]},
+        {"find": "upper limit of prediabetes", "accept": ["OVERSTEPS"]},
+        {"find": "metabolic syndrome", "accept": ["OVERSTEPS"]},
+        {"find": "critical window where diet changes", "accept": ["OVERSTEPS"]}
+      ]
+    },
+    {
+      "report": "samples/03_lft_kft.txt",
+      "ai": "samples/ai/03_lft_kft__chatbot_real.txt",
+      "expect_omissions": [],
+      "forbid_omissions": ["Bilirubin, Direct", "Bilirubin, Indirect"],
+      "cases": [
+        {"find": "point to mild stress on the liver", "accept": ["OVERSTEPS"]},
+        {"find": "ALT is an enzyme found primarily", "accept": ["VERIFIED"]},
+        {"find": "commonly from fatty liver", "accept": ["OVERSTEPS"]},
+        {"find": "An ALT of 62 is mildly elevated", "accept": ["VERIFIED"]},
+        {"find": "absolute upper limit of normal (40)", "accept": ["VERIFIED"]},
+        {"find": "normal breakdown of red blood cells", "accept": ["VERIFIED", "NEUTRAL"], "note": "'normal breakdown' is descriptive, not a status claim; was falsely CONTRADICTED"},
+        {"find": "All three markers are slightly above", "accept": ["VERIFIED"], "note": "the three are Total/Direct/Indirect from the bullet lead"},
+        {"find": "processing this pigment a bit sluggishly", "accept": ["OVERSTEPS"]},
+        {"find": "does not specify the patient's biological sex", "accept": ["VERIFIED", "NEUTRAL"]},
+        {"find": "perfectly normal for a male (range 10-71)", "accept": ["VERIFIED", "UNVERIFIABLE"]},
+        {"find": "measures how efficiently the kidneys", "accept": ["VERIFIED"]},
+        {"find": "A healthy adult typically has a score of 90", "accept": ["VERIFIED", "NEUTRAL", "UNVERIFIABLE"], "note": "matches the printed >= 90; was OVERSTEPS"},
+        {"find": "indicates mildly decreased kidney function", "accept": ["OVERSTEPS"]},
+        {"find": "The value of 7.4 is above the normal limit (for both", "accept": ["VERIFIED"], "note": "7.4 is above BOTH printed ranges (M 3.4-7.0, F 2.4-5.7), so the report does settle it"},
+        {"find": "causing gout", "accept": ["OVERSTEPS"]},
+        {"find": "normal for a male (range 0.7-1.3)", "accept": ["VERIFIED", "UNVERIFIABLE"], "note": "subject is Serum Creatinine (bullet lead), not GGT; both ranges ARE printed on the report; was falsely RANGE_NOT_FROM_REPORT"},
+        {"find": "functions of these organs are intact", "accept": ["OVERSTEPS"]},
+        {"find": "A doctor would typically look at these", "accept": ["NEUTRAL"]}
+      ]
+    },
+    {
+      "report": "samples/07_missing_ranges.txt",
+      "ai": "samples/ai/07_missing_ranges__chatbot_real.txt",
+      "expect_omissions": [],
+      "cases": [
+        {"find": "markers are perfectly healthy", "accept": ["OVERSTEPS"]},
+        {"find": "using standard clinical reference ranges for the missing values", "accept": ["RANGE_NOT_FROM_REPORT"], "note": "the AI says outright it is importing outside ranges"},
+        {"find": "Elevated CRP (4.2 mg/L)", "accept": ["UNVERIFIABLE"]},
+        {"find": "Standard ranges usually prefer this value to be under 3.0", "accept": ["RANGE_NOT_FROM_REPORT", "OVERSTEPS"]},
+        {"find": "mild level of systemic inflammation", "accept": ["OVERSTEPS"]},
+        {"find": "lists two different fasting blood sugar values", "accept": ["VERIFIED", "NEUTRAL"]},
+        {"find": "reading is completely normal", "accept": ["UNVERIFIABLE"], "note": "the 98 row has no printed range"},
+        {"find": "early prediabetes category", "accept": ["OVERSTEPS"]},
+        {"find": "a doctor would likely look at an HbA1c test", "accept": ["NEUTRAL"], "note": "suggests a test; '3-month' is a time span; was falsely NOT_IN_REPORT"},
+        {"find": "no B12 or iron deficiency anemia", "accept": ["OVERSTEPS"]},
+        {"find": "well-balanced and normal", "accept": ["UNVERIFIABLE"]},
+        {"find": "healthy kidney filtration", "accept": ["OVERSTEPS"]},
+        {"find": "no active Hepatitis B infection", "accept": ["OVERSTEPS"]}
+      ]
+    }
+  ]
+}
