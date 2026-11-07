@@ -649,3 +649,32 @@ def test_test_purpose_and_condition_word_definitions_are_not_oversteps(ai):
                                 "These results suggest mild anemia, which means fewer red cells."])
 def test_interpretations_with_a_trailing_definition_are_still_oversteps(ai):
     assert verify(REPORT, ai).sentences[0].label == "OVERSTEPS"
+
+
+# ---------------------------------------------------------------- held-out round 1, step 1: markdown tables
+def test_markdown_table_rows_are_structured_claims():
+    report = (SAMPLES / "04_thyroid_urine.txt").read_text()
+    ai = ("| Test | Your result | Reference range | Interpretation |\n| --- | --- | --- | --- |\n"
+          "| TSH | \\<0.01 | 0.27–4.20 | Very low |\n| Total T4 | 9.8 | 5.1–14.1 | High |\n"
+          "| Pus cells | 6–8 /hpf | | Slightly above normal |")
+    r = verify(report, ai)
+    rows = {s.text.split("|")[1].strip(): s for s in r.sentences}
+    assert rows["Test"].label == "NEUTRAL" and "---" not in " ".join(rows)          # header; separator skipped
+    tsh = rows["TSH"]
+    assert tsh.label == "VERIFIED" and {f.kind for f in tsh.findings} >= {"value", "range", "status"}
+    assert rows["Total T4"].label == "CONTRADICTED"                                  # 9.8 is within, not high
+    assert [f.label for f in rows["Pus cells"].findings if f.kind == "value"] == ["VERIFIED"]   # span value
+
+
+def test_columns_are_mapped_by_header_words_not_position():
+    report = (SAMPLES / "04_thyroid_urine.txt").read_text()
+    ai = "| Interpretation | Reference | Parameter | Value |\n|---|---|---|---|\n| High | 0.93–1.70 | Free T4 | 2.1 |"
+    s = verify(report, ai).sentences[-1]
+    assert s.label == "VERIFIED" and len([f for f in s.findings if f.kind != "mention"]) == 3
+
+
+def test_censored_value_after_the_test_name_is_a_value_not_a_range():
+    report = (SAMPLES / "04_thyroid_urine.txt").read_text()
+    s = verify(report, "- **TSH \\<0.01:** Your TSH is very suppressed.").sentences[0]
+    assert [f.kind for f in s.findings if f.label != "NEUTRAL"] == ["value"]
+    assert s.findings[0].label == "VERIFIED"

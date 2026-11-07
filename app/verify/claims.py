@@ -42,11 +42,15 @@ def split_sentences(text: str) -> list[Span]:
     """Sentence spans. Never splits on a decimal (11.2), inside parentheses, or after an abbreviation
     (E.S.R., Dr., Mrs., i.e., e.g., No., a single capital letter like 'A.'). Newlines always split."""
     cuts, depth, i, n = [], 0, 0, len(text)
+    in_table = text.lstrip(" \t").startswith("|")
     while i < n:
         ch = text[i]
         if ch == "\n":
             depth = 0
             cuts.append(i + 1)
+            in_table = text[i + 1:].lstrip(" \t").startswith("|")    # a markdown table row stays one sentence
+        elif in_table:
+            pass
         elif ch in "([":
             depth += 1
         elif ch in ")]":
@@ -506,6 +510,117 @@ def _is_status_claim(text: str, s: int, e: int, before: str) -> bool:
     return True
 
 
+# ---------------------------------------------------------------- markdown tables
+TABLE_ROLES = [
+    ("reference", re.compile(r"\b(?:reference|range|normal|ref|interval|limits?)\b", re.I)),
+    ("result", re.compile(r"\b(?:result|results|value|values|level|reading)\b", re.I)),
+    ("test", re.compile(r"\b(?:test|tests|parameter|investigation|marker|analyte|name|organ)\b", re.I)),
+    ("interp", re.compile(r"\b(?:interpretation|finding|findings|assessment|status|flag|meaning|comment)\b", re.I)),
+]
+SEPARATOR_ROW = re.compile(r"^\s*\|?\s*:?-{2,}:?\s*(?:\|\s*:?-{2,}:?\s*)*\|?\s*$")
+CELL_LOW = re.compile(r"\b(?:very\s+low|low|lower|below|decreased|reduced|suppressed|deficient)\b", re.I)
+CELL_HIGH = re.compile(r"\b(?:very\s+high|high|higher|elevated|raised|increased|above)\b", re.I)
+CELL_NORMAL = re.compile(r"^\W*(?:normal|desirable|acceptable|adequate|optimal|within(?:\s+range)?|negative|non-?reactive)\b",
+                         re.I)
+CELL_VALUE = re.compile(rf"^(?P<cmp><=|>=|≤|≥|<|>)?\s*(?P<num>{N})(?:\s*[-–]\s*(?P<hi>{N}))?\s*(?P<unit>[^\s].*)?$")
+
+
+def _cells(text: str, a: int, b: int) -> list[tuple[int, int]]:
+    """Content spans of the cells of a '| a | b |' row (absolute, stripped)."""
+    line = text[a:b]
+    bars = [i for i, ch in enumerate(line) if ch == "|"]
+    out = []
+    for x, y in zip(bars, bars[1:]):
+        seg = line[x + 1:y]
+        lead = len(seg) - len(seg.lstrip())
+        body = seg.strip()
+        out.append((a + x + 1 + lead, a + x + 1 + lead + len(body)))
+    return out
+
+
+def parse_tables(text: str) -> dict[int, dict]:
+    """line start -> {"kind": "header"|"separator"|"row", "roles": {role: [cell spans]}} for markdown tables."""
+    out: dict[int, dict] = {}
+    pos, roles = 0, None
+    for line in text.split("\n"):
+        a, b = pos, pos + len(line)
+        pos = b + 1
+        if not line.lstrip(" \t").startswith("|"):
+            roles = None
+            continue
+        if SEPARATOR_ROW.match(line):
+            out[a] = {"kind": "separator"}
+            continue
+        cells = _cells(text, a, b)
+        if roles is None:                         # the first row of a table is its header
+            roles = []
+            for cs, ce in cells:
+                h = text[cs:ce]
+                roles.append(next((r for r, rx in TABLE_ROLES if rx.search(h)), "other"))
+            if "test" not in roles and roles:
+                roles[0] = "test"                     # first column names the row
+            out[a] = {"kind": "header"}
+            continue
+        mapped: dict[str, list] = {}
+        for i, span in enumerate(cells):
+            mapped.setdefault(roles[i] if i < len(roles) else "other", []).append(span)
+        out[a] = {"kind": "row", "roles": mapped}
+    return out
+
+
+def _cell_status(cell: str) -> Optional[str]:
+    if re.search(r"\b(?:not|no|n't)\b", cell, re.I):
+        return None
+    lo, hi = CELL_LOW.search(cell), CELL_HIGH.search(cell)
+    if lo or hi:
+        return "LOW" if lo and (not hi or lo.start() < hi.start()) else "HIGH"
+    return "NORMAL" if CELL_NORMAL.match(cell) else None
+
+
+def _table_row_claims(text: str, row: dict) -> tuple[list[Mention], list[Claim]]:
+    """One row = one claim set, from explicit cells: value, printed range and status."""
+    gl = load_glossary()
+    roles = row["roles"]
+    test_cells = roles.get("test", [])
+    if not test_cells:
+        return [], []
+    ts, te = test_cells[0]
+    hits = [t for t in find_terms(text[ts:te]) if t.term_id not in PANEL_IDS and
+            (gl.get(t.term_id, {}).get("kind", "test") == "test" or gl.get(t.term_id, {}).get("possibilities"))]
+    if not hits:
+        return [], []
+    t = hits[0]
+    m = Mention(term_id=t.term_id, term=t.term, span=_sp(text, ts + t.span.start, ts + t.span.end))
+    base = dict(term_id=m.term_id, term=m.term, mention=m.span)
+    claims: list[Claim] = []
+    value_cells = roles.get("result", []) + [c for c in roles.get("interp", []) if CELL_VALUE.match(text[c[0]:c[1]])]
+    for cs, ce in value_cells:
+        vm = CELL_VALUE.match(text[cs:ce])
+        if not vm:
+            continue
+        unit = (vm["unit"] or "").strip() or None
+        if unit and not UNIT_WORDS.match(unit.replace(" ", "")):
+            unit = None
+        claims.append(Claim(kind="value", span=_sp(text, cs, ce), value=parse_number(vm["num"]),
+                            value_high=parse_number(vm["hi"]) if vm["hi"] else None, value_raw=text[cs:ce],
+                            unit=unit, **base))
+        break
+    for cs, ce in roles.get("reference", []):
+        r = parse_range(text[cs:ce])
+        if r.kind != "unparseable":
+            claims.append(Claim(kind="range", span=_sp(text, cs, ce), range=r, **base))
+    for cs, ce in roles.get("interp", []):
+        st = _cell_status(text[cs:ce])
+        if st and not CELL_VALUE.match(text[cs:ce]):
+            claims.append(Claim(kind="status", span=_sp(text, cs, ce), status=st, **base))
+            break
+    return [m], claims
+
+
+# a censored value right after the test name is the AI's value, not a range: "TSH <0.01: ..."
+LEAD_CENSORED = re.compile(rf"^\s*(?:[:=]|is|of|at|was|=)?\s*(?P<cmp><=|>=|≤|≥|<|>)\s*(?P<num>{N})(?![\d.])")
+
+
 DOSE_AFTER = re.compile(r"\s*(?:mg|mcg|µg|iu|tablets?|tabs?|capsules?|drops?)(?![/\w])", re.I)
 
 
@@ -563,6 +678,12 @@ def _segment_claims(text: str, m: Mention, a: int, b: int, sent_start: int) -> l
         return all(e <= us or s >= ue for us, ue in used)
 
     base = dict(term_id=m.term_id, term=m.term, mention=m.span)
+    lc = LEAD_CENSORED.match(seg)
+    if lc and not RANGE_CUE.search(text[sent_start:a]):
+        vs, ve = lc.start("cmp"), lc.end("num")
+        claims.append(Claim(kind="value", span=_sp(text, a + vs, a + ve), value=parse_number(lc["num"]),
+                            value_raw=seg[vs:ve], **base))
+        used.append((vs, ve))
     # ranges first (their numbers must not be read as values)
     for im in INTERVAL_RE.finditer(seg):
         before = text[sent_start:a + im.start()]
@@ -644,6 +765,7 @@ MD_PATTERNS = [
     re.compile(r"(?<![\w*])\*(?=\S)|(?<=\S)\*(?![\w*])"),        # *italic*
     re.compile(r"(?<![\w_])_(?=\S)|(?<=\S)_(?![\w_])"),           # _italic_ (never inside snake_case)
     re.compile(r"`+"),                                         # `code`
+    re.compile(r"\\(?=[^\w\s])"),                                # escapes: "\<0.01", "1\."
 ]
 
 
@@ -686,6 +808,7 @@ def _extract(text: str, original: str) -> list[SentenceClaims]:
     heading_tests: dict[str, set] = {}
     bullet_line, lead_mentions, lead_done, lead_word = -1, [], False, None
     prev_lead: list[Mention] = []            # the last bullet lead, for follow-on bullets that name no test
+    tables = parse_tables(text)
     for sp in split_sentences(text):
         sc = SentenceClaims(span=sp)
         ms = [m for m in mentions_all if sp.start <= m.span.start and m.span.end <= sp.end]
@@ -694,6 +817,15 @@ def _extract(text: str, original: str) -> list[SentenceClaims]:
         line_end = text.find("\n", sp.end)
         line_end = len(text) if line_end == -1 else line_end
         whole_line = original[line_start:line_end]                 # with its markdown (bullets, **bold**)
+        trow = tables.get(line_start)
+        if trow:                                   # markdown table: header/separator rows are not claims
+            if trow["kind"] == "row":
+                sc.mentions, sc.claims = _table_row_claims(text, trow)
+                for cat, why in find_oversteps(text[sp.start:sp.end],
+                                               [(m.span.start - sp.start, m.span.end - sp.start) for m in sc.mentions]):
+                    sc.claims.append(Claim(kind="overstep", span=sp, overstep=cat, detail=why))
+            out.append(sc)
+            continue
         hg = _heading_group(text[line_start:line_end]) if text[line_start:line_end].strip() == sp.text else None
         if hg:
             heading = hg

@@ -123,6 +123,8 @@ def _same(a: float, b: float) -> bool:
 
 def _ranges_equal(ai: ReferenceRange, rep: ReferenceRange) -> bool:
     """Same kind and same bounds. Inclusive/exclusive wording differences are tolerated."""
+    if ai.kind == "multi":                 # "Men >40": each labelled range the AI quotes must be printed
+        return bool(ai.alternatives) and all(_ranges_equal(alt.range, rep) for alt in ai.alternatives)
     if rep.kind == "multi":
         return any(_ranges_equal(ai, alt.range) for alt in rep.alternatives)
     if ai.kind != rep.kind:
