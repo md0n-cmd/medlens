@@ -403,7 +403,49 @@ def _segment_claims(text: str, m: Mention, a: int, b: int, sent_start: int) -> l
     return claims
 
 
+MD_PATTERNS = [
+    re.compile(r"^[ \t]*#{1,6}[ \t]+", re.M),                   # headings
+    re.compile(r"^[ \t]*(?:[*\-+•·])[ \t]+", re.M),             # bullet markers
+    re.compile(r"\*\*|__"),                                   # bold
+    re.compile(r"(?<![\w*])\*(?=\S)|(?<=\S)\*(?![\w*])"),        # *italic*
+    re.compile(r"(?<![\w_])_(?=\S)|(?<=\S)_(?![\w_])"),           # _italic_ (never inside snake_case)
+    re.compile(r"`+"),                                         # `code`
+]
+
+
+def strip_markdown(text: str) -> str:
+    """Replace markdown markup with spaces of the same length, so every offset in the cleaned text
+    is the same offset in the original (the offset map is the identity)."""
+    out = text
+    for rx in MD_PATTERNS:
+        out = rx.sub(lambda m: " " * len(m.group(0)), out)
+    assert len(out) == len(text)
+    return out
+
+
+def _resync(spans: list[Span], original: str) -> None:
+    for sp in spans:
+        sp.text = original[sp.start:sp.end]
+
+
 def extract(text: str) -> list[SentenceClaims]:
+    """Claims are found on markdown-free text; structure (headings, bullets, bold leads) is read from the
+    original; every span's text is re-sliced from the original at the end."""
+    original, text = text, strip_markdown(text)
+    out = _extract(text, original)
+    spans: list[Span] = []
+    for sc in out:
+        spans.append(sc.span)
+        spans += [m.span for m in sc.mentions]
+        for c in sc.claims:
+            spans.append(c.span)
+            if c.mention:
+                spans.append(c.mention)
+    _resync(spans, original)
+    return out
+
+
+def _extract(text: str, original: str) -> list[SentenceClaims]:
     mentions_all = _test_mentions(text)
     out: list[SentenceClaims] = []
     heading: Optional[str] = None
@@ -414,8 +456,9 @@ def extract(text: str) -> list[SentenceClaims]:
         sc.mentions = ms
         line_start = text.rfind("\n", 0, sp.start) + 1
         line_end = text.find("\n", sp.end)
-        whole_line = text[line_start:len(text) if line_end == -1 else line_end]
-        hg = _heading_group(whole_line) if whole_line.strip() == sp.text else None
+        line_end = len(text) if line_end == -1 else line_end
+        whole_line = original[line_start:line_end]                 # with its markdown (bullets, **bold**)
+        hg = _heading_group(text[line_start:line_end]) if text[line_start:line_end].strip() == sp.text else None
         if hg:
             heading = hg
             heading_tests.setdefault(hg, set())

@@ -12,7 +12,7 @@ from app.parser.ranges import units_compatible
 from app.safety import is_safe
 from app.pipeline import analyze
 from app.glossary.matcher import load_glossary
-from app.verify.claims import GROUPS, Claim, extract
+from app.verify.claims import GROUPS, Claim, extract, strip_markdown
 from app.verify.names import names_match
 
 Label = Literal["VERIFIED", "CONTRADICTED", "RANGE_NOT_FROM_REPORT", "OVERSTEPS", "NOT_IN_REPORT",
@@ -153,7 +153,8 @@ def _unsettled_reason(v: LabValue) -> str:
 def _check_claim(c: Claim, text: str, rows: list[LabValue], value_row: Optional[LabValue]) -> Finding:
     span = c.span
     if c.kind == "overstep":
-        phrase = c.detail if c.detail and c.detail.lower() in span.text.lower() else ""
+        norm = lambda x: re.sub(r"\s+", " ", strip_markdown(x)).strip().lower()  # noqa: E731
+        phrase = re.sub(r"\s+", " ", c.detail).strip() if c.detail and norm(c.detail) in norm(span.text) else ""
         why = OVERSTEP_KIND[c.overstep]
         if phrase and is_safe(phrase):
             why = why.format(p=phrase)

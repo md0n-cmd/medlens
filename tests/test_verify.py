@@ -362,3 +362,24 @@ def test_heading_bullets_define_the_group_for_a_generic_summary():
     ai = "**Thyroid Profile**\n* TSH: 2.85 µIU/mL\n\nThey are all within normal ranges."
     r = verify(THYROID_OK, ai)
     assert group_finding(r, len(r.sentences) - 1).label == "VERIFIED"
+
+
+# ---------------------------------------------------------------- real-world test 2: markdown
+def test_markdown_is_stripped_for_extraction_but_spans_point_into_the_original():
+    ai = "* **Low Hemoglobin (11.2 g/dL):** Because it is below the range, this points to **mild anemia**."
+    r = verify(REPORT, ai)
+    s = r.sentences[0]
+    assert s.label == "OVERSTEPS"
+    over = next(f for f in s.findings if f.kind == "overstep")
+    assert "points to mild anemia" in over.message
+    for f in s.findings:
+        assert ai[f.ai_span.start:f.ai_span.end] == f.ai_span.text
+    val = next(f for f in s.findings if f.kind == "value")
+    assert val.label == "VERIFIED" and val.ai_span.text == "11.2 g/dL"
+
+
+def test_strip_markdown_keeps_length_and_offsets():
+    from app.verify.claims import strip_markdown
+    t = "# Title\n* **bold** _it_ `code` *em* snake_case 2*3"
+    c = strip_markdown(t)
+    assert len(c) == len(t) and "snake_case" in c and "2*3" in c and "*" not in c.replace("2*3", "")

@@ -50,7 +50,7 @@ def test_normal_thyroid_function_is_an_overstep():
 
 
 def test_total_cholesterol_verified_and_not_omitted():
-    s = sentence("* Total Cholesterol: 212 mg/dL")
+    s = sentence("Total Cholesterol: 212 mg/dL")         # bullet marker is markup, not part of the sentence
     assert s.label == "VERIFIED"
     assert "Cholesterol, Total" not in {o.test_name for o in R.omissions}
 
