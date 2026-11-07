@@ -1,0 +1,41 @@
+SYNTHETIC AI EXPLANATION (chatbot style) of sample 10_lipid_thyroid_lft_cbc. Not real advice.
+
+Here's a breakdown of your lab report, section by section.
+
+**Liver Function Tests (LFT)**
+* Bilirubin Total: 0.62 mg/dL (Reference: 0.30 - 1.20 mg/dL)
+* SGOT (AST): 28 U/L (Reference: <40 U/L)
+* SGPT (ALT): 31 U/L (Reference: <45 U/L)
+* Total Protein: 6.33 g/dL (Reference: 6.40 - 8.30 g/dL)
+* Albumin: 4.20 g/dL (Reference: 3.50 - 5.20 g/dL)
+
+Liver enzymes and proteins are all within normal ranges, indicating healthy liver function.
+
+**Lipid Profile**
+* Total Cholesterol: 212 mg/dL (Reference: <200 mg/dL), slightly high.
+* Triglycerides: 168 mg/dL (Reference: <150 mg/dL), elevated.
+* HDL Cholesterol: 41 mg/dL (Reference: >40 mg/dL)
+* LDL Cholesterol: 137.4 mg/dL (Reference: <100 mg/dL), above the desirable level.
+* VLDL Cholesterol: 33.6 mg/dL (Reference: <30 mg/dL)
+
+These results indicate dyslipidemia.
+
+**Blood Sugar**
+* Fasting Plasma Glucose: 92 mg/dL (Reference: 70 - 100 mg/dL), within range.
+
+**Thyroid Profile**
+* Total T3: 1.12 ng/mL (Reference: 0.80 - 2.00 ng/mL)
+* Total T4: 7.40 µg/dL (Reference: 5.10 - 14.10 µg/dL)
+* TSH: 2.85 µIU/mL (Reference: 0.27 - 4.20 µIU/mL)
+
+Your thyroid hormones are within standard reference intervals, indicating normal thyroid function.
+
+**Complete Blood Count (CBC)**
+* Hemoglobin: 14.6 g/dL (Reference: 13.0 - 17.0 g/dL)
+* RDW-CV: 14.3% (Reference: 11.6 - 14.0%)
+* Platelet Count: 245 thou/mm3 (Reference: 150 - 410 thou/mm3)
+
+Your blood counts are healthy and all within normal ranges.
+
+**ESR**
+* E.S.R. (Erythrocyte Sedimentation Rate): 19 mm/hr (Reference: 0 - 15 mm/hr), which is slightly elevated.

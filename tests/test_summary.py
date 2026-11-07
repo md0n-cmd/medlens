@@ -23,8 +23,8 @@ def test_summary_matches_extracted_values(name):
 @pytest.mark.parametrize("name", NAMES)
 def test_summary_never_contains_patient_name(name):
     s = analyze((SAMPLES / name).read_text()).structured_summary
-    dumped = s.model_dump_json()
-    assert "Test Patient" not in dumped and "Patient Name" not in dumped
+    dumped = s.model_dump_json().lower()
+    assert "test patient" not in dumped and "patient name" not in dumped
 
 
 @pytest.mark.parametrize("name", NAMES)

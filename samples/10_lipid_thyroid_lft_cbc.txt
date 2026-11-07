@@ -1,0 +1,92 @@
+*** SYNTHETIC SAMPLE — not real patient data ***
+NORTHSTAR PATH LABS (fictional lab) · Regional Reference Laboratory
+Name       : Mr. TEST PATIENT J                 Age    : 38 Years      Gender : Male
+Lab No.    : 000000000                          Ref By : Dr. EXAMPLE DOCTOR
+Collected  : 05/11/2026 08:10                   Reported : 05/11/2026 14:20
+Page 1 of 3
+------------------------------------------------------------------------------------
+Test Name                          Results      Units         Bio. Ref. Interval
+------------------------------------------------------------------------------------
+LIVER & KIDNEY PANEL, SERUM
+Bilirubin Total                    0.62         mg/dL         0.30 - 1.20
+Bilirubin Direct                   0.18         mg/dL         < 0.30
+Bilirubin Indirect                 0.44         mg/dL         < 1.10
+SGOT / AST                         28.0         U/L           < 40
+SGPT / ALT                         31.0         U/L           < 45
+Alkaline Phosphatase               84.0         U/L           30 - 120
+GGTP                               22.0         U/L           < 55
+Total Protein                      6.33         g/dL          6.40 - 8.30
+Albumin                            4.20         g/dL          3.50 - 5.20
+Globulin                           2.13         gm/dL         2.0 - 3.5
+A : G Ratio                        1.97                       0.90 - 2.00
+Creatinine                         0.92         mg/dL         0.70 - 1.30
+Urea                               24.0         mg/dL         13.0 - 43.0
+Uric Acid                          5.6          mg/dL         3.5 - 7.2
+Sodium                             140          mEq/L         136 - 146
+Potassium                          4.3          mEq/L         3.5 - 5.1
+
+LIPID SCREEN, SERUM
+Cholesterol, Total                 212.00       mg/dL         < 200.00
+Triglycerides                      168.00       mg/dL         < 150.00
+HDL Cholesterol                    41.00        mg/dL         > 40.00
+LDL Cholesterol,Calculated         137.40       mg/dL         < 100.00
+VLDL Cholesterol,Calculated        33.60        mg/dL         < 30.00
+Non-HDL Cholesterol                171.00       mg/dL         < 130.00
+
+Interpretation
+| REMARKS          | TOTAL CHOLESTEROL | TRIGLYCERIDE | LDL CHOLESTEROL |
+Optimal              < 200               < 150          < 100
+Near optimal         -                   -              100 - 129
+Borderline High      200 - 239           150 - 199      130 - 159
+High                 >= 240              200 - 499      160 - 189
+Very High            -                   >= 500         >= 190
+
+Risk Category
+Extreme risk group       LDL-C  < 50
+Very high risk group     LDL-C  < 70
+High risk group          LDL-C  < 100
+Moderate risk group      LDL-C  < 100
+Low risk group           LDL-C  < 130
+Note: Measurements in the same patient can show physiological and analytical variations.
+
+Page 2 of 3
+------------------------------------------------------------------------------------
+Test Name                          Results      Units         Bio. Ref. Interval
+------------------------------------------------------------------------------------
+GLUCOSE FASTING (F), PLASMA        92.00        mg/dL         70.00 - 100.00
+
+THYROID PROFILE, TOTAL, SERUM
+T3, Total                          1.12         ng/mL         0.80 - 2.00
+T4, Total                          7.40         µg/dL         5.10 - 14.10
+TSH                                2.85         µIU/mL        0.27 - 4.20
+Note
+TSH reference ranges in pregnancy
+1st Trimester                      0.100 - 2.500
+2nd Trimester                      0.200 - 3.000
+3rd Trimester                      0.300 - 3.000
+
+COMPLETE BLOOD COUNT;CBC
+Hemoglobin                         14.6         g/dL          13.00 - 17.00
+Packed Cell Volume (PCV)           44.1         %             40.00 - 50.00
+RBC Count                          4.92         mill/mm3      4.50 - 5.50
+MCV                                89.6         fL            83.00 - 101.00
+MCH                                29.7         pg            27.00 - 32.00
+MCHC                               33.1         g/dL          31.50 - 34.50
+Red Cell Distribution Width (RDW-CV)  14.3      %             11.60 - 14.00
+Total Leukocyte Count (TLC)        6.80         thou/mm3      4.00 - 10.00
+Segmented Neutrophils              58.0         %             40.00 - 80.00
+Lymphocytes                        32.0         %             20.00 - 40.00
+Monocytes                          6.0          %             2.00 - 10.00
+Eosinophils                        3.0          %             1.00 - 6.00
+Basophils                          1.0          %             < 2.00
+Platelet Count                     245          thou/mm3      150.00 - 410.00
+
+Page 3 of 3
+------------------------------------------------------------------------------------
+Test Name                          Results      Units         Bio. Ref. Interval
+------------------------------------------------------------------------------------
+ERYTHROCYTE SEDIMENTATION RATE (ESR), WHOLE BLOOD
+E.S.R                              19           mm/hr         0 - 15
+
+Dr. EXAMPLE PATHOLOGIST, MD (Pathology)
+*** End of synthetic report ***

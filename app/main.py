@@ -80,9 +80,11 @@ def verify_endpoint(req: VerifyRequest) -> VerifyResult:
 @app.get("/api/ai-samples")
 def ai_samples() -> list[dict]:
     out = []
+    stems = [p.stem for p in sorted(SAMPLES.glob("*.txt"))]
     for p in sorted((SAMPLES / "ai").glob("*.txt")):
-        report_id, kind = p.stem.split("__")
-        label = "correct" if kind == "correct" else "with errors"
+        prefix, kind = p.stem.split("__")
+        report_id = prefix if prefix in stems else next((s for s in stems if s.startswith(prefix + "_")), prefix)
+        label = {"correct": "correct", "realistic": "chatbot style, with errors"}.get(kind, "with errors")
         out.append({"id": p.stem, "report_id": report_id, "kind": kind,
                     "title": f"Sample AI explanation ({label}) · {report_id.replace('_', ' ').title()}",
                     "text": p.read_text(encoding="utf-8")})

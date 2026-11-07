@@ -12,9 +12,14 @@ ROOT = Path(__file__).resolve().parent.parent
 SAMPLES, AI = ROOT / "samples", ROOT / "samples" / "ai"
 
 
+def report_for(name):
+    prefix = name.split("__")[0]
+    exact = SAMPLES / f"{prefix}.txt"
+    return exact if exact.exists() else next(SAMPLES.glob(f"{prefix}_*.txt"))
+
+
 def run(name):
-    report = name.split("__")[0]
-    return verify((SAMPLES / f"{report}.txt").read_text(), (AI / f"{name}.txt").read_text())
+    return verify(report_for(name).read_text(), (AI / f"{name}.txt").read_text())
 
 
 def sentence(res, starts):
@@ -200,7 +205,8 @@ def test_api_verify_is_rate_limited():
 
 def test_api_ai_samples_listed():
     s = client.get("/api/ai-samples").json()
-    assert len(s) == 5 and sum(x["kind"] == "correct" for x in s) == 1
+    assert len(s) == 6 and sum(x["kind"] == "correct" for x in s) == 1
+    assert {x["report_id"] for x in s} <= {p.stem for p in SAMPLES.glob("*.txt")}       # every AI sample has its report
     assert all("SYNTHETIC AI EXPLANATION" in x["text"] for x in s)
 
 
