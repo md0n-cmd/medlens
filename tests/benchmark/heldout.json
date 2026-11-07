@@ -1,0 +1,89 @@
+{
+  "_about": "HELD-OUT set: real chatbot answers (a different, 'worried patient' style with markdown tables, symptom lists and follow-up questions) about SYNTHETIC samples 04, 05, 06. Hand-labelled. Score once BEFORE any change and commit that number. After tuning on these, they stop being held-out: a new held-out set is needed.",
+  "files": [
+    {
+      "report": "samples/04_thyroid_urine.txt",
+      "ai": "samples/ai/heldout/04_thyroid_urine__chatbot_heldout.txt",
+      "expect_omissions": [],
+      "cases": [
+        {"find": "nothing here automatically means something dangerous", "accept": ["OVERSTEPS"]},
+        {"find": "your thyroid may be overactive", "accept": ["OVERSTEPS"]},
+        {"find": "Total T3 | 1.10", "accept": ["VERIFIED"]},
+        {"find": "0.27–4.20 | Very low", "accept": ["VERIFIED"], "note": "table row: value <0.01, range 0.27–4.20; was CONTRADICTED (columns swapped)"},
+        {"find": "Free T4 | 2.1 | 0.93–1.70 | High", "accept": ["VERIFIED"]},
+        {"find": "Your TSH is significantly suppressed", "accept": ["VERIFIED", "NEUTRAL"], "note": "<0.01 is the value, not a range; was RANGE_NOT_FROM_REPORT"},
+        {"find": "higher than the normal range", "accept": ["VERIFIED"]},
+        {"find": "overt hyperthyroidism", "accept": ["OVERSTEPS"]},
+        {"find": "producing more thyroid hormone than your body needs", "accept": ["OVERSTEPS"]},
+        {"find": "rather than assuming it is Graves", "accept": ["NEUTRAL", "OVERSTEPS"]},
+        {"find": "Don't start thyroid medication or supplements without medical advice", "accept": ["NEUTRAL"], "note": "a caution that defers to a doctor, not treatment advice"},
+        {"find": "seek urgent medical care", "accept": ["NEUTRAL"]},
+        {"find": "Below 20: Low", "accept": ["RANGE_NOT_FROM_REPORT"], "note": "report prints NO range for Vitamin D"},
+        {"find": "30 or above: Adequate", "accept": ["RANGE_NOT_FROM_REPORT"]},
+        {"find": "Your level is low and worth addressing", "accept": ["UNVERIFIABLE"]},
+        {"find": "Most of your urine results look normal", "accept": ["NEUTRAL", "UNVERIFIABLE", "VERIFIED"], "note": "'most' is not 'all'; was CONTRADICTED"},
+        {"find": "6–8 /hpf | Slightly above normal", "accept": ["VERIFIED"]},
+        {"find": "urinary tract infection (UTI)", "accept": ["OVERSTEPS"]},
+        {"find": "temporarily due to dehydration", "accept": ["OVERSTEPS"]},
+        {"find": "This is reassuring.", "accept": ["OVERSTEPS"]},
+        {"find": "does not establish whether you have immunity", "accept": ["NEUTRAL", "OVERSTEPS"]},
+        {"find": "elevated Free T4 is suggestive of an overactive thyroid", "accept": ["OVERSTEPS"], "note": "'elevated' belongs to Free T4, not TSH; was CONTRADICTED"},
+        {"find": "It is generally treatable", "accept": ["OVERSTEPS"]},
+        {"find": "Have you ever been diagnosed with a thyroid problem", "accept": ["NEUTRAL"], "note": "a question to the user is not a claim"}
+      ]
+    },
+    {
+      "report": "samples/06_age_bands.txt",
+      "ai": "samples/ai/heldout/06_age_bands__chatbot_heldout.txt",
+      "expect_omissions": [],
+      "cases": [
+        {"find": "Don't worry.", "accept": ["OVERSTEPS"]},
+        {"find": "nothing here immediately suggests a serious problem", "accept": ["OVERSTEPS"]},
+        {"find": "which may indicate an underactive thyroid", "accept": ["OVERSTEPS"]},
+        {"find": "TSH | 5.2 | 0.4–4.0 | Slightly elevated", "accept": ["VERIFIED"]},
+        {"find": "This pattern can suggest", "accept": ["OVERSTEPS"]},
+        {"find": "thyroid hormone levels are currently within the normal range", "accept": ["VERIFIED", "UNVERIFIABLE", "NEUTRAL"], "note": "thyroid HORMONES = T3/T4, not TSH; was CONTRADICTED"},
+        {"find": "starting to function less efficiently", "accept": ["OVERSTEPS"]},
+        {"find": "after approximately 2–3 months", "accept": ["NEUTRAL"], "note": "time span; was CONTRADICTED"},
+        {"find": "45 mg/dL | Men", "accept": ["UNVERIFIABLE"], "note": "KEY: report prints Men >40 | Women >50 and no sex; the AI ASSUMED male. Was VERIFIED"},
+        {"find": "HDL (good cholesterol): 45", "accept": ["VERIFIED", "NEUTRAL"], "note": "'(good cholesterol)' is not Total Cholesterol; was CONTRADICTED"},
+        {"find": "For women, above 50 is generally preferred", "accept": ["VERIFIED", "NEUTRAL"]},
+        {"find": "Desirable by the standard adult cutoff", "accept": ["UNVERIFIABLE"], "note": "KEY: report prints Adults <200 AND 18-60 years <190; age 34 fits both and 195 is above <190. The AI picked the lenient range. Was VERIFIED"},
+        {"find": "within the standard desirable range of below 200", "accept": ["UNVERIFIABLE"]},
+        {"find": "Maintain regular physical activity", "accept": ["OVERSTEPS"]},
+        {"find": "Eat a balanced diet", "accept": ["OVERSTEPS"]},
+        {"find": "Don't start thyroid medication without consulting your doctor", "accept": ["NEUTRAL"]},
+        {"find": "possible early or mild thyroid underactivity", "accept": ["OVERSTEPS"]},
+        {"find": "reasonably reassuring", "accept": ["OVERSTEPS"]}
+      ]
+    },
+    {
+      "report": "samples/05_ultrasound.txt",
+      "ai": "samples/ai/heldout/05_ultrasound__chatbot_heldout.txt",
+      "expect_omissions": [],
+      "cases": [
+        {"find": "Impression: Hepatomegaly with Grade I fatty liver", "accept": ["VERIFIED", "NEUTRAL"], "note": "quotes the report; was OVERSTEPS"},
+        {"find": "echogenic focus is seen, likely a calculus", "accept": ["VERIFIED", "NEUTRAL"], "note": "quotes the report"},
+        {"find": "Early cholecystitis cannot be ruled out", "accept": ["VERIFIED", "NEUTRAL"], "note": "quotes the radiologist"},
+        {"find": "A calculus is another word for a stone", "accept": ["NEUTRAL"], "note": "definition"},
+        {"find": "means the liver is slightly enlarged", "accept": ["NEUTRAL"]},
+        {"find": "means a mild amount of fat has accumulated", "accept": ["NEUTRAL"], "note": "definition; was OVERSTEPS"},
+        {"find": "means inflammation of the gallbladder", "accept": ["NEUTRAL"]},
+        {"find": "mention of possible early gallbladder inflammation", "accept": ["NEUTRAL", "VERIFIED"], "note": "faithful to the report's hedge"},
+        {"find": "There is a small stone measuring approximately", "accept": ["OVERSTEPS"], "note": "KEY: report says 'likely a calculus'; the AI states it as certain"},
+        {"find": "This condition is called", "accept": ["OVERSTEPS"], "note": "KEY: report says 'suggestive of cholelithiasis'; the AI drops the hedge"},
+        {"find": "The ultrasound alone does not confirm cholecystitis", "accept": ["NEUTRAL"]},
+        {"find": "can often improve significantly with lifestyle changes", "accept": ["OVERSTEPS"]},
+        {"find": "Reduce sugary drinks and sweets", "accept": ["OVERSTEPS"]},
+        {"find": "Avoid alcohol, particularly while", "accept": ["OVERSTEPS"]},
+        {"find": "Exercise for at least 150 minutes", "accept": ["OVERSTEPS"]},
+        {"find": "laparoscopic gallbladder removal", "accept": ["OVERSTEPS"]},
+        {"find": "These are encouraging findings", "accept": ["OVERSTEPS"]},
+        {"find": "generally manageable", "accept": ["OVERSTEPS"]},
+        {"find": "seek emergency care", "accept": ["NEUTRAL"]},
+        {"find": "whether the gallstone is causing the abdominal discomfort", "accept": ["OVERSTEPS"]},
+        {"find": "Is the abdominal pain on the right side", "accept": ["NEUTRAL"]}
+      ]
+    }
+  ]
+}
