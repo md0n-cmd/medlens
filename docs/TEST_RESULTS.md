@@ -48,7 +48,7 @@ rootdir: /home/d0n/medlens
 configfile: pytest.ini
 testpaths: tests
 plugins: anyio-4.16.0
-collecting ... collected 215 items
+collecting ... collected 269 items
 
 tests/test_age_bands.py::test_age_band_cell_parses_as_multi PASSED
 tests/test_age_bands.py::test_label_bands PASSED
@@ -63,6 +63,7 @@ tests/test_api.py::test_samples_listed_and_synthetic PASSED
 tests/test_api.py::test_analyze_endpoint PASSED
 tests/test_api.py::test_analyze_rejects_empty PASSED
 tests/test_api.py::test_frontend_served PASSED
+tests/test_api.py::test_head_root_for_uptime_checks PASSED
 tests/test_classify_safety.py::test_hedged_language_needs_professional[Findings suggestive of cholelithiasis.] PASSED
 tests/test_classify_safety.py::test_hedged_language_needs_professional[Appearance consistent with fatty liver.] PASSED
 tests/test_classify_safety.py::test_hedged_language_needs_professional[Malignancy cannot be ruled out.] PASSED
@@ -265,6 +266,59 @@ tests/test_values.py::test_qualitative_value PASSED
 tests/test_values.py::test_value_without_range PASSED
 tests/test_values.py::test_non_result_lines_ignored PASSED
 tests/test_values.py::test_sections_and_interpretive_flag PASSED
+tests/test_verify.py::test_planted_error_is_caught[01_cbc__errors-Your hemoglobin is 12 g/dL-value-CONTRADICTED] PASSED
+tests/test_verify.py::test_planted_error_is_caught[01_cbc__errors-The normal range for hemoglobin is 12\u201316-range-RANGE_NOT_FROM_REPORT] PASSED
+tests/test_verify.py::test_planted_error_is_caught[01_cbc__errors-Your WBC count of 11,800 is normal-status-CONTRADICTED] PASSED
+tests/test_verify.py::test_planted_error_is_caught[01_cbc__errors-Overall, you have anemia-overstep-OVERSTEPS] PASSED
+tests/test_verify.py::test_planted_error_is_caught[01_cbc__errors-You should take iron tablets-overstep-OVERSTEPS] PASSED
+tests/test_verify.py::test_planted_error_is_caught[01_cbc__errors-There is nothing to worry about-overstep-OVERSTEPS] PASSED
+tests/test_verify.py::test_planted_error_is_caught[03_lft_kft__errors-Your SGOT is 48 U/L-value-CONTRADICTED] PASSED
+tests/test_verify.py::test_planted_error_is_caught[03_lft_kft__errors-The normal range for ALT is 7\u201356-range-RANGE_NOT_FROM_REPORT] PASSED
+tests/test_verify.py::test_planted_error_is_caught[03_lft_kft__errors-This suggests liver disease-overstep-OVERSTEPS] PASSED
+tests/test_verify.py::test_planted_error_is_caught[03_lft_kft__errors-No need to see a doctor-overstep-OVERSTEPS] PASSED
+tests/test_verify.py::test_planted_error_is_caught[06_age_bands__errors-The normal TSH range is 0.5\u20135.0-range-RANGE_NOT_FROM_REPORT] PASSED
+tests/test_verify.py::test_planted_error_is_caught[06_age_bands__errors-Your total cholesterol is 159-value-CONTRADICTED] PASSED
+tests/test_verify.py::test_planted_error_is_caught[06_age_bands__errors-This confirms hypothyroidism-overstep-OVERSTEPS] PASSED
+tests/test_verify.py::test_planted_error_is_caught[06_age_bands__errors-Take levothyroxine 50 mcg-overstep-OVERSTEPS] PASSED
+tests/test_verify.py::test_planted_error_is_caught[07_missing_ranges__errors-Your vitamin B12 is 450-range-RANGE_NOT_FROM_REPORT] PASSED
+tests/test_verify.py::test_planted_error_is_caught[07_missing_ranges__errors-Your sodium is 145-value-CONTRADICTED] PASSED
+tests/test_verify.py::test_planted_error_is_caught[07_missing_ranges__errors-Your CRP of 4.2 mg/L is elevated-overstep-OVERSTEPS] PASSED
+tests/test_verify.py::test_planted_error_is_caught[07_missing_ranges__errors-You don't need to worry-overstep-OVERSTEPS] PASSED
+tests/test_verify.py::test_sentence_label_is_most_severe_finding PASSED
+tests/test_verify.py::test_omitted_out_of_range_values_are_reported PASSED
+tests/test_verify.py::test_correct_explanation_has_no_problems PASSED
+tests/test_verify.py::test_number_formats_match[Your platelet count is 2,10,000.] PASSED
+tests/test_verify.py::test_number_formats_match[Your platelet count is 210000.] PASSED
+tests/test_verify.py::test_number_formats_match[Your platelets are 2.1 lakh.] PASSED
+tests/test_verify.py::test_number_formats_match[Your platelet count is 210,000.] PASSED
+tests/test_verify.py::test_aliases_hb_and_sgpt PASSED
+tests/test_verify.py::test_two_claims_in_one_sentence PASSED
+tests/test_verify.py::test_status_on_ambiguous_range_is_unverifiable PASSED
+tests/test_verify.py::test_test_not_in_report PASSED
+tests/test_verify.py::test_paraphrase_without_test_name_is_neutral PASSED
+tests/test_verify.py::test_negated_status_is_not_a_claim PASSED
+tests/test_verify.py::test_dose_number_is_not_a_test_value PASSED
+tests/test_verify.py::test_value_written_as_span PASSED
+tests/test_verify.py::test_status_judged_against_the_row_whose_value_matched PASSED
+tests/test_verify.py::test_spans_valid_in_both_texts[01_cbc__correct] PASSED
+tests/test_verify.py::test_spans_valid_in_both_texts[01_cbc__errors] PASSED
+tests/test_verify.py::test_spans_valid_in_both_texts[03_lft_kft__errors] PASSED
+tests/test_verify.py::test_spans_valid_in_both_texts[06_age_bands__errors] PASSED
+tests/test_verify.py::test_spans_valid_in_both_texts[07_missing_ranges__errors] PASSED
+tests/test_verify.py::test_medlens_own_messages_pass_safety[01_cbc__correct] PASSED
+tests/test_verify.py::test_medlens_own_messages_pass_safety[01_cbc__errors] PASSED
+tests/test_verify.py::test_medlens_own_messages_pass_safety[03_lft_kft__errors] PASSED
+tests/test_verify.py::test_medlens_own_messages_pass_safety[06_age_bands__errors] PASSED
+tests/test_verify.py::test_medlens_own_messages_pass_safety[07_missing_ranges__errors] PASSED
+tests/test_verify.py::test_api_verify PASSED
+tests/test_verify.py::test_api_verify_empty_inputs_400[payload0] PASSED
+tests/test_verify.py::test_api_verify_empty_inputs_400[payload1] PASSED
+tests/test_verify.py::test_api_verify_size_limit PASSED
+tests/test_verify.py::test_api_verify_is_rate_limited PASSED
+tests/test_verify.py::test_api_ai_samples_listed PASSED
+tests/test_verify.py::test_range_in_lakh_matches_report_range PASSED
+tests/test_verify.py::test_different_unit_is_unverifiable_not_contradicted PASSED
+tests/test_verify.py::test_known_limits_are_neutral_not_verified PASSED
 
-======================== 216 passed (see full list above) ========================
+======================== 269 passed in 85.88s (0:01:25) ========================
 ```

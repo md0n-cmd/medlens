@@ -8,6 +8,7 @@ from typing import Literal, Optional
 from pydantic import BaseModel, Field
 
 from app.models import OUT_OF_RANGE, AnalysisResult, LabValue, ReferenceRange, Span, Status
+from app.parser.ranges import units_compatible
 from app.pipeline import analyze
 from app.verify.claims import Claim, extract
 
@@ -161,6 +162,11 @@ def _check_claim(c: Claim, text: str, rows: list[LabValue], value_row: Optional[
                                report_value_id=v.id,
                                message=f"Matches your report: {v.test_name} {v.value_raw}{' ' + v.unit if v.unit else ''}.{note}")
         shown = " or ".join(f"{v.value_raw}{' ' + v.unit if v.unit else ''}" for v in rows)
+        if c.unit and all(v.unit and not units_compatible(c.unit, v.unit) for v in rows):
+            return Finding(kind="value", label="UNVERIFIABLE", term=c.term, ai_span=span, report_span=rep_line(rows[0]),
+                           report_value_id=rows[0].id,
+                           message=f"The AI uses a different unit ({c.unit}) than your report ({shown}). MedLens does "
+                                   "not convert units, so it cannot check this number.")
         return Finding(kind="value", label="CONTRADICTED", term=c.term, ai_span=span, report_span=rep_line(rows[0]),
                        report_value_id=rows[0].id, message=f"AI says {c.value_raw}, report says {shown}.")
 

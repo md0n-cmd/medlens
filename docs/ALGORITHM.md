@@ -21,7 +21,7 @@
 * **No hallucinated diagnoses.** The core requirement is to *avoid unsupported diagnoses*. A deterministic system can only output sentences we wrote and reviewed.
 * **Reference ranges must come from the report.** An LLM tends to "helpfully" fill in population ranges it has memorised. Our parser has no ranges to fall back on.
 * **Exact provenance.** Every output carries character offsets into the input, which the UI uses for two-way linking. Generative output does not give that reliably.
-* **Testable.** 216 unit and end-to-end tests pin the behaviour, and the same input always gives the same output.
+* **Testable.** 269 unit and end-to-end tests pin the behaviour, and the same input always gives the same output.
 * **Offline, free, fast.** No API key is needed, and a report takes a few milliseconds.
 * An LLM is used only as an **optional, clearly labelled fallback** for glossary misses. It is off by default and goes through the same safety filter.
 
@@ -104,3 +104,42 @@ Hedge lexicon: *suggestive of, suggests, consistent with, compatible with, canno
 * Every `LabValue` carries `test_span`, `value_span`, `unit_span`, `flag_span` and `reference_span`. Every `TermMatch`, `UnrecognizedTerm` and `ExplanationItem` carries a `span` and a `source_snippet` (the full source line).
 * Tests check `text[start:end] == span.text` for every span in every sample.
 * The UI cuts the report at every span boundary and wraps each segment in a `<span>` listing all covering classes. A click resolves to the *innermost* covering span's explanation card. Clicking a card flashes every segment inside the card's span and scrolls it into view.
+
+## 9. MedLens Verify: checking AI explanations
+
+Input: the report and an AI-written explanation of it. The report goes through the normal pipeline. The AI text goes through `app/verify/claims.py` (extraction), then `app/verify/check.py` (checking). No LLM is involved.
+
+### 9.1 Claim extraction
+1. **Sentences.** Split on `.`/`!`/`?` followed by whitespace, and on newlines. A `.` inside a number (`11.2`) never ends a sentence. Character offsets are kept.
+2. **Test mentions.** The glossary matcher (same longest-match and case rules), keeping entries of kind `test` plus ambiguous abbreviations such as PCV.
+3. **Segments.** The claims for a mention are read from the text after it, up to the next mention. `"Your MCV and MCH are normal"`: a mention followed only by a conjunction shares the next mention's status.
+4. In each segment, ranges are found first, so their numbers are never read as values:
+   * **Intervals** `a–b`, `a to b`, `between a and b`. These count as a range only when a cue word (range, normal, reference, should, between, …) appears earlier in the sentence, or the interval is in brackets. Otherwise `6-8 /hpf` is read as a value written as a span.
+   * **Upper / lower bounds**: `below / under / less than / up to / < / ≤ N`, `above / over / more than / at least / > / ≥ N`.
+   * `lakh` / `thousand` / `k` multiply the numbers (`1.5–4.1 lakh` = 150000–410000).
+5. **Value.** The first remaining number, with comparator, multiplier (`2.1 lakh`) and unit. A number followed by a dose unit (`100 mg`, `2 tablets`) is a dose, never a test value.
+6. **Status words.** LOW (low, below the range, decreased, reduced, deficient), HIGH (high, above the range, elevated, raised, increased), NORMAL (normal, within/in the range, fine, healthy, ok). "normal range is …" is not a status. A negation in the three words before (`not`, `isn't`, `never`) drops the claim.
+7. **Oversteps**, per sentence. Everything `safety.py` blocks, plus extra rules: `you are suffering/anaemic/diabetic…`; `this/it/which indicates|confirms|suggests|means|shows|points to … <disease word>` (anaemia, diabetes, infection, disease, deficiency, cancer, failure, hypo/hyperthyroidism, *-itis/-emia/-osis/-pathy*); dosage (`N mg/mcg/IU/tablets`, `twice a day`, `every morning`); "should take … tablets/supplements"; false reassurance (`no need to see a doctor / to worry`, `nothing to worry about`, `don't worry`, `no cause for concern`, `you're fine/healthy`). Each is categorised as diagnosis, treatment or reassurance.
+
+### 9.2 Checking rules
+Report rows are indexed by every glossary term inside their test name. A few related names are also accepted: WBC ↔ TLC, PCV ↔ Packed Cell Volume, Bilirubin → Total Bilirubin, Glucose → FBS/RBS/PPBS, PT → INR.
+
+| Claim | VERIFIED when… | Otherwise |
+|---|---|---|
+| Value | the number equals a report value for that test (relative tolerance 1e-6, so `2,10,000` = `210000` = `2.1 lakh`; span values must match both ends) | **CONTRADICTED** "AI says X, report says Y". If both texts give units and they differ: **UNVERIFIABLE** (no unit conversion, ever). Test not on the report: **NOT_IN_REPORT**. |
+| Range | same kind and the same bounds as the printed range (or any labelled alternative) | **RANGE_NOT_FROM_REPORT** "AI quotes …; your report prints …", or "your report prints no range for this test; this range came from elsewhere" |
+| Status | equals MedLens's computed status (ABOVE→HIGH, BELOW→LOW, WITHIN→NORMAL), judged against the row whose value matched in the same sentence when there is one | **CONTRADICTED**. Ambiguous, missing or unreadable range, or several rows that disagree: **UNVERIFIABLE** "the report doesn't settle this" |
+| Overstep | – | always **OVERSTEPS** "This goes beyond what a report explanation should say; ask your doctor." |
+
+* **Sentence label.** The most severe finding wins: CONTRADICTED > OVERSTEPS > RANGE_NOT_FROM_REPORT > NOT_IN_REPORT > UNVERIFIABLE > VERIFIED > NEUTRAL.
+* **Omissions.** Every report value outside its printed range whose test (or a related name) is never mentioned anywhere in the AI text.
+* **Provenance.** Every finding carries `ai_span` (inside its sentence) and `report_span` (the whole report line). Tests check both slice their source texts exactly. MedLens's own messages pass `safety.py`; a test caught an early message that used the word "dosage".
+
+### 9.3 Known limits (measured, see `tests/test_verify.py`)
+* **Paraphrases aren't extracted.** "Your blood count is a bit off" names no test and has no number, so it comes out **NEUTRAL**: shown, never counted as verified.
+* **A number before the test name** ("12 g/dL of hemoglobin was found") isn't attached to the test, so it's NEUTRAL.
+* **Pronouns across sentences** ("Your hemoglobin is low. It is 11.2.") aren't resolved: the second sentence is NEUTRAL.
+* **Qualitative claims** ("Your HBsAg is negative") aren't checked yet: NEUTRAL.
+* **No unit conversion.** "5.8 mmol/L" against a report value of "104 mg/dL" is UNVERIFIABLE, never CONTRADICTED.
+* **Status words are lexical.** Unusual wording ("a touch under par") isn't recognised. Negation is handled only within three words.
+* **Overstep detection is pattern-based.** Novel phrasing of a diagnosis or advice can slip through. Every pattern errs towards flagging.

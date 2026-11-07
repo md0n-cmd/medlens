@@ -19,7 +19,7 @@ MedLens takes the text of a medical report (lab panel or radiology report) and:
 
 Deploy your own: push this repo to GitHub, then in Render choose **New → Blueprint** and pick the repo. `render.yaml` defines one free Docker web service (Tesseract OCR included, health check `/api/health`). Public-safety basics:
 * 10 MB upload limit.
-* 30 requests/minute per IP on `/api/analyze` and `/api/extract` (HTTP 429 with a friendly message; `RATE_LIMIT_PER_MIN` to change).
+* 30 requests/minute per IP on `/api/analyze`, `/api/extract` and `/api/verify` (HTTP 429 with a friendly message; `RATE_LIMIT_PER_MIN` to change).
 * Report text and uploads are processed in memory and never logged or stored.
 * The LLM fallback is off (`USE_LLM=0`, no API key).
 * The container runs as a non-root user.
@@ -36,7 +36,27 @@ To open it on your phone (same Wi-Fi), run `./run.sh --lan`. It prints the lapto
 
 Open http://localhost:8000. Pick a sample from the dropdown, or open `http://localhost:8000/?sample=01_cbc` directly.
 
-Run the tests with `pytest -v` (216 tests; see [docs/TEST_RESULTS.md](docs/TEST_RESULTS.md)).
+Run the tests with `pytest -v` (269 tests; see [docs/TEST_RESULTS.md](docs/TEST_RESULTS.md)).
+
+## MedLens Verify: check an AI's explanation against your report
+
+People already paste their lab reports into AI chatbots and trust what comes back. The chatbot may quote a textbook "normal range" instead of the one printed on the report, misread a number, call a value normal when the report's own range says otherwise, skip an abnormal result, or slide into a diagnosis or a dose. **MedLens Verify makes that safer by checking the AI against the source.** It is fully deterministic: no LLM is used anywhere.
+
+Paste the report and the AI's text in the **Check an AI explanation** tab (or `POST /api/verify {report_text, ai_text}`). Every sentence of the AI text gets a label, shown as a colour **and** a text badge:
+
+| Label | Meaning |
+|---|---|
+| ✓ **VERIFIED** | The value, range or high/low/normal claim matches the report. |
+| ✗ **CONTRADICTED** | A different number than the report ("AI says 12, report says 11.2"), or the wrong status. |
+| ⚠ **RANGE_NOT_FROM_REPORT** | The AI quotes a range the report doesn't print ("AI quotes 12–16; your report prints 13.0 - 17.0"), or the report prints no range at all. |
+| ⛔ **OVERSTEPS** | Diagnosis ("you have anemia", "this suggests liver disease"), treatment or dosage ("100 mg twice a day"), or false reassurance ("nothing to worry about"). |
+| ? **UNVERIFIABLE** | The report doesn't settle it (ambiguous sex/age range, no range printed, different unit). |
+| ∅ **NOT_IN_REPORT** | The AI talks about a test that isn't on the report. |
+| *(no label)* NEUTRAL | No checkable claim; shown, not judged. |
+
+It also lists **omissions**: results outside the printed range that the AI never mentions. Every finding links both ways: click an AI sentence to outline the report line it's about; click a report line to highlight what the AI said about it. Try `/?ai=01_cbc__errors` (planted errors) or `/?ai=01_cbc__correct`.
+
+*MedLens checks what the AI said against your report. It does not judge medical meaning. Only your doctor can.* Known limits are listed in [docs/ALGORITHM.md](docs/ALGORITHM.md#9-medlens-verify-checking-ai-explanations).
 
 ## Glossary
 
@@ -110,7 +130,7 @@ flowchart LR
 
 ```
 app/
-  main.py            FastAPI: POST /api/analyze, POST /api/extract, GET /api/terms, GET /api/samples, GET /api/health, GET /
+  main.py            FastAPI: POST /api/analyze, POST /api/extract, POST /api/verify, GET /api/terms, GET /api/samples, GET /api/health, GET /
   ingest/pdf.py      PDF text layer (layout-preserving) + scanned-page OCR
   ingest/ocr.py      Pillow preprocessing + Tesseract, confidence + uncertain tokens
   models.py          Pydantic schemas (Span, LabValue, TermMatch, ExplanationItem, AnalysisResult…)
@@ -122,6 +142,8 @@ app/
   classify.py        hedge / interpretive-section rules
   safety.py          guardrail + the only out-of-range wording template
   pipeline.py        orchestration → AnalysisResult
+  verify/claims.py   claim extraction from AI-written text (values, ranges, statuses, oversteps)
+  verify/check.py    claim checking against the report + omissions
 frontend/index.html  single static page, vanilla JS, no build step
 samples/*.txt        5 synthetic reports
 tests/               pytest suite

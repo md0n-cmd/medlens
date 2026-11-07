@@ -202,3 +202,22 @@ def test_api_ai_samples_listed():
     s = client.get("/api/ai-samples").json()
     assert len(s) == 5 and sum(x["kind"] == "correct" for x in s) == 1
     assert all("SYNTHETIC AI EXPLANATION" in x["text"] for x in s)
+
+
+def test_range_in_lakh_matches_report_range():
+    _, s = one("Platelets should be 1.5–4.1 lakh.")
+    assert labels(s) == ["VERIFIED"]
+
+
+def test_different_unit_is_unverifiable_not_contradicted():
+    report = (SAMPLES / "07_missing_ranges.txt").read_text()
+    _, s = one("Your fasting glucose is 5.8 mmol/L.", report)
+    assert labels(s) == ["UNVERIFIABLE"] and "does not convert units" in s.findings[0].message
+
+
+def test_known_limits_are_neutral_not_verified():
+    """Documented limits: these are shown but not judged."""
+    assert one("12 g/dL of hemoglobin was found.")[1].label == "NEUTRAL"          # number before the test name
+    assert one("Your HBsAg is negative.", (SAMPLES / "04_thyroid_urine.txt").read_text())[1].label == "NEUTRAL"  # qualitative
+    r = verify(REPORT, "Your hemoglobin is low. It is 11.2.")                   # pronoun across sentences
+    assert r.sentences[1].label == "NEUTRAL"

@@ -196,8 +196,14 @@ def _segment_claims(text: str, m: Mention, a: int, b: int, sent_start: int) -> l
             continue
         r = parse_range(f"{im['lo']} - {im['hi']}")
         if r.kind != "unparseable":
-            used.append((im.start(), im.end()))
-            claims.append(Claim(kind="range", span=_sp(text, a + im.start(), a + im.end()), range=r, **base))
+            end = im.end()
+            mm = re.match(r"\s*(lakhs?|lacs?|thousand|k)\b", seg[end:], re.I)       # "1.5–4.1 lakh"
+            if mm:
+                f = MULTIPLIER[mm.group(1).lower()]
+                r = r.model_copy(update={"low": r.low * f, "high": r.high * f})
+                end += mm.end()
+            used.append((im.start(), end))
+            claims.append(Claim(kind="range", span=_sp(text, a + im.start(), a + end), range=r, **base))
     for rx, kind in ((UPPER_RE, "upper"), (LOWER_RE, "lower")):
         for rm in rx.finditer(seg):
             if not free(rm.start(), rm.end()):

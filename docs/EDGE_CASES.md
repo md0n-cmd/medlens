@@ -69,3 +69,19 @@
 | 65 | Disease / finding words (cholecystitis, malignant, cardiomegaly) | Defined as words only; fixed note "This explains the word only…"; source line stays NEEDS_PROFESSIONAL | `test_kinds_and_finding_note` |
 | 66 | Same alias in two entries (e.g. `TG` triglycerides vs `Tg` thyroglobulin) | Build script and test reject it | `test_no_duplicate_aliases_across_entries` |
 | 67 | Glossary wording drift | No entry may contain "you have", "indicates", "means you", "diagnos", "treat"; all pass safety.py | `test_no_forbidden_phrases_in_entries`, `test_every_glossary_entry_passes_safety_filter` |
+| 68 | AI quotes a number different from the report | CONTRADICTED "AI says 12, report says 11.2" | `test_verify.py::test_planted_error_is_caught` |
+| 69 | AI writes the number in another format (`2,10,000` / `210000` / `2.1 lakh` / `210,000`) | Same value → VERIFIED | `test_number_formats_match` |
+| 70 | AI quotes a textbook range instead of the printed one | RANGE_NOT_FROM_REPORT, with both ranges shown | `test_planted_error_is_caught` |
+| 71 | AI quotes a range when the report prints none | RANGE_NOT_FROM_REPORT "this range came from elsewhere" | `test_planted_error_is_caught` (vitamin B12) |
+| 72 | AI calls a value normal when it is outside the printed range | CONTRADICTED | `test_planted_error_is_caught` (WBC) |
+| 73 | AI states a status for an ambiguous (sex/age) or missing range | UNVERIFIABLE "the report doesn't settle this" | `test_status_on_ambiguous_range_is_unverifiable` |
+| 74 | AI diagnoses, prescribes/doses, or falsely reassures | OVERSTEPS (diagnosis / treatment / reassurance) | `test_planted_error_is_caught` |
+| 75 | AI skips an out-of-range result | Listed as an omission with its report line | `test_omitted_out_of_range_values_are_reported` |
+| 76 | AI uses an alias or another name (Hb, SGPT/ALT, WBC vs TLC, PCV) | Matched to the same report row | `test_aliases_hb_and_sgpt` |
+| 77 | Two claims in one sentence | Each judged; sentence takes the most severe label | `test_two_claims_in_one_sentence` |
+| 78 | Dose numbers ("iron tablets 100 mg") | Never read as a test value; sentence is OVERSTEPS | `test_dose_number_is_not_a_test_value` |
+| 79 | Same test printed twice (one row without range) | Status judged against the row whose value the AI quoted | `test_status_judged_against_the_row_whose_value_matched` |
+| 80 | AI value in a different unit than the report | UNVERIFIABLE (no unit conversion), never CONTRADICTED | `test_different_unit_is_unverifiable_not_contradicted` |
+| 81 | Range written in lakh (`1.5–4.1 lakh`) | Multiplied before comparing; matches `1,50,000 - 4,10,000` | `test_range_in_lakh_matches_report_range` |
+| 82 | Paraphrase / number before test name / pronoun / qualitative claim | NEUTRAL (shown, not judged): documented limits | `test_known_limits_are_neutral_not_verified`, `test_paraphrase_without_test_name_is_neutral` |
+| 83 | Empty input, oversized input, rate limit | 400 / 422 / 429 (same limits as `/api/analyze`) | `test_api_verify_empty_inputs_400`, `test_api_verify_size_limit`, `test_api_verify_is_rate_limited` |
