@@ -1,0 +1,7 @@
+SYNTHETIC AI EXPLANATION (correct) of sample 01_cbc. Not real advice.
+
+Your report shows several blood count results outside the ranges printed on it. Your hemoglobin is 11.2 g/dL, below the range printed on your report (13.0 - 17.0 g/dL). Your total RBC count is 4.10 million/cumm, lower than the printed range of 4.5 - 5.5. Your PCV is 36.5%, below the printed range of 40 - 50. Your MCHC is 30.7 g/dL, which is low compared with the printed range of 31.5 - 34.5. Your RDW-CV is 14.8%, above the printed range of 11.6 - 14.0. Your TLC is 11,800 /cumm, higher than the printed range of 4,000 - 10,000. Your ESR is 18 mm/1st hr, which is high compared with the printed range of 0 - 15.
+
+Your platelet count is 2,10,000 /cumm, within the printed range of 1,50,000 - 4,10,000, even though the lab marked it H. Your MCV of 89.0 fL and MCH of 27.3 pg are within the printed ranges.
+
+What these results mean for you depends on your health and history. Please discuss them with your doctor.

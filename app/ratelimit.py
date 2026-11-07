@@ -6,7 +6,7 @@ import threading
 import time
 from collections import defaultdict, deque
 
-LIMITED_PATHS = {"/api/analyze", "/api/extract"}
+LIMITED_PATHS = {"/api/analyze", "/api/extract", "/api/verify"}
 MESSAGE = "Too many requests from your connection. Please wait a minute and try again."
 
 

@@ -150,6 +150,31 @@
   .h-passage { outline: 2px solid var(--brand); outline-offset: 1px; background: #eef3ff; }
   .xcard .pbtns { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; margin-top: 6px; }
   .xcard .pbtns button { padding: 4px 10px; font-size: calc(12.5px * var(--fs)); }
+  .vcard { margin-top: 18px; }
+  .vsum { font-weight: 600; margin: 4px 0 10px; }
+  .vgrid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 18px; }
+  .vgrid > * { min-width: 0; }
+  @media (max-width: 1000px) { .vgrid { grid-template-columns: minmax(0, 1fr); } }
+  #vai { white-space: pre-wrap; line-height: 1.7; }
+  #vai .vs { cursor: pointer; border-radius: 3px; padding: 1px 0; }
+  #vai .vs.vsel { outline: 3px solid #e0b800; }
+  .v-VERIFIED { background: var(--in-bg); }
+  .v-CONTRADICTED { background: var(--out-bg); text-decoration: underline wavy var(--out); }
+  .v-RANGE_NOT_FROM_REPORT { background: #ffe9d6; }
+  .v-OVERSTEPS { background: var(--amb-bg); }
+  .v-UNVERIFIABLE, .v-NOT_IN_REPORT { background: var(--neutral-bg); }
+  .vbadge { display: inline-block; font-size: calc(11.5px * var(--fs)); font-weight: 700; padding: 0 6px; border-radius: 999px; margin: 0 4px; vertical-align: 1px; white-space: nowrap; }
+  .vb-VERIFIED { background: var(--in-bg); color: var(--in); border: 1px solid #9fd3ad; }
+  .vb-CONTRADICTED { background: var(--out-bg); color: var(--out); border: 1px solid #f3b4b4; }
+  .vb-RANGE_NOT_FROM_REPORT { background: #ffe9d6; color: #8a4b00; border: 1px solid #f0a35a; }
+  .vb-OVERSTEPS { background: var(--amb-bg); color: var(--amb); border: 1px solid #c7b2ef; }
+  .vb-UNVERIFIABLE, .vb-NOT_IN_REPORT, .vb-OMISSION { background: var(--neutral-bg); color: #39445a; border: 1px solid #c7cfdf; }
+  #vreport { white-space: pre; overflow-x: auto; font: calc(13px * var(--fs))/1.65 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; max-height: 70vh; overflow-y: auto; }
+  #vreport span[data-seg] { cursor: pointer; }
+  #vreport .vlink { background: #fff3c4; }
+  #vfind .xcard { cursor: default; }
+  .vfoot { margin-top: 12px; padding: 8px 12px; border-top: 2px solid var(--line); color: var(--muted); font-size: calc(13px * var(--fs)); font-weight: 600; }
+  .vlegend { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 10px; }
   @media print {
     header .fs-ctl, #input-card, .review, .controls, button, #rep-card, .group.FACTUAL_FROM_REPORT, .group.GENERAL_INFO, footer, .legend { display: none !important; }
     .disclaimer { position: static; }
@@ -184,6 +209,7 @@
       <button role="tab" id="tab-paste" aria-selected="true" aria-controls="panel-paste">Paste text</button>
       <button role="tab" id="tab-upload" aria-selected="false" aria-controls="panel-upload">Upload PDF / image</button>
       <button role="tab" id="tab-camera" aria-selected="false" aria-controls="panel-camera">Scan with camera</button>
+      <button role="tab" id="tab-verify" aria-selected="false" aria-controls="panel-verify">Check an AI explanation</button>
     </div>
     <div class="panel" id="panel-paste" role="tabpanel"></div>
     <div class="panel" id="panel-upload" role="tabpanel" hidden>
@@ -207,8 +233,14 @@
         </div>
       </div>
     </div>
+    <div class="panel" id="panel-verify" role="tabpanel" hidden>
+      <p class="hint">Paste your report below, and what an AI chatbot told you about it here. MedLens checks every sentence the AI wrote against what your report actually says. It never uses an AI itself.</p>
+      <label for="aitext"><strong>What the AI told you</strong></label>
+      <textarea id="aitext" aria-label="What the AI told you" placeholder="Paste the AI's explanation of your report here…" style="min-height:130px"></textarea>
+      <div class="controls"><button class="primary" id="verifybtn">Check AI explanation</button></div>
+    </div>
     <div class="review" id="review" role="status" hidden></div>
-    <label for="input" class="hint">Report text (check and edit before analyzing):</label>
+    <label for="input" class="hint" id="input-label">Report text (check and edit before analyzing):</label>
     <textarea id="input" aria-label="Report text" placeholder="Paste the text of a lab or radiology report here, upload a file, or load a synthetic sample…"></textarea>
     <div class="controls">
       <label for="sample" class="hint">Load sample:</label>
@@ -217,6 +249,29 @@
       <button id="print" disabled title="Analyze a report first">Print / Save summary</button>
       <span class="hint" id="status" aria-live="polite"></span>
     </div>
+  </section>
+
+  <section class="card vcard" id="vcard" aria-labelledby="v-h" hidden>
+    <h2 id="v-h">AI explanation, checked against your report</h2>
+    <div class="vsum" id="vsum" aria-live="polite"></div>
+    <div class="vlegend" aria-label="Sentence labels">
+      <span class="vbadge vb-VERIFIED">✓ Matches report</span><span class="vbadge vb-CONTRADICTED">✗ Contradicts report</span>
+      <span class="vbadge vb-RANGE_NOT_FROM_REPORT">⚠ Range not from report</span><span class="vbadge vb-OVERSTEPS">⛔ Goes beyond an explanation</span>
+      <span class="vbadge vb-UNVERIFIABLE">? Report doesn't settle this</span><span class="vbadge vb-NOT_IN_REPORT">∅ Not in your report</span>
+    </div>
+    <div class="vgrid">
+      <div>
+        <h3>What the AI told you <span class="hint">(click a sentence)</span></h3>
+        <div id="vai"></div>
+        <div id="vfind" aria-live="polite"></div>
+        <div id="vomit"></div>
+      </div>
+      <div>
+        <h3>Your report <span class="hint">(click a line to see what the AI said about it)</span></h3>
+        <div id="vreport"></div>
+      </div>
+    </div>
+    <div class="vfoot" role="note">MedLens checks what the AI said against your report. It does not judge medical meaning. Only your doctor can.</div>
   </section>
 
   <div class="grid">
@@ -282,20 +337,31 @@ const TAGS = {
 };
 
 let result = null;
+const SAMPLE_TEXT = {}, AI_SAMPLES = {};
 
 async function loadSamples() {
   const res = await fetch("/api/samples");
   const samples = await res.json();
   const sel = $("#sample");
   samples.forEach(s => { const o = document.createElement("option"); o.value = s.id; o.textContent = s.title; o.dataset.text = s.text; sel.appendChild(o); });
+  samples.forEach(s => { SAMPLE_TEXT[s.id] = s.text; });
   const grp = document.createElement("optgroup"); grp.label = "Files (PDF / image, via text extraction)";
   FILE_SAMPLES.forEach(([f, label]) => { const o = document.createElement("option"); o.value = "file:" + f; o.dataset.file = f; o.textContent = label; grp.appendChild(o); });
   sel.appendChild(grp);
+  try {
+    const ai = await (await fetch("/api/ai-samples")).json();
+    const g2 = document.createElement("optgroup"); g2.label = "Check an AI explanation";
+    ai.forEach(a => { const o = document.createElement("option"); o.value = "ai:" + a.id; o.dataset.ai = a.id; o.textContent = a.title; AI_SAMPLES[a.id] = a; g2.appendChild(o); });
+    sel.appendChild(g2);
+  } catch (e) {}
   sel.addEventListener("change", () => {
     const o = sel.selectedOptions[0];
+    if (o.dataset.ai) { const a = AI_SAMPLES[o.dataset.ai]; $("#input").value = SAMPLE_TEXT[a.report_id] || ""; $("#aitext").value = a.text; showTab("verify"); runVerify(); return; }
     if (o.dataset.file) { showTab("upload"); loadFileSample(o.dataset.file); }
     else if (o.dataset.text) { $("#review").hidden = true; $("#input").value = o.dataset.text; run(); }
   });
+  const wantAi = new URLSearchParams(location.search).get("ai");     // e.g. /?ai=01_cbc__errors
+  if (wantAi && AI_SAMPLES[wantAi]) { sel.value = "ai:" + wantAi; sel.dispatchEvent(new Event("change")); return; }
   const want = new URLSearchParams(location.search).get("sample");   // e.g. /?sample=01_cbc
   if (want && [...sel.options].some(o => o.value === want)) { sel.value = want; sel.dispatchEvent(new Event("change")); }
 }
@@ -345,7 +411,7 @@ function showPassage(p) {
   flashRange(p.start, p.end);
 }
 
-function renderReport(r, spans) {
+function renderReport(r, spans, target = "#report", onSeg = null) {
   const text = r.text;
   const cuts = new Set([0, text.length]);
   spans.forEach(s => { cuts.add(s.start); cuts.add(s.end); });
@@ -361,10 +427,11 @@ function renderReport(r, spans) {
     const best = cover.find(([s]) => s.eid) || cover.find(([s]) => s.title) || cover[0];
     html += `<span data-seg data-a="${a}" data-b="${b}" data-eid="${best[0].eid || ""}" class="${cls}" title="${esc(best[0].title)}">${esc(seg)}</span>`;
   }
-  const el = $("#report");
+  const el = $(target);
   el.innerHTML = html;
   el.querySelectorAll("span[data-seg]").forEach(sp => sp.addEventListener("click", () => {
-    if (sp.dataset.eid) focusCard(sp.dataset.eid);
+    if (onSeg) onSeg(sp);
+    else if (sp.dataset.eid) focusCard(sp.dataset.eid);
   }));
 }
 
@@ -603,13 +670,14 @@ const SOURCE_LABEL = {pdf_text: "text PDF", pdf_ocr: "scanned PDF (OCR)", image_
 let stream = null, ocrOk = true;
 
 function showTab(name) {
-  ["paste", "upload", "camera"].forEach(t => {
+  $("#input-label").textContent = name === "verify" ? "Your report:" : "Report text (check and edit before analyzing):";
+  ["paste", "upload", "camera", "verify"].forEach(t => {
     $("#tab-" + t).setAttribute("aria-selected", String(t === name));
     $("#panel-" + t).hidden = t !== name;
   });
   if (name === "camera") startCamera(); else stopCamera();
 }
-["paste", "upload", "camera"].forEach(t => $("#tab-" + t).addEventListener("click", () => showTab(t)));
+["paste", "upload", "camera", "verify"].forEach(t => $("#tab-" + t).addEventListener("click", () => showTab(t)));
 
 async function extractFile(blob, name) {
   $("#status").innerHTML = `<span class="spinner"></span>Reading ${esc(name)}…`;
@@ -737,6 +805,111 @@ async function searchTerms() {
   $("#tres").querySelectorAll("button").forEach(b => b.addEventListener("click", () => showTerm(items[+b.dataset.i])));
 }
 $("#tq").addEventListener("input", () => { clearTimeout(tqTimer); tqTimer = setTimeout(searchTerms, 200); });
+
+// ---- MedLens Verify: check an AI explanation against the report (rule-based, server side)
+const VLABEL = {
+  VERIFIED: "✓ Matches report", CONTRADICTED: "✗ Contradicts report", RANGE_NOT_FROM_REPORT: "⚠ Range not from report",
+  OVERSTEPS: "⛔ Goes beyond an explanation", UNVERIFIABLE: "? Report doesn't settle this", NOT_IN_REPORT: "∅ Not in your report",
+  NEUTRAL: "", OMISSION: "Not mentioned by the AI",
+};
+let vres = null;
+const plural = (n, one, many) => `${n} ${n === 1 ? one : many}`;
+
+async function runVerify() {
+  const report_text = $("#input").value, ai_text = $("#aitext").value;
+  if (!report_text.trim() || !ai_text.trim()) { $("#status").textContent = "Paste both your report and the AI's explanation."; return; }
+  $("#status").innerHTML = `<span class="spinner"></span>Checking the AI explanation…`;
+  try {
+    const res = await fetch("/api/verify", {method: "POST", headers: {"Content-Type": "application/json"}, body: JSON.stringify({report_text, ai_text})});
+    const body = await res.json();
+    if (!res.ok) throw new Error(body.detail || res.statusText);
+    vres = body; vres.ai_text = ai_text.replace(/\r\n?/g, "\n");
+    result = body.report_analysis; render();          // the normal analysis below stays in sync
+    renderVerify();
+    $("#status").textContent = "Checked. Click a sentence to see why it got its label.";
+    $("#vcard").scrollIntoView({behavior: "smooth", block: "start"});
+  } catch (e) { $("#status").textContent = "Error: " + e.message; }
+}
+
+function verifySummary(v) {
+  const c = v.counts, parts = [];
+  parts.push(`${c.VERIFIED} match your report`);
+  parts.push(`${c.CONTRADICTED} ${c.CONTRADICTED === 1 ? "contradicts" : "contradict"} it`);
+  parts.push(`${c.RANGE_NOT_FROM_REPORT} ${c.RANGE_NOT_FROM_REPORT === 1 ? "uses a range" : "use ranges"} not on your report`);
+  parts.push(`${c.OVERSTEPS} ${c.OVERSTEPS === 1 ? "goes" : "go"} beyond an explanation`);
+  if (c.UNVERIFIABLE) parts.push(`${c.UNVERIFIABLE} the report doesn't settle`);
+  if (c.NOT_IN_REPORT) parts.push(`${c.NOT_IN_REPORT} ${c.NOT_IN_REPORT === 1 ? "is" : "are"} about tests not in your report`);
+  let t = `${plural(v.claims_checked, "claim", "claims")} checked: ${parts.join(", ")}.`;
+  t += c.OMISSION ? ` The AI didn't mention ${plural(c.OMISSION, "out-of-range result", "out-of-range results")}.` : " The AI mentioned every out-of-range result.";
+  return t;
+}
+
+function renderVerify() {
+  const v = vres, text = v.ai_text;
+  $("#vsum").textContent = verifySummary(v);
+  // AI text with labelled sentences (colour + text badge)
+  let html = "", pos = 0;
+  v.sentences.forEach(sn => {
+    html += esc(text.slice(pos, sn.span.start));
+    const badge = sn.label !== "NEUTRAL" ? `<span class="vbadge vb-${sn.label}">${VLABEL[sn.label]}</span>` : "";
+    html += `<span class="vs v-${sn.label}" data-sid="${sn.id}" tabindex="0" role="button" aria-label="${esc(VLABEL[sn.label] || "Not judged")}: ${esc(sn.text)}">${esc(text.slice(sn.span.start, sn.span.end))}</span>${badge}`;
+    pos = sn.span.end;
+  });
+  html += esc(text.slice(pos));
+  $("#vai").innerHTML = html;
+  $("#vai").querySelectorAll(".vs").forEach(el => {
+    const go = () => selectSentence(el.dataset.sid);
+    el.addEventListener("click", go); el.addEventListener("keydown", e => { if (e.key === "Enter") go(); });
+  });
+  // report pane: status colours + every line the AI's findings point at
+  const r = v.report_analysis, spans = buildSpans(r).map(sp => ({...sp, eid: null}));
+  const lines = [];
+  v.sentences.forEach(sn => sn.findings.forEach(f => { if (f.report_span) lines.push(f.report_span); }));
+  v.omissions.forEach(o => lines.push(o.report_span));
+  lines.forEach(l => spans.push({start: l.start, end: l.end, cls: "vline", eid: null, title: "Click to see what the AI said about this line"}));
+  renderReport(r, spans, "#vreport", seg => selectReportLine(+seg.dataset.a));
+  // omissions
+  $("#vomit").innerHTML = v.omissions.length ? `<h3>What the AI didn't mention (${v.omissions.length})</h3>` +
+    v.omissions.map(o => `<div class="xcard" data-a="${o.report_span.start}" data-b="${o.report_span.end}"><span class="vbadge vb-OMISSION">${VLABEL.OMISSION}</span><div>${esc(o.message)}</div><div class="src">${esc(o.report_span.text)}</div></div>`).join("") : "";
+  $("#vomit").querySelectorAll(".xcard").forEach(c => c.addEventListener("click", () => outlineReport([{start: +c.dataset.a, end: +c.dataset.b}])));
+  $("#vfind").innerHTML = "";
+  $("#vcard").hidden = false;
+}
+
+function outlineReport(ranges) {
+  const segs = [...document.querySelectorAll("#vreport span[data-seg]")];
+  segs.forEach(s => s.classList.remove("h-passage", "vlink"));
+  let first = null;
+  ranges.forEach(r => segs.forEach(s => {
+    if (+s.dataset.a >= r.start && +s.dataset.b <= r.end) { s.classList.add("h-passage"); first = first || s; }
+  }));
+  if (first) first.scrollIntoView({behavior: "smooth", block: "nearest"});
+}
+
+function selectSentence(sid) {
+  const sn = vres.sentences.find(x => x.id === sid);
+  document.querySelectorAll("#vai .vs").forEach(x => x.classList.toggle("vsel", x.dataset.sid === sid));
+  const judged = sn.findings.filter(f => f.kind !== "mention");
+  const shown = judged.length ? judged : sn.findings;
+  $("#vfind").innerHTML = `<h3>Why this sentence got its label</h3>` + (shown.length ? shown.map(f =>
+    `<div class="xcard"><span class="vbadge vb-${f.label}">${VLABEL[f.label] || "Mention only"}</span>${f.term ? ` <strong>${esc(f.term)}</strong>` : ""}<div>${esc(f.message)}</div>` +
+    (f.report_span ? `<div class="src">${esc(f.report_span.text)}</div>` : "") + `</div>`).join("")
+    : `<p class="hint">No checkable claim in this sentence (no test value, range, status or advice found). It is shown but not judged.</p>`);
+  outlineReport(sn.findings.filter(f => f.report_span).map(f => f.report_span));
+}
+
+function selectReportLine(pos) {
+  const hits = vres.sentences.filter(sn => sn.findings.some(f => f.report_span && f.report_span.start <= pos && pos < f.report_span.end));
+  document.querySelectorAll("#vai .vs").forEach(x => x.classList.toggle("vsel", hits.some(h => h.id === x.dataset.sid)));
+  const line = vres.sentences.flatMap(sn => sn.findings).map(f => f.report_span).find(sp => sp && sp.start <= pos && pos < sp.end)
+    || vres.omissions.map(o => o.report_span).find(sp => sp.start <= pos && pos < sp.end);
+  if (line) outlineReport([line]);
+  $("#vfind").innerHTML = hits.length ? `<p class="hint">${plural(hits.length, "AI sentence mentions", "AI sentences mention")} this line (highlighted).</p>`
+    : `<p class="hint">The AI didn't say anything about this line.</p>`;
+  const first = document.querySelector("#vai .vs.vsel");
+  if (first) first.scrollIntoView({behavior: "smooth", block: "nearest"});
+}
+$("#verifybtn").addEventListener("click", runVerify);
 
 $("#analyze").addEventListener("click", run);
 $("#input").addEventListener("keydown", e => { if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) run(); });

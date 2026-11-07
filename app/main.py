@@ -8,7 +8,7 @@ from typing import Optional
 
 from fastapi import FastAPI, File, HTTPException, Request, UploadFile
 from fastapi.responses import FileResponse, JSONResponse
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 from app.ingest.ocr import OCR_MISSING_MSG, TESSERACT_AVAILABLE, OcrUnavailable, ocr_bytes
 from app.ingest.pdf import PdfError, extract_pdf
@@ -16,6 +16,7 @@ from app.ingest.pdf import PdfError, extract_pdf
 from app.models import AnalysisResult, AnalyzeRequest
 from app.pipeline import analyze
 from app.ratelimit import LIMITED_PATHS, MESSAGE, limiter
+from app.verify.check import VerifyResult, verify
 
 ROOT = Path(__file__).resolve().parent.parent
 SAMPLES = ROOT / "samples"
@@ -61,6 +62,31 @@ def terms(q: str = "") -> list[dict]:
     if not q.strip():
         raise HTTPException(status_code=400, detail="Type a term to search.")
     return search_terms(q)
+
+
+class VerifyRequest(BaseModel):
+    report_text: str = Field(..., max_length=100_000)
+    ai_text: str = Field(..., max_length=100_000)
+
+
+@app.post("/api/verify", response_model=VerifyResult)
+def verify_endpoint(req: VerifyRequest) -> VerifyResult:
+    """Check an AI-written explanation against the report. Both texts stay in memory; nothing is logged."""
+    if not req.report_text.strip() or not req.ai_text.strip():
+        raise HTTPException(status_code=400, detail="Please paste both your report and the AI's explanation.")
+    return verify(req.report_text, req.ai_text)
+
+
+@app.get("/api/ai-samples")
+def ai_samples() -> list[dict]:
+    out = []
+    for p in sorted((SAMPLES / "ai").glob("*.txt")):
+        report_id, kind = p.stem.split("__")
+        label = "correct" if kind == "correct" else "with errors"
+        out.append({"id": p.stem, "report_id": report_id, "kind": kind,
+                    "title": f"Sample AI explanation ({label}) · {report_id.replace('_', ' ').title()}",
+                    "text": p.read_text(encoding="utf-8")})
+    return out
 
 
 @app.post("/api/analyze", response_model=AnalysisResult)
