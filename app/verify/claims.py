@@ -91,6 +91,7 @@ class Claim:
     detail: Optional[str] = None
     group: Optional[str] = None                  # group claims: "liver", "cbc", "thyroid", ... or "all"
     group_tests: set = field(default_factory=set)   # tests listed under the AI's own heading for that group
+    weak: bool = False                           # status carried over to a sentence that doesn't name the test
 
 
 @dataclass
@@ -121,8 +122,8 @@ UNIT_WORDS = re.compile(r"^(?:g/dl|mg/dl|mg/l|ng/ml|pg/ml|ug/dl|µg/dl|u/l|iu/l|
                         r"/cumm|/hpf|cells/cumm|million/cumm|mm/hr|mm|sec|seconds|min|ms|bpm|x10\^\d+/[a-z]+|10\^\d+/[a-z]+|"
                         r"ml/min(?:/1\.73m2)?|lakhs?|thousand|k)$", re.I)
 
-LOW_RE = re.compile(r"\b(?:low|lower|below\s+(?:the\s+)?(?:normal|reference|printed|range|limit)|decreased|deficient|"
-                    r"deficiency|reduced|on\s+the\s+lower\s+side)\b", re.I)
+LOW_RE = re.compile(r"\b(?:low|lower|below\s+(?:the\s+)?(?:normal|reference|printed|range|limit)|decreased|"
+                    r"reduced|on\s+the\s+lower\s+side)\b", re.I)    # 'deficiency' is interpretation, not a reading
 HIGH_RE = re.compile(r"\b(?:high|higher|above\s+(?:the\s+)?(?:normal|reference|printed|range|limit)|elevated|raised|"
                      r"increased|on\s+the\s+higher\s+side)\b", re.I)
 NORMAL_RE = re.compile(r"\b(?:within\s+(?:the\s+)?(?:normal\s+|reference\s+|printed\s+)?(?:ranges?|limits)|"
@@ -303,6 +304,15 @@ def _group_claim(sentence: str, heading: Optional[str], mention_spans: list[tupl
     return None
 
 
+# descriptive phrases that the glossary maps to a count, but that are never the subject of a status
+GENERIC_MENTIONS = {"red blood cells", "red blood cell", "white blood cells", "white blood cell", "blood cells",
+                    "leukocytes", "leucocytes", "erythrocytes", "rbcs", "wbcs", "platelet", "cells"}
+LEAD_RE = re.compile(r"^\s*(?:[*\-+•·]|\d+[.)])\s+\*\*(?P<lead>[^*]+?)\*\*")
+LEAD_STATUS_RE = re.compile(r"(low|high|normal|elevated|raised|decreased|reduced|borderline\s+high|borderline\s+low)\b", re.I)
+LEAD_STATUS = {"low": "LOW", "decreased": "LOW", "reduced": "LOW", "high": "HIGH", "elevated": "HIGH", "raised": "HIGH",
+               "normal": "NORMAL", "borderline": "HIGH"}
+
+
 def _test_mentions(text: str) -> list[Mention]:
     gl = load_glossary()
     out = []
@@ -317,6 +327,22 @@ def _test_mentions(text: str) -> list[Mention]:
 
 def _sp(text: str, a: int, b: int) -> Span:
     return Span(start=a, end=b, text=text[a:b])
+
+
+def _find_statuses(text: str, a: int, b: int, used: list[tuple[int, int]] = ()) -> list[tuple[str, int, int]]:
+    """Status words in text[a:b] that really are claims about a value: (status, start, end), absolute offsets,
+    at most one per status kind."""
+    seg = text[a:b]
+    out = []
+    for rx, st in ((LOW_RE, "LOW"), (HIGH_RE, "HIGH"), (NORMAL_RE, "NORMAL")):
+        for sm in rx.finditer(seg):
+            if any(not (sm.end() <= us or sm.start() >= ue) for us, ue in used):
+                continue
+            if NEGATION.search(seg[:sm.start()]):
+                continue
+            out.append((st, a + sm.start(), a + sm.end()))
+            break
+    return out
 
 
 DOSE_AFTER = re.compile(r"\s*(?:mg|mcg|µg|iu|tablets?|tabs?|capsules?|drops?)(?![/\w])", re.I)
@@ -390,12 +416,8 @@ def _segment_claims(text: str, m: Mention, a: int, b: int, sent_start: int) -> l
         used.append((vm.start(), end))
         break
     # status words (not inside a range phrase, not negated)
-    for rx, st in ((LOW_RE, "LOW"), (HIGH_RE, "HIGH"), (NORMAL_RE, "NORMAL")):
-        for sm in rx.finditer(seg):
-            if not free(sm.start(), sm.end()) or NEGATION.search(seg[:sm.start()]):
-                continue
-            claims.append(Claim(kind="status", span=_sp(text, a + sm.start(), a + sm.end()), status=st, **base))
-            break
+    for st, sa, sb in _find_statuses(text, a, b, used):
+        claims.append(Claim(kind="status", span=_sp(text, sa, sb), status=st, **base))
     statuses = [c for c in claims if c.kind == "status"]
     if len(statuses) > 1:                         # keep the one written first
         first = min(statuses, key=lambda c: c.span.start)
@@ -450,6 +472,7 @@ def _extract(text: str, original: str) -> list[SentenceClaims]:
     out: list[SentenceClaims] = []
     heading: Optional[str] = None
     heading_tests: dict[str, set] = {}
+    bullet_line, lead_mentions, lead_done, lead_word = -1, [], False, None
     for sp in split_sentences(text):
         sc = SentenceClaims(span=sp)
         ms = [m for m in mentions_all if sp.start <= m.span.start and m.span.end <= sp.end]
@@ -481,8 +504,52 @@ def _extract(text: str, original: str) -> list[SentenceClaims]:
                     if c.kind == "status":
                         per_mention[i].append(Claim(kind="status", span=c.span, status=c.status, term_id=ms[i].term_id,
                                                     term=ms[i].term, mention=ms[i].span))
+        # ---- subject binding
+        line_key = line_start
+        if line_key != bullet_line:                       # a new line: is it a bullet with a **bold lead**?
+            bullet_line, lead_mentions, lead_done = line_key, [], False
+            lm = LEAD_RE.match(whole_line)
+            if BULLET_RE.match(whole_line) and lm:
+                la, lb = line_start + lm.start("lead"), line_start + lm.end("lead")
+                lead_mentions = [m for m in mentions_all if la <= m.span.start and m.span.end <= lb
+                                 and m.span.text.lower() not in GENERIC_MENTIONS]
+                lead_status = LEAD_STATUS_RE.match(text[la:lb].strip())
+                lead_word = (lead_status, la) if lead_status else None
+            else:
+                lead_word = None
+        value_subjects = [ms[i] for i, cl in enumerate(per_mention) if any(c.kind == "value" for c in cl)
+                          and ms[i].span.text.lower() not in GENERIC_MENTIONS]
+        subjects = {m.term_id: m for m in (lead_mentions + value_subjects)}
+        for i, m in enumerate(ms):
+            if m.span.text.lower() not in GENERIC_MENTIONS or not subjects:
+                continue
+            moved = []                                    # 'red blood cells ... which is normal': the subject's status
+            for c in per_mention[i]:
+                if c.kind == "status" and len(subjects) == 1:
+                    subj = next(iter(subjects.values()))
+                    moved.append(Claim(kind="status", span=c.span, status=c.status, term_id=subj.term_id,
+                                       term=subj.term, mention=subj.span))
+            per_mention[i] = [c for c in per_mention[i] if c.kind != "status"] + moved
         for cl in per_mention:
             sc.claims.extend(cl)
+        # the status word in the bullet lead itself ("**Low Hemoglobin (11.2), Total RBC (4.10) ...**")
+        if lead_word and not lead_done and any(sp.start <= m.span.start < sp.end for m in lead_mentions):
+            lead_done = True
+            word, la = lead_word
+            st = LEAD_STATUS[word.group(1).lower().split()[0]]
+            wa = la + (len(text[la:]) - len(text[la:].lstrip())) + word.start(1)
+            for m in lead_mentions:
+                if not any(c.kind == "status" and c.term_id == m.term_id for c in sc.claims):
+                    sc.claims.append(Claim(kind="status", span=_sp(text, wa, wa + len(word.group(1))), status=st,
+                                           term_id=m.term_id, term=m.term, mention=m.span))
+        # later sentences of the same bullet that name no test: the lead's subject carries over (weak)
+        elif lead_mentions and not [m for m in ms if m.span.text.lower() not in GENERIC_MENTIONS]:
+            found = _find_statuses(text, sp.start, sp.end)
+            if found:
+                st, fa, fb = min(found, key=lambda x: x[1])
+                for m in lead_mentions:
+                    sc.claims.append(Claim(kind="status", span=_sp(text, fa, fb), status=st, term_id=m.term_id,
+                                           term=m.term, mention=m.span, weak=True))
         for cat, why in find_oversteps(sp.text):
             sc.claims.append(Claim(kind="overstep", span=sp, overstep=cat, detail=why))
         out.append(sc)

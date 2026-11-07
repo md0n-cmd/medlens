@@ -227,6 +227,11 @@ def _check_claim(c: Claim, text: str, rows: list[LabValue], value_row: Optional[
         return Finding(kind="status", label="VERIFIED", term=c.term, ai_span=span, report_span=rep_line(v),
                        report_value_id=v.id,
                        message=f"Matches: {v.value_raw} is {STATUS_WORD[v.status]} the range printed on your report ({rng}).")
+    if c.weak:                     # precision first: an indirect reference is never called a contradiction
+        return Finding(kind="status", label="UNVERIFIABLE", term=c.term, ai_span=span, report_span=rep_line(v),
+                       report_value_id=v.id,
+                       message=f"This sentence doesn't name {v.test_name}; if it means it, the report shows {v.value_raw} "
+                               f"is {STATUS_WORD[v.status]} the printed range ({rng}).")
     return Finding(kind="status", label="CONTRADICTED", term=c.term, ai_span=span, report_span=rep_line(v),
                    report_value_id=v.id,
                    message=f"AI says {CLAIM_WORD[c.status]}; compared with the range printed on your report ({rng}), "

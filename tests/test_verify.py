@@ -383,3 +383,33 @@ def test_strip_markdown_keeps_length_and_offsets():
     t = "# Title\n* **bold** _it_ `code` *em* snake_case 2*3"
     c = strip_markdown(t)
     assert len(c) == len(t) and "snake_case" in c and "2*3" in c and "*" not in c.replace("2*3", "")
+
+
+# ---------------------------------------------------------------- real-world test 2: status binding
+def test_generic_cells_phrase_is_not_a_status_target_when_a_test_is_the_subject():
+    ai = "* **Normal MCV (89.0 fL):** This measures the average size of the red blood cells, which is normal."
+    s = verify(REPORT, ai).sentences[0]
+    st = [f for f in s.findings if f.kind == "status"]
+    assert s.label == "VERIFIED" and [f.term for f in st] == ["Mean Corpuscular Volume"]
+
+
+def test_status_word_in_the_bullet_lead_is_checked_for_every_lead_test():
+    s = verify(REPORT, "* **Low Hemoglobin (11.2 g/dL), Total RBC (4.10), and PCV (36.5%):** These are below range.").sentences[0]
+    st = [(f.term, f.label) for f in s.findings if f.kind == "status"]
+    assert len(st) == 3 and all(lab == "VERIFIED" for _, lab in st)
+    s = verify(REPORT, "* **High Hemoglobin (11.2 g/dL):** Measures oxygen-carrying protein.").sentences[0]
+    assert s.label == "CONTRADICTED"                                     # a wrong lead status is still caught
+
+
+def test_bullet_subject_carries_over_but_never_contradicts():
+    ai = "* **High RDW-CV (14.8%):** RDW measures size variation. A high value means more varied cells."
+    r = verify(REPORT, ai)
+    assert r.sentences[1].label == "VERIFIED"
+    ai = "* **MCV (89.0 fL):** This measures average size. A high value means bigger cells."   # MCV is within range
+    r = verify(REPORT, ai)
+    assert r.sentences[1].label == "UNVERIFIABLE"                        # indirect: not called a contradiction
+
+
+def test_deficiency_is_not_a_low_status():
+    s = verify(REPORT, "* **High RDW-CV (14.8%):** RDW variation with a nutritional deficiency.").sentences[0]
+    assert all(f.label != "CONTRADICTED" for f in s.findings)
