@@ -285,7 +285,7 @@ def test_finding_words_after_indicate_suggest_are_oversteps(ai, phrase):
     r = verify(LIPID, ai)
     s = r.sentences[0]
     assert s.label == "OVERSTEPS" and "NOT_IN_REPORT" not in labels(s)
-    assert phrase in s.findings[-1].message and "diagnosis only your doctor can make" in s.findings[-1].message
+    assert phrase in s.findings[-1].message and "That is an interpretation only your doctor can make" in s.findings[-1].message
 
 
 @pytest.mark.parametrize("ai", ["Your thyroid hormones are fine, indicating normal thyroid function.",
@@ -450,3 +450,43 @@ def test_flag_mismatch_noted_correctly_is_verified():
 def test_flag_mismatch_claimed_but_not_on_report_is_contradicted():
     s = verify(REPORT, 'Your hemoglobin has an "L" flag, but it is within the reference range.').sentences[0]
     assert s.label == "CONTRADICTED" and next(f for f in s.findings if f.kind == "flag").label == "CONTRADICTED"
+
+
+# ---------------------------------------------------------------- real-world test 2: interpretation = OVERSTEPS
+@pytest.mark.parametrize("ai,phrase", [
+    ("The results show two main patterns: mild anemia and signs of a mild immune response.", "patterns: mild anemia"),
+    ("A high RDW is often an early sign of a nutritional deficiency.", "early sign of a nutritional deficiency"),
+    ("A raised count usually indicates that the body is reacting to a recent mild infection.", "reacting to a recent mild infection"),
+    ("These results commonly occur together during recovery from a minor illness.", "recovery from a minor illness"),
+    ("The high ESR is probably due to inflammation.", "due to inflammation"),
+    ("This is consistent with leukocytosis.", "consistent with leukocytosis"),
+])
+def test_linking_results_to_a_condition_is_an_overstep(ai, phrase):
+    s = verify(REPORT, ai).sentences[0]
+    f = next(f for f in s.findings if f.kind == "overstep")
+    assert s.label == "OVERSTEPS" and phrase in f.message
+
+
+def test_link_message_wording():
+    f = next(f for f in verify(REPORT, "This is a sign of infection.").sentences[0].findings if f.kind == "overstep")
+    assert "This links your results to a condition or cause" in f.message
+    assert "That is an interpretation only your doctor can make." in f.message
+
+
+def test_normal_ability_is_an_overstep():
+    assert verify(REPORT, "This indicates normal blood clotting ability.").sentences[0].label == "OVERSTEPS"
+
+
+@pytest.mark.parametrize("ai", [
+    "The Erythrocyte Sedimentation Rate is a general marker for inflammation in the body.",   # definition
+    "White blood cells fight infection.",                                                      # definition
+    "A doctor would review these numbers to determine if a simple iron supplement is necessary.",  # deferral
+    "Here is what they generally indicate:",
+    "Your ESR aligns with the mildly elevated white blood cell count.",                        # no condition
+])
+def test_definitions_and_doctor_deferrals_are_not_oversteps(ai):
+    assert all(f.kind != "overstep" for f in verify(REPORT, ai).sentences[0].findings)
+
+
+def test_direct_supplement_instruction_is_still_an_overstep():
+    assert verify(REPORT, "Take iron supplements daily.").sentences[0].label == "OVERSTEPS"

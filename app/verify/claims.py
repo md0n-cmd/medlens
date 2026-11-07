@@ -205,26 +205,63 @@ def _finding_claim_re() -> re.Pattern:
     return _FINDING_RE
 
 
+CONDITION_WORDS = (r"an(?:a)?emia|infections?|inflammation|inflammatory|immune\s+response|deficienc(?:y|ies)|illness(?:es)?|"
+                   r"diseases?|disorders?|stress|dehydration|insufficiency|failure|damage")
+LINK = (r"\b(?:points?\s+to|pointing\s+to|indicat(?:es?|ing)(?:\s+that)?|suggest(?:s|ing)?(?:\s+that)?|suggestive\s+of|"
+        r"(?:is|are)\s+(?:often\s+|usually\s+|commonly\s+|typically\s+)?(?:an?\s+)?(?:early\s+)?signs?\s+of|"
+        r"(?:an?\s+)?(?:early\s+)?signs?\s+of|usually\s+means|means\s+that|consistent\s+with|typical\s+of|"
+        r"(?:commonly\s+)?occurs?\s+(?:together\s+)?(?:during|with|in)|commonly\s+occur|due\s+to|caused\s+by|"
+        r"(?:a|the)\s+result\s+of|reacting\s+to|recovery\s+from|shows?\s+(?:\w+\s+){0,3}patterns?|aligns?\s+with)\b")
+DEFINITION = re.compile(r"\b(?:is\s+(?:a|an)\s+(?:\w+\s+){0,2}(?:marker|measure|test)\s+(?:for|of)|measures|is\s+used\s+to|"
+                        r"used\s+to\s+(?:check|detect|screen|look))\b", re.I)
+DEFERRAL = re.compile(r"\b(?:a|your|the)\s+(?:doctor|physician|clinician|healthcare\s+provider)\s+(?:would|will|can|may|might|"
+                      r"should|could)\s+(?:\w+\s+){0,3}(?:review|determine|decide|assess|check|evaluate|interpret|advise|"
+                      r"confirm|look)\b", re.I)
+HEALTH_ABILITY = re.compile(r"\b(?:normal|healthy|good|proper|optimal|excellent)\s+(?:\w+\s+){0,2}(?:function(?:ing)?|"
+                            r"ability|capacity|health)\b(?!\s+tests?)", re.I)
+_LINK_RE: Optional[re.Pattern] = None
+
+
+def _link_re() -> re.Pattern:
+    global _LINK_RE
+    if _LINK_RE is None:
+        cond = rf"(?:{_finding_words()}|{SUFFIX_FINDING.replace('megaly)', 'megaly|cytosis|penia)')}|{CONDITION_WORDS})"
+        _LINK_RE = re.compile(LINK + rf"[^.;!?]{{0,80}}?\b{cond}\b", re.I)
+    return _LINK_RE
+
+
 def find_oversteps(sentence: str) -> list[tuple[str, str]]:
     """[(category, the exact phrase)] for diagnosis / treatment / reassurance / interpretation in one sentence."""
     out: list[tuple[str, str]] = []
+    deferred = bool(DEFERRAL.search(sentence))      # "a doctor would review/determine ...": deferring, not advising
     for why in violations(sentence):
-        out.append((SAFETY_KIND.get(why, "treatment"), why))
-    if not QUOTING_REPORT.search(sentence):
+        cat = SAFETY_KIND.get(why, "treatment")
+        if not (deferred and cat == "treatment"):
+            out.append((cat, why))
+    if not QUOTING_REPORT.search(sentence) and not deferred:
         m = _finding_claim_re().search(sentence)
         if m:
-            out.append(("diagnosis", m.group(0).strip()))
-    for rx in INTERPRETATION:
-        m = rx.search(sentence)
-        if m:
-            out.append(("interpretation", m.group(0).strip()))
+            out.append(("link", m.group(0).strip()))
+        else:
+            for lm in _link_re().finditer(sentence):
+                if DEFINITION.search(sentence[:lm.start()]) and not re.search(r"\b(?:because|which|this|these|so)\b",
+                                                                             sentence[:lm.start()], re.I):
+                    continue                        # 'ESR is a general marker for inflammation': a definition
+                out.append(("link", lm.group(0).strip()))
+                break
+    if not deferred:
+        for rx in [*INTERPRETATION, HEALTH_ABILITY]:
+            m = rx.search(sentence)
+            if m:
+                out.append(("interpretation", m.group(0).strip()))
+                break
     for rx in DIAG_EXTRA:
         m = rx.search(sentence)
         if m:
             out.append(("diagnosis", m.group(0).strip()))
     for rx in TREAT_EXTRA:
         m = rx.search(sentence)
-        if m:
+        if m and not deferred:
             out.append(("treatment", m.group(0).strip()))
     for rx in REASSURE_EXTRA:
         m = rx.search(sentence)
@@ -232,8 +269,9 @@ def find_oversteps(sentence: str) -> list[tuple[str, str]]:
             out.append(("reassurance", m.group(0).strip()))
     seen, uniq = set(), []
     for cat, why in out:
-        if cat not in seen:
-            seen.add(cat)
+        key = "diagnosis" if cat == "link" else cat       # a condition named via 'sign of' / 'points to': count once
+        if key not in seen:
+            seen.add(key)
             uniq.append((cat, why))
     return uniq
 
