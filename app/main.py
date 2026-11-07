@@ -85,8 +85,10 @@ def ai_samples() -> list[dict]:
         prefix, kind = p.stem.split("__")
         report_id = prefix if prefix in stems else next((s for s in stems if s.startswith(prefix + "_")), prefix)
         label = {"correct": "correct", "realistic": "chatbot style, with errors"}.get(kind, "with errors")
+        title = (f"Real chatbot answer · {report_id.replace('_', ' ').title()}" if kind == "chatbot_real"
+                 else f"Sample AI explanation ({label}) · {report_id.replace('_', ' ').title()}")
         out.append({"id": p.stem, "report_id": report_id, "kind": kind,
-                    "title": f"Sample AI explanation ({label}) · {report_id.replace('_', ' ').title()}",
+                    "title": title,
                     "text": p.read_text(encoding="utf-8")})
     return out
 
