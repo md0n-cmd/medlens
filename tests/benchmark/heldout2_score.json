@@ -1,0 +1,13 @@
+{
+  "history": [
+    {
+      "correct": 38,
+      "false_alarms": 21,
+      "misses": 14,
+      "total": 73,
+      "labs": "28/43",
+      "imaging": "10/30",
+      "note": "first run, unchanged build 4c71b5e, before any change"
+    }
+  ]
+}

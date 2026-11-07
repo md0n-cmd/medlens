@@ -18,6 +18,7 @@ Scoring (tests/benchmark/gold.json):
 from __future__ import annotations
 
 import json
+import re
 import sys
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -40,6 +41,7 @@ class Row:
     expected: str
     got: str
     outcome: str            # "correct" | "false alarm" | "miss"
+    category: str = "labs"  # "labs" | "imaging"
 
 
 @dataclass
@@ -85,6 +87,7 @@ def run(gold_path: Path = GOLD) -> Score:
         ai = (ROOT / f["ai"]).read_text(encoding="utf-8")
         r = verify(report, ai)
         name = Path(f["ai"]).stem
+        cat = f.get("category") or category(report)
         for c in f["cases"]:
             s = find_sentence(r, c["find"])
             got = s.label if s else "(sentence not found)"
@@ -94,17 +97,34 @@ def run(gold_path: Path = GOLD) -> Score:
                 outcome = "false alarm"
             else:
                 outcome = "miss"
-            score.rows.append(Row(name, c["find"], "/".join(c["accept"]), got, outcome))
-        expect = f.get("expect_omissions")
+            score.rows.append(Row(name, c["find"], "/".join(c["accept"]), got, outcome, cat))
+        expect = f.get("expect_omissions") or []
         forbid = f.get("forbid_omissions")
-        if expect or forbid is not None:
-            got_om = {o.test_name for o in r.omissions}
-            bad = (got_om - set(expect or [])) | (got_om & set(forbid or []))
-            missing = set(expect or []) - got_om
-            outcome = "false alarm" if bad else ("miss" if missing else "correct")
-            what = "omissions" + (f" (forbid {sorted(forbid)})" if forbid else "")
-            score.rows.append(Row(name, what, str(sorted(expect or [])), str(sorted(got_om)), outcome))
+        got_om = sorted(o.test_name for o in r.omissions)
+        hit = lambda want, have: want.lower() in have.lower()  # noqa: E731  (substring match)
+        # one check per expected omission name
+        for want in expect:
+            ok = any(hit(want, g) for g in got_om)
+            score.rows.append(Row(name, f"omission: {want}", want, str(got_om), "correct" if ok else "miss", cat))
+        # an omission nobody expected is a false alarm (a row only when it happens)
+        if expect:
+            extra = [g for g in got_om if not any(hit(w, g) for w in expect)]
+            if extra:
+                score.rows.append(Row(name, "unexpected omissions", "none", str(extra), "false alarm", cat))
+        if forbid is not None:
+            bad = [g for g in got_om if any(hit(fb, g) for fb in forbid)]
+            score.rows.append(Row(name, f"omissions (forbid {sorted(forbid)})", "none of these", str(bad),
+                                  "false alarm" if bad else "correct", cat))
     return score
+
+
+IMAGING = re.compile(r"\b(?:findings|impression|opinion)\b", re.I)
+
+
+def category(report: str) -> str:
+    """'imaging' for narrative reports (FINDINGS / IMPRESSION sections), 'labs' for tables of values."""
+    from app.pipeline import analyze
+    return "imaging" if any(IMAGING.search(sec.name) for sec in analyze(report).sections) else "labs"
 
 
 def table(score: Score) -> str:
@@ -118,8 +138,13 @@ def table(score: Score) -> str:
 
 
 def summary(score: Score) -> str:
-    return (f"correct {score.correct}/{score.total} | false alarms {score.false_alarms} | "
-            f"misses {score.misses}")
+    out = (f"correct {score.correct}/{score.total} | false alarms {score.false_alarms} | "
+           f"misses {score.misses}")
+    cats = sorted({r.category for r in score.rows})
+    if len(cats) > 1:
+        out += " | " + ", ".join(f"{c} {sum(r.outcome == 'correct' for r in score.rows if r.category == c)}/"
+                                 f"{sum(r.category == c for r in score.rows)}" for c in cats)
+    return out
 
 
 SCORE = ROOT / "tests" / "benchmark" / "score.json"
@@ -162,7 +187,16 @@ def run_heldout() -> Optional[Score]:
     return sc
 
 
+SETS = {"main": GOLD, "heldout_round1": ROOT / "tests" / "benchmark" / "heldout.json",
+        "heldout_round2": ROOT / "tests" / "benchmark" / "heldout2.json"}
+
+
 if __name__ == "__main__":
+    if "--set" in sys.argv:
+        name = sys.argv[sys.argv.index("--set") + 1]
+        sc = run(SETS[name])
+        print(summary(sc) if "--brief" in sys.argv else table(sc))
+        sys.exit(0)
     if "--heldout" in sys.argv:
         hs = run_heldout()
         print("no tests/benchmark/heldout.json yet" if hs is None else ("HELD-OUT\n" + table(hs)))
