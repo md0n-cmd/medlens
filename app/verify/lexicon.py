@@ -63,6 +63,7 @@ DEFINITIONS = [
     r"\b(?:is|are)\s+(?:a|an)\s+(?:\w+\s+){0,3}?(?:marker|measure|indicator)\s+(?:for|of)\b",
     r"\b(?:is|are)\s+(?:produced|made|found|formed|released|stored)\b",
     r"\b(?:this|it|which)\s+measures?\b",
+    r"\bis\s+another\s+(?:word|name|term)\s+for\b",
     # the purpose of a test: "used to screen for diabetes", "ordered this test to check for anemia"
     r"\b(?:used|ordered|done|performed|requested)\s+(?:\w+\s+){0,3}?to\s+(?:screen|check|test|look|detect|monitor|rule\s+out)"
     r"(?:\s+for)?\b",
@@ -78,3 +79,23 @@ DEFERRALS = [
     r"\bask\s+(?:your|a)\s+(?:doctor|physician|clinician)\b",
     r"\b(?:discuss|talk)\s+(?:\w+\s+){0,3}with\s+(?:your|a)\s+(?:doctor|physician|clinician)\b",
 ]
+
+# ---------------------------------------------------------------- quotes and certainty
+# glossary findings that name the same thing (a report's "calculus" is the AI's "stone"/"gallstone")
+FINDING_SYNONYMS = [
+    ["calculus", "cholelithiasis"],
+    ["fatty_liver", "hepatomegaly"],
+]
+# the AI keeps the uncertainty when one of these is present
+AI_HEDGES = [
+    r"likely", r"possibl[ey]", r"probabl[ey]", r"may", r"might", r"could", r"suggest(?:s|ive|ing)?", r"\?",
+    r"cannot\s+be\s+ruled\s+out", r"consistent\s+with", r"appears?", r"seems?", r"suspected", r"suspicion",
+    r"if", r"whether", r"not\s+confirmed", r"concern\s+for", r"query",
+]
+# the AI is talking about this patient (not explaining a word in general)
+PATIENT_REFERENCE = [
+    r"there\s+(?:is|are)", r"you\s+have", r"your", r"this\s+(?:condition|finding|stone|is)", r"is\s+called",
+    r"the\s+patient", r"(?:report|scan|ultrasound)\s+shows", r"measuring", r"inside\s+the",
+]
+# the AI attributes a hedged finding to the report ("a mention of possible ...")
+ATTRIBUTION = [r"mention(?:s|ed)?\s+of", r"the\s+report\s+(?:mentions|notes|says)", r"radiologist\s+(?:mentions|notes|says)"]

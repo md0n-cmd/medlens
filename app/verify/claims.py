@@ -43,19 +43,23 @@ def split_sentences(text: str) -> list[Span]:
     (E.S.R., Dr., Mrs., i.e., e.g., No., a single capital letter like 'A.'). Newlines always split."""
     cuts, depth, i, n = [], 0, 0, len(text)
     in_table = text.lstrip(" \t").startswith("|")
+    in_quote = False
     while i < n:
         ch = text[i]
         if ch == "\n":
             depth = 0
+            in_quote = False
             cuts.append(i + 1)
             in_table = text[i + 1:].lstrip(" \t").startswith("|")    # a markdown table row stays one sentence
         elif in_table:
             pass
+        elif ch in '"“”':                           # never split inside a quotation: "? Early cholecystitis ..."
+            in_quote = (not in_quote) if ch == '"' else (ch == "“")
         elif ch in "([":
             depth += 1
         elif ch in ")]":
             depth = max(0, depth - 1)
-        elif ch in ".!?" and depth == 0:
+        elif ch in ".!?" and depth == 0 and not in_quote:
             j = i
             while j + 1 < n and text[j + 1] in ".!?":
                 j += 1
@@ -80,7 +84,7 @@ Status = Literal["LOW", "HIGH", "NORMAL"]
 
 @dataclass
 class Claim:
-    kind: Literal["value", "range", "status", "overstep", "group", "flag", "outside_range"]
+    kind: Literal["value", "range", "status", "overstep", "group", "flag", "outside_range", "quote", "certainty"]
     span: Span                                   # the claim text in the AI explanation
     term_id: Optional[str] = None
     term: Optional[str] = None
@@ -289,6 +293,8 @@ def _lexicon_res() -> dict:
             "definition": re.compile("|".join(L.DEFINITIONS), re.I),
             "def_after_test": re.compile(L.DEFINITION_AFTER_TEST, re.I),
             "deferral": re.compile("|".join(L.DEFERRALS), re.I),
+            "attribution": re.compile(r"\b(?:" + "|".join(L.ATTRIBUTION) + r")\b", re.I),
+            "ai_hedge": re.compile(r"\b(?:" + "|".join(h for h in L.AI_HEDGES if h != r"\?") + r")\b", re.I),
         }
     return _LEX
 
@@ -302,6 +308,8 @@ def _default_interpretation(sentence: str, mention_spans: list[tuple[int, int]])
     lx = _lexicon_res()
     if lx["deferral"].search(sentence) or QUOTING_REPORT.search(sentence):
         return None
+    if lx["attribution"].search(sentence) and lx["ai_hedge"].search(sentence):
+        return None                               # "a mention of possible early ...": faithful to the report's hedge
     if lx["definition"].search(sentence) or any(lx["def_after_test"].match(sentence[e:]) for _, e in mention_spans):
         return None
     if CATEGORY_RE.match(sentence) and re.search(r"\d", sentence):
@@ -421,7 +429,8 @@ BULLET_RE = re.compile(r"^\s*(?:[*\-•·]|\d+[.)])\s+")
 
 def _heading_group(line: str) -> Optional[str]:
     """'**Liver Function Tests (LFT)**' -> 'liver'. A heading is a short line with no sentence punctuation."""
-    if BULLET_RE.match(line) or re.search(r"[.!?]\s*$", line.strip()) or re.search(r"\d", line):
+    if BULLET_RE.match(line) or re.search(r"[.!?][\"”']?\s*$", line.strip()) or re.search(r"\d", line) \
+            or line.lstrip().startswith(('"', "“")):
         return None
     m = HEADING_RE.match(line)
     if not m:
@@ -617,6 +626,30 @@ def _table_row_claims(text: str, row: dict) -> tuple[list[Mention], list[Claim]]
     return [m], claims
 
 
+# ---------------------------------------------------------------- quotes and certainty
+QUOTE_RE = re.compile(r'["“]\s*([^"“”]{12,}?)\s*["”]')
+QUOTE_INTRO = re.compile(r"\b(?:report|radiologist|doctor|lab|pathologist|impression|scan|ultrasound)\b[^.!?]*\b(?:says|states|stated|"
+                         r"has\s+written|wrote|writes|reads|notes|mentions|lists)\s*:\s*$", re.I)
+IMPRESSION_LINE = re.compile(r"^\W*(?:impression|conclusion|opinion)\s*:\s*\S", re.I)
+NEGATED_CERTAINTY = re.compile(r"\b(?:does\s+not|doesn't|do\s+not|don't|cannot|can't|not\s+enough\s+to|unable\s+to|"
+                               r"did\s+not)\s+(?:\w+\s+){0,2}?(?:confirm|establish|tell|rule\s+out|prove|show|determine|"
+                               r"diagnose|mean)\b", re.I)
+
+
+def _lex_alt(items) -> re.Pattern:
+    return re.compile(r"\b(?:" + "|".join(items) + r")\b", re.I)
+
+
+def _certainty_candidate(sentence: str, gl: dict) -> list[str]:
+    """Finding terms the AI states about this patient without any hedge (checked against the report's hedges)."""
+    from app.verify import lexicon as L
+    if _lex_alt(L.AI_HEDGES).search(sentence) or NEGATED_CERTAINTY.search(sentence):
+        return []
+    if not _lex_alt(L.PATIENT_REFERENCE).search(sentence) or _lexicon_res()["definition"].search(sentence):
+        return []
+    return sorted({t.term_id for t in find_terms(sentence) if gl.get(t.term_id, {}).get("kind") == "finding"})
+
+
 # a censored value right after the test name is the AI's value, not a range: "TSH <0.01: ..."
 LEAD_CENSORED = re.compile(rf"^\s*(?:[:=]|is|of|at|was|=)?\s*(?P<cmp><=|>=|≤|≥|<|>)\s*(?P<num>{N})(?![\d.])")
 
@@ -808,6 +841,7 @@ def _extract(text: str, original: str) -> list[SentenceClaims]:
     heading_tests: dict[str, set] = {}
     bullet_line, lead_mentions, lead_done, lead_word = -1, [], False, None
     prev_lead: list[Mention] = []            # the last bullet lead, for follow-on bullets that name no test
+    quote_mode = False                       # after "Your report says:", the following bullets are quotes
     tables = parse_tables(text)
     for sp in split_sentences(text):
         sc = SentenceClaims(span=sp)
@@ -968,6 +1002,27 @@ def _extract(text: str, original: str) -> list[SentenceClaims]:
                 if m.term_id not in seen_t:
                     seen_t.add(m.term_id)
                     sc.claims.append(Claim(kind="flag", span=sp, term_id=m.term_id, term=m.term, mention=m.span))
+        # ---- quotes: "...", lines after "Your report says:", "Impression: ..." lines
+        stext = text[sp.start:sp.end]
+        is_bullet = bool(BULLET_RE.match(whole_line))
+        qspans = [(sp.start + q.start(1), sp.start + q.end(1)) for q in QUOTE_RE.finditer(stext)]
+        if (quote_mode and is_bullet) or IMPRESSION_LINE.match(stext):
+            qspans.append((sp.start, sp.end))
+        for qa, qb in qspans:
+            sc.claims.append(Claim(kind="quote", span=_sp(text, qa, qb), detail=text[qa:qb]))
+        if QUOTE_INTRO.search(stext):
+            quote_mode = True
+        elif not is_bullet and not qspans:
+            quote_mode = False
+        whole_quote = any(qb - qa >= 0.8 * (sp.end - sp.start) for qa, qb in qspans)
+        # ---- certainty: a finding the report hedges, stated here as certain
+        if not whole_quote:
+            outside = stext
+            for qa, qb in qspans:
+                outside = outside[:qa - sp.start] + " " * (qb - qa) + outside[qb - sp.start:]
+            cands = _certainty_candidate(outside, load_glossary())
+            if cands:
+                sc.claims.append(Claim(kind="certainty", span=sp, detail=",".join(cands)))
         for cat, why in find_oversteps(text[sp.start:sp.end],
                                        [(m.span.start - sp.start, m.span.end - sp.start) for m in sc.mentions]):
             sc.claims.append(Claim(kind="overstep", span=sp, overstep=cat, detail=why))

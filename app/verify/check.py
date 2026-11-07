@@ -11,7 +11,7 @@ from app.models import OUT_OF_RANGE, AnalysisResult, LabValue, ReferenceRange, S
 from app.parser.ranges import units_compatible
 from app.safety import is_safe
 from app.pipeline import analyze
-from app.glossary.matcher import load_glossary
+from app.glossary.matcher import find_terms, load_glossary
 from app.verify.claims import GROUP_TERMS, GROUPS, NORMAL_CATEGORIES, Claim, extract, strip_markdown
 from app.verify.names import names_match
 
@@ -44,7 +44,7 @@ RELATED_TESTS = {
 
 
 class Finding(BaseModel):
-    kind: Literal["value", "range", "status", "overstep", "mention", "group", "flag", "outside_range"]
+    kind: Literal["value", "range", "status", "overstep", "mention", "group", "flag", "outside_range", "quote", "certainty"]
     label: Label
     message: str
     term: Optional[str] = None
@@ -444,12 +444,97 @@ def _check_group(c: Claim, r: AnalysisResult, idx: dict[str, list[LabValue]]) ->
                    message=f"Matches: all {len(rows)} {name} on your report are within their printed ranges.")
 
 
+# ---------------------------------------------------------------- quotes and certainty
+def _norm_q(x: str) -> str:
+    return " ".join(re.sub(r"[^\w\s?]", " ", strip_markdown(x).lower()).replace("?", " ? ").split())
+
+
+def _best_quote_match(q: str, report: str) -> tuple[float, str, Optional[Span]]:
+    """Best fuzzy match of quote q against report lines (whole line or a same-length window of it)."""
+    import difflib
+    nq = _norm_q(q)
+    best = (0.0, "", None)
+    pos = 0
+    for line in report.split("\n"):
+        a, pos = pos, pos + len(line) + 1
+        nl = _norm_q(re.sub(r"^\s*\d+[.)]\s*", "", line))      # "1. Hepatomegaly": the list number isn't content
+        if not nl:
+            continue
+        cands = [nl]
+        words = nl.split()
+        width = len(nq.split())
+        if len(words) > width:
+            cands += [" ".join(words[i:i + width + k]) for i in range(len(words) - width + 1) for k in (-1, 0, 1)
+                      if width + k > 0]
+        for c in cands:
+            r = difflib.SequenceMatcher(None, nq, c).ratio()
+            if r > best[0]:
+                lead = len(line) - len(line.lstrip())
+                best = (r, c, Span(start=a + lead, end=a + lead + len(line.strip()), text=line.strip()))
+    return best
+
+
+def _meaning_changed(q: str, rep: str) -> bool:
+    nums = lambda x: set(re.findall(r"\d+(?:\.\d+)?", x))  # noqa: E731
+    neg = lambda x: bool(re.search(r"\b(?:no|not|cannot|without|absent|negative)\b", x))  # noqa: E731
+    from app.classify import find_hedges
+    return nums(q) != nums(rep) or neg(q) != neg(rep) or (bool(find_hedges(rep)) and not find_hedges(q))
+
+
+def _check_quote(c: Claim, analysis: AnalysisResult) -> Optional[Finding]:
+    ratio, matched, rep_span = _best_quote_match(c.detail or "", analysis.text)
+    if ratio >= 0.7 and _meaning_changed(_norm_q(c.detail or ""), matched):   # a changed number, negation or hedge
+        return Finding(kind="quote", label="CONTRADICTED", ai_span=c.span, report_span=rep_span,
+                       message=f"Misquotes your report: it says '{rep_span.text if rep_span else matched}'.")
+    if ratio >= 0.85:
+        return Finding(kind="quote", label="VERIFIED", ai_span=c.span, report_span=rep_span,
+                       message="Quotes your report accurately.")
+    return None
+
+
+def _report_hedged_findings(analysis: AnalysisResult) -> dict[str, tuple[str, Span]]:
+    """finding family -> (the report's hedged phrase, its line) for findings the report states with a hedge."""
+    from app.classify import find_hedges
+    from app.verify import lexicon as L
+    gl = load_glossary()
+    out: dict[str, tuple[str, Span]] = {}
+    pos = 0
+    for line in analysis.text.split("\n"):
+        a, pos = pos, pos + len(line) + 1
+        hedges = list(find_hedges(line))
+        if not hedges and "?" not in line:
+            continue
+        for t in find_terms(line):
+            if gl.get(t.term_id, {}).get("kind") != "finding":
+                continue
+            h = min(hedges, key=lambda m: abs(m.start() - t.span.start)) if hedges else None
+            if h is not None and h.start() < t.span.start:
+                phrase = line[h.start():t.span.end]
+            else:
+                phrase = line[max(0, t.span.start - 2):t.span.end].strip(" ;,")
+                q = line.rfind("?", 0, t.span.start + 1)
+                phrase = line[q:t.span.end] if q != -1 and t.span.start - q < 12 else line[t.span.start:t.span.end + 40].split(";")[0]
+            lead = len(line) - len(line.lstrip())
+            span = Span(start=a + lead, end=a + lead + len(line.strip()), text=line.strip())
+            for fam in _families(t.term_id, L.FINDING_SYNONYMS):
+                out.setdefault(fam, (" ".join(phrase.split()), span))
+    return out
+
+
+def _families(tid: str, synonyms) -> list[str]:
+    for group in synonyms:
+        if tid in group:
+            return [group[0]]
+    return [tid]
+
+
 def verify(report_text: str, ai_text: str) -> VerifyResult:
     from app.parser.lines import normalize_text
     ai_text = normalize_text(ai_text)
     analysis = analyze(report_text)
     rtext = analysis.text
     idx = _index(analysis)
+    hedged = _report_hedged_findings(analysis)
     age_txt = (analysis.structured_summary.report.get("age") or "") if analysis.structured_summary else ""
     patient_age = float(age_txt.split()[0]) if age_txt[:1].isdigit() else None
     sentences: list[VerifiedSentence] = []
@@ -459,9 +544,27 @@ def verify(report_text: str, ai_text: str) -> VerifyResult:
         # value claims first: a status in the same segment is judged against the row whose value matched
         matched_row: dict[tuple[int, int], LabValue] = {}
         pairs: list[tuple[Claim, Finding]] = []
-        for c in sorted(sc.claims, key=lambda c: c.kind != "value"):
+        matched_quotes: list[Span] = []
+        # quotes are checked first: an overstep phrase inside an accurate quote is the report speaking
+        for c in sorted(sc.claims, key=lambda c: (c.kind != "quote", c.kind != "value")):
             if c.kind == "group":
                 findings.append(_check_group(c, analysis, idx))
+                continue
+            if c.kind == "quote":
+                qf = _check_quote(c, analysis)
+                if qf is not None:
+                    findings.append(qf)
+                    if qf.label == "VERIFIED":
+                        matched_quotes.append(c.span)
+                continue
+            if c.kind == "certainty":
+                from app.verify import lexicon as L
+                for tid in (c.detail or "").split(","):
+                    hit = next((hedged[f] for f in _families(tid, L.FINDING_SYNONYMS) if f in hedged), None)
+                    if hit:
+                        findings.append(Finding(kind="certainty", label="OVERSTEPS", ai_span=c.span, report_span=hit[1],
+                                                message=f"Your report says '{hit[0]}'; the AI states it as certain."))
+                        break
                 continue
             if c.kind == "outside_range":
                 findings.append(Finding(kind="outside_range", label="RANGE_NOT_FROM_REPORT", ai_span=c.span,
@@ -484,6 +587,13 @@ def verify(report_text: str, ai_text: str) -> VerifyResult:
             findings.append(f)
             pairs.append((c, f))
         _multi_range_assumptions(pairs, findings, analysis, patient_age, sc.span.text)
+        if matched_quotes:
+            def in_quote(f: Finding) -> bool:
+                if any(q.end - q.start >= 0.8 * (sc.span.end - sc.span.start) for q in matched_quotes):
+                    return True
+                phrase = f.message.split("('")[1].split("')")[0].lower() if "('" in f.message else ""
+                return bool(phrase) and any(phrase in q.text.lower() for q in matched_quotes)
+            findings = [f for f in findings if not (f.kind in ("overstep", "certainty") and in_quote(f))]
         claimed = {(c.mention.start, c.mention.end) for c in sc.claims if c.mention}
         for m in sc.mentions:
             mentioned.add(m.term_id)

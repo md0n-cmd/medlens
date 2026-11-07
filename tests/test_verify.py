@@ -714,3 +714,40 @@ def test_quoting_every_printed_range_is_fine():
 def test_status_word_relying_on_one_range_is_unverifiable():
     f = finding_of("Your HDL is acceptable for men.", "status")
     assert f.label == "UNVERIFIABLE" and "The AI used the Men range" in f.message
+
+
+# ---------------------------------------------------------------- held-out round 1, step 3: quotes and certainty
+US = (SAMPLES / "05_ultrasound.txt").read_text()
+
+
+def test_accurate_quote_is_verified_and_never_an_overstep():
+    r = verify(US, 'The radiologist has written:\n\n"Gallbladder is distended. A 6 mm echogenic focus is seen, likely a calculus."')
+    s = r.sentences[-1]
+    assert s.label == "VERIFIED" and [f.kind for f in s.findings if f.label != "NEUTRAL"] == ["quote"]
+    assert s.findings[0].message == "Quotes your report accurately."
+
+
+def test_lines_after_report_says_are_quotes():
+    r = verify(US, "Your report says:\n\n- Impression: Hepatomegaly with grade I fatty liver.")
+    assert r.sentences[-1].label == "VERIFIED"
+
+
+def test_misquote_with_changed_meaning_is_contradicted():
+    r = verify(US, 'The report says "A 9 mm echogenic focus is seen, likely a calculus."')
+    f = next(f for f in r.sentences[0].findings if f.kind == "quote")
+    assert f.label == "CONTRADICTED" and f.message.startswith("Misquotes your report")
+
+
+@pytest.mark.parametrize("ai", ["There is a 6 mm stone in your gallbladder.", "This condition is called cholelithiasis."])
+def test_dropping_the_reports_hedge_is_an_overstep(ai):
+    s = verify(US, ai).sentences[0]
+    f = next(f for f in s.findings if f.kind == "certainty")
+    assert f.label == "OVERSTEPS" and "the AI states it as certain" in f.message
+
+
+@pytest.mark.parametrize("ai", ["There may be a small stone in your gallbladder.",          # hedge kept
+                                "The scan alone does not confirm cholecystitis.",            # negated certainty
+                                "A calculus is another word for a stone.",                   # definition
+                                "There is also a mention of possible gallbladder inflammation."])  # attributed + hedged
+def test_keeping_the_hedge_is_not_a_certainty_overstep(ai):
+    assert not [f for f in verify(US, ai).sentences[0].findings if f.kind == "certainty"]
