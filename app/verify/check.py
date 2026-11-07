@@ -305,6 +305,74 @@ def _check_claim(c: Claim, text: str, rows: list[LabValue], value_row: Optional[
 
 # glossary category says CBC, but labs report ESR as its own test: only a CBC section heading makes it a blood count
 CATEGORY_EXCEPTIONS = {"cbc": {"erythrocyte_sedimentation_rate"}}
+SEX_WORDS = {"male": r"\b(?:men|man|male|males)\b", "female": r"\b(?:women|woman|female|females)\b"}
+
+
+def _position(v: LabValue, r: ReferenceRange) -> str:
+    from app.parser.ranges import compare_numeric
+    st = compare_numeric(v.value_num, v.value_comparator, r, v.value_high)
+    return {Status.WITHIN: "within", Status.ABOVE: "above", Status.BELOW: "below"}.get(st, "close to")
+
+
+def _multi_range_assumptions(pairs, findings, analysis: AnalysisResult, age: Optional[float], sentence: str) -> None:
+    """Several printed ranges and the header doesn't settle which applies: a claim that relies on ONE of them is
+    UNVERIFIABLE (unless the value is on the same side of all of them); the message names the assumption."""
+    from app.parser.ranges import label_band, _band_match
+    sex = analysis.patient_sex
+    by_id = {v.id: v for v in analysis.values}
+    for c, f in pairs:
+        v = by_id.get(f.report_value_id or "")
+        if v is None or v.status != Status.AMBIGUOUS or v.reference is None or v.reference.kind != "multi":
+            continue
+        if v.value_num is None or _settled_across_ranges(v) is not None:
+            continue
+        alts = v.reference.alternatives
+        applies_to_value = any(g.report_value_id == v.id and g.kind in ("value", "status") for g in findings)
+        quoted = {id(a) for cc, _ in pairs if cc.kind == "range" and cc.range is not None
+                  for a in alts if _ranges_equal(cc.range, a.range)}
+        if f.kind == "range" and (not applies_to_value or len(quoted) == len(alts)):
+            continue                                  # quoting printed ranges (one, or all of them) is fine
+        if f.kind not in ("range", "status"):
+            continue
+        assumed = None
+        if f.kind == "range" and c.range is not None:
+            assumed = next((a for a in alts if _ranges_equal(c.range, a.range)), None)
+        if assumed is None:
+            for a in alts:
+                b = label_band(a.label)
+                if b.sex and re.search(SEX_WORDS[b.sex], sentence, re.I):
+                    assumed = a
+        f.label = "UNVERIFIABLE"
+        f.message = _assumption_message(v, alts, assumed, sex, age)
+
+
+def _assumption_message(v: LabValue, alts, assumed, sex: Optional[str], age: Optional[float]) -> str:
+    from app.parser.ranges import label_band, _band_match
+    bands = [label_band(a.label) for a in alts]
+    if any(b.pregnancy for b in bands):
+        preg = next(a for a, b in zip(alts, bands) if b.pregnancy)
+        return (f"Your report also prints a pregnancy range ({preg.label}: {preg.range.display()}) and doesn't say "
+                f"whether it applies, so MedLens can't tell which range to use.")
+    if any(b.sex for b in bands) and sex is None:
+        if assumed is not None:
+            other = [a for a in alts if a is not assumed]
+            others = "; ".join(f"for {label_band(a.label).sex and ('women' if label_band(a.label).sex == 'female' else 'men') or a.label} it prints {a.range.display()}"
+                               for a in other)
+            return f"The AI used the {assumed.label} range ({assumed.range.display()}). Your report doesn't state sex; {others}."
+        return ("Your report prints different ranges for men and women ("
+                + "; ".join(f"{a.label}: {a.range.display()}" for a in alts) + ") and doesn't state sex.")
+    fit = [a for a, b in zip(alts, bands) if _band_match(b, sex, age) is not False] or alts
+    who = f"age {age:g}" if age is not None else "this patient"
+    pos = [_position(v, a.range) for a in fit]
+    if len(fit) == 2 and pos[0] != pos[1]:
+        tail = f"{v.value_raw} is {pos[0]} one and {pos[1]} the other."
+    else:
+        tail = f"{v.value_raw} is " + ", ".join(f"{p} {a.range.display()}" for p, a in zip(pos, fit)) + "."
+    ranges = " and ".join(a.range.display() for a in fit)
+    used = f"The AI used {assumed.range.display()}. " if assumed is not None and len(fit) > 1 else ""
+    return f"{used}Your report prints {len(fit)} ranges that fit {who}: {ranges}. {tail}"
+
+
 UNSETTLED = {Status.AMBIGUOUS, Status.NO_RANGE, Status.UNPARSEABLE, Status.UNIT_MISMATCH, Status.INDETERMINATE}
 SIDE = {Status.ABOVE: "above", Status.BELOW: "below", Status.DIFFERS: "different from"}
 GROUP_NAME = {"liver": "liver tests", "kidney": "kidney tests", "cbc": "blood counts", "thyroid": "thyroid tests",
@@ -382,12 +450,15 @@ def verify(report_text: str, ai_text: str) -> VerifyResult:
     analysis = analyze(report_text)
     rtext = analysis.text
     idx = _index(analysis)
+    age_txt = (analysis.structured_summary.report.get("age") or "") if analysis.structured_summary else ""
+    patient_age = float(age_txt.split()[0]) if age_txt[:1].isdigit() else None
     sentences: list[VerifiedSentence] = []
     mentioned: set[str] = set()
     for sc in extract(ai_text):
         findings: list[Finding] = []
         # value claims first: a status in the same segment is judged against the row whose value matched
         matched_row: dict[tuple[int, int], LabValue] = {}
+        pairs: list[tuple[Claim, Finding]] = []
         for c in sorted(sc.claims, key=lambda c: c.kind != "value"):
             if c.kind == "group":
                 findings.append(_check_group(c, analysis, idx))
@@ -411,6 +482,8 @@ def verify(report_text: str, ai_text: str) -> VerifyResult:
             if c.kind == "value" and f.label == "VERIFIED":
                 matched_row[key] = next(v for v in rows if v.id == f.report_value_id)
             findings.append(f)
+            pairs.append((c, f))
+        _multi_range_assumptions(pairs, findings, analysis, patient_age, sc.span.text)
         claimed = {(c.mention.start, c.mention.end) for c in sc.claims if c.mention}
         for m in sc.mentions:
             mentioned.add(m.term_id)

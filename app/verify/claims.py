@@ -134,9 +134,9 @@ HIGH_RE = re.compile(r"\b(?:high|higher|above\s+(?:the\s+|their\s+|its\s+|your\s
                      r"increased|on\s+the\s+higher\s+side)\b", re.I)
 # 'normal' is a status only when it predicates the test or its value ("X is normal", "normal at 9.0",
 # "within normal", "normal X level"); attributive uses ("normal breakdown of", "normal part of") are not claims
-NORMAL_WORD = r"(?:normal|fine|healthy|okay|ok)"
+NORMAL_WORD = r"(?:normal|fine|healthy|okay|ok|acceptable|desirable|adequate)"
 NORMAL_RE = re.compile(
-    r"\b(?:within\s+(?:the\s+)?(?:normal\s+|reference\s+|printed\s+|healthy\s+)?(?:ranges?|limits)"
+    r"\b(?:within\s+(?:the\s+|your\s+|their\s+)?(?:[\w-]+\s+){0,2}?(?:ranges?|limits)"
     r"|in\s+(?:the\s+)?(?:normal\s+|reference\s+|healthy\s+)?ranges?"
     r"|(?:is|are|was|were|remains?|stays?|looks?|appears?|seems?|be|being|both|all)\s+"
     r"(?:(?!higher|lower|than|above|below|not)[\w-]+\s+){0,2}?" + NORMAL_WORD +

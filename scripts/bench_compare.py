@@ -1,7 +1,8 @@
 """Both benchmark scores + changed cases vs a saved state (for commit messages).
 
     python scripts/bench_compare.py save <state.json>      # remember current outcomes
-    python scripts/bench_compare.py diff <state.json>      # print before/after for main + held-out, then save
+    python scripts/bench_compare.py diff <state.json>      # print before/after for main + held-out (read-only)
+    python scripts/bench_compare.py commit <state.json>    # print before/after, then save the new state
 """
 import json
 import sys
@@ -23,7 +24,7 @@ def snapshot():
 def main():
     mode, state = sys.argv[1], Path(sys.argv[2])
     now = snapshot()
-    if mode == "diff":
+    if mode in ("diff", "commit"):
         before = json.loads(state.read_text())
         print(f"{'':10} {'before':>22} {'after':>22}")
         for name in ("main", "held-out"):
@@ -38,7 +39,8 @@ def main():
                 for k, b, a in changed:
                     f, what = k.split("|", 1)
                     print(f"  {b[0]:11} -> {a[0]:11} {f.split('__')[0]:14} got {a[1][:20]:20} | {what[:60]}")
-    state.write_text(json.dumps(now))
+    if mode in ("save", "commit"):
+        state.write_text(json.dumps(now))
 
 
 if __name__ == "__main__":

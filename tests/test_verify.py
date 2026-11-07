@@ -678,3 +678,39 @@ def test_censored_value_after_the_test_name_is_a_value_not_a_range():
     s = verify(report, "- **TSH \\<0.01:** Your TSH is very suppressed.").sentences[0]
     assert [f.kind for f in s.findings if f.label != "NEUTRAL"] == ["value"]
     assert s.findings[0].label == "VERIFIED"
+
+
+# ---------------------------------------------------------------- held-out round 1, step 2: multi-range tests
+AGE_BANDS = (SAMPLES / "06_age_bands.txt").read_text()     # age 34, no sex; HDL Men >40 | Women >50; TC Adults <200 | 18-60 <190
+
+
+def finding_of(ai, kind, report=AGE_BANDS):
+    return next(f for s in verify(report, ai).sentences for f in s.findings if f.kind == kind)
+
+
+def test_applying_one_sex_range_names_the_assumption():
+    f = finding_of("Your HDL of 45 is acceptable for men (above 40).", "range")
+    assert f.label == "UNVERIFIABLE"
+    assert f.message == "The AI used the Men range (> 40). Your report doesn't state sex; for women it prints > 50."
+
+
+def test_applying_one_age_band_names_both_bands():
+    f = finding_of("Your total cholesterol of 195 is within the desirable range of below 200.", "range")
+    assert f.label == "UNVERIFIABLE"
+    assert "2 ranges that fit age 34: < 200 and < 190. 195 is within one and above the other." in f.message
+
+
+def test_quoting_one_printed_range_without_applying_it_is_fine():
+    assert finding_of("For HDL, men above 40 is the printed range.", "range").label == "VERIFIED"
+
+
+def test_quoting_every_printed_range_is_fine():
+    report = (SAMPLES / "03_lft_kft.txt").read_text()
+    s = verify(report, "Your GGT of 55 is normal for a male (range 10-71) but high for a female (range 6-42).").sentences[0]
+    assert [f.label for f in s.findings if f.kind == "range"] == ["VERIFIED", "VERIFIED"]
+    assert {f.label for f in s.findings if f.kind == "status"} == {"UNVERIFIABLE"}
+
+
+def test_status_word_relying_on_one_range_is_unverifiable():
+    f = finding_of("Your HDL is acceptable for men.", "status")
+    assert f.label == "UNVERIFIABLE" and "The AI used the Men range" in f.message
