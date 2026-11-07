@@ -18,7 +18,7 @@ SEVERITY: list[str] = ["CONTRADICTED", "OVERSTEPS", "RANGE_NOT_FROM_REPORT", "NO
                        "VERIFIED", "NEUTRAL"]
 OVERSTEP_MSG = "This goes beyond what a report explanation should say; ask your doctor."
 OVERSTEP_KIND = {"diagnosis": "It states or implies a diagnosis.",
-                 "treatment": "It gives treatment, medicine or dosage advice.",
+                 "treatment": "It tells you to take or change a medicine, or how much of it.",
                  "reassurance": "It gives reassurance that only your doctor can give."}
 
 # An AI may name a test more generally (or by a sibling name) than the report does.
