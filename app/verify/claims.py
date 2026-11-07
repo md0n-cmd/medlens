@@ -466,6 +466,9 @@ CUTOFF_RE = _cutoff_re()
 TOPIC_REF = re.compile(r"\b(?:your|this|the)\s+(?:level|result|value|reading|number)s?\b", re.I)
 
 
+# a list of possible causes of the results: "Common contributing factors include:", "It can be caused by:"
+CAUSE_LIST_INTRO = re.compile(r"\b(?:factors?|causes?|reasons?)\s+(?:include|includes|can\s+include|are|may\s+be)\b|"
+                              r"\bcan\s+be\s+caused\s+by\b|\bpossible\s+causes?\b|\bcontributing\s+factors?\b", re.I)
 POSSIBILITY_INTRO = re.compile(r"\b(?:include|includes|including|such\s+as|causes?|factors?|symptoms?|reasons?|"
                                r"conditions?|possibilities|experience|could\s+be|might\s+be|can\s+be)\b[^:]*:\s*$", re.I)
 
@@ -933,6 +936,7 @@ def _extract(text: str, original: str) -> list[SentenceClaims]:
     list_counter, last_item_line = 0, -1
     section_counter, last_heading_line = 0, -1
     possibility_list = False                 # inside a list introduced by "... include:" / "You might experience:"
+    cause_list = False                       # ... and that list gives possible causes of the results
     tables = parse_tables(text)
     for sp in split_sentences(text):
         sc = SentenceClaims(span=sp)
@@ -944,10 +948,15 @@ def _extract(text: str, original: str) -> list[SentenceClaims]:
         whole_line = original[line_start:line_end]                 # with its markdown (bullets, **bold**)
         # items under "Common causes include:" / "You might experience:" are possibilities, not test claims
         in_possibility_list = possibility_list and bool(BULLET_RE.match(whole_line))
+        in_cause_list = cause_list and bool(BULLET_RE.match(whole_line))
         if POSSIBILITY_INTRO.search(text[sp.start:sp.end]):
             possibility_list = True
+            cause_list = bool(CAUSE_LIST_INTRO.search(text[sp.start:sp.end]))
+            if cause_list:                         # the lead-in itself: "Common contributing factors include:"
+                sc.claims.append(Claim(kind="overstep", span=sp, overstep="cause_list",
+                                       detail=text[sp.start:sp.end].strip().rstrip(":")))
         elif not BULLET_RE.match(whole_line):
-            possibility_list = False
+            possibility_list = cause_list = False
         if re.match(r"^\s*(?:#{1,6}\s|\*\*[^*]+\*\*\s*:?\s*$|-{3,}\s*$)", whole_line) and line_start != last_heading_line:
             section_counter += 1                       # a markdown heading, a bold-only line or a rule
             last_heading_line = line_start
@@ -1188,5 +1197,9 @@ def _extract(text: str, original: str) -> list[SentenceClaims]:
         _apply_never_claim(sc, never_claim_type(stext, whole_line), stext, [])
         if in_possibility_list:                    # "Common causes include:" -> these items are possibilities
             sc.claims = [c for c in sc.claims if c.kind not in ("value", "range", "status", "group")]
+        if in_cause_list:                          # every item of a cause list is part of the same interpretation
+            sc.claims = [c for c in sc.claims if c.kind != "overstep"]
+            sc.claims.append(Claim(kind="overstep", span=sp, overstep="cause_list",
+                                   detail=text[sp.start:sp.end].strip()))
         out.append(sc)
     return out

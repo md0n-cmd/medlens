@@ -155,7 +155,14 @@
   .vgrid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 18px; }
   .vgrid > * { min-width: 0; }
   @media (max-width: 1000px) { .vgrid { grid-template-columns: minmax(0, 1fr); } }
-  #vai { white-space: pre-wrap; line-height: 1.7; }
+  #vai { line-height: 1.7; }
+  #vai .vh { font-weight: 700; margin: 12px 0 4px; }
+  #vai .vh1 { font-size: calc(18px * var(--fs)); } #vai .vh2 { font-size: calc(16px * var(--fs)); } #vai .vh3 { font-size: calc(15px * var(--fs)); }
+  #vai .vp { margin: 4px 0; } #vai .vgap { height: 6px; } #vai hr { border: 0; border-top: 1px solid var(--line); margin: 10px 0; }
+  #vai .vli { margin: 2px 0 2px 18px; text-indent: -12px; } #vai .vli .vbul { display: inline-block; width: 12px; text-indent: 0; }
+  #vai table.vtable { border-collapse: collapse; margin: 6px 0; font-size: calc(13px * var(--fs)); }
+  #vai table.vtable th, #vai table.vtable td { border: 1px solid var(--line); padding: 3px 8px; text-align: left; vertical-align: top; }
+  #vai table.vtable th { background: #fafbfd; }
   #vai .vs { cursor: pointer; border-radius: 3px; padding: 1px 0; }
   #vai .vs.vsel { outline: 3px solid #e0b800; }
   .v-VERIFIED { background: var(--in-bg); }
@@ -851,20 +858,8 @@ function verifySummary(v) {
 function renderVerify() {
   const v = vres, text = v.ai_text;
   $("#vsum").textContent = verifySummary(v);
-  // AI text with labelled sentences (colour + text badge)
-  let html = "", pos = 0;
-  v.sentences.forEach(sn => {
-    html += esc(text.slice(pos, sn.span.start));
-    // a merged passage (consecutive interpretation lines) gets one badge, on its first line
-    const inPassage = sn.passage_id && sn.passage_size > 1;
-    const first = !inPassage || sn.passage_id === sn.id;
-    const label = inPassage ? `⛔ ${sn.passage_size} lines: interpretation` : VLABEL[sn.label];
-    const badge = sn.label !== "NEUTRAL" && first ? `<span class="vbadge vb-${sn.label}">${label}</span>` : "";
-    html += `<span class="vs v-${sn.label}" data-sid="${sn.id}" data-pid="${sn.passage_id || ""}" tabindex="0" role="button" aria-label="${esc(VLABEL[sn.label] || "Not judged")}: ${esc(sn.text)}">${esc(text.slice(sn.span.start, sn.span.end))}</span>${badge}`;
-    pos = sn.span.end;
-  });
-  html += esc(text.slice(pos));
-  $("#vai").innerHTML = html;
+  // AI text, lightly rendered markdown, with labelled sentences (colour + text badge)
+  $("#vai").innerHTML = renderAiMarkdown(text, v.sentences);
   $("#vai").querySelectorAll(".vs").forEach(el => {
     const go = () => selectSentence(el.dataset.sid);
     el.addEventListener("click", go); el.addEventListener("keydown", e => { if (e.key === "Enter") go(); });
@@ -888,6 +883,96 @@ function findingSpans(f) {
   const out = f.report_span ? [f.report_span] : [];
   (f.extra_report_spans || []).forEach(sp => { if (!out.some(o => o.start === sp.start)) out.push(sp); });
   return out;
+}
+
+// ---- light markdown for the AI pane. Sentence spans are offsets into the raw AI text, so markup characters
+// are HIDDEN, never removed: every character keeps its offset and its sentence. A sentence that crosses a
+// style change becomes several pieces with the same data-sid (clicks and selection work on all of them).
+function mdLineFlags(line, isTable) {
+  const n = line.length, hide = new Uint8Array(n), bold = new Uint8Array(n), ital = new Uint8Array(n);
+  const lead = line.match(/^(\s*#{1,6}\s+|\s*[-*+•]\s+)/);
+  if (lead && !/^\s*-{3,}\s*$/.test(line)) for (let i = 0; i < lead[1].length; i++) hide[i] = 1;
+  for (let i = 0; i < n - 1; i++) if (line[i] === "\\" && /[^\w\s]/.test(line[i + 1])) hide[i] = 1;
+  const wrap = (re, w, arr) => {
+    re.lastIndex = 0; let x;
+    while ((x = re.exec(line))) {
+      const a = x.index, b = a + x[0].length;
+      for (let i = a; i < a + w; i++) hide[i] = 1;
+      for (let i = b - w; i < b; i++) hide[i] = 1;
+      for (let i = a + w; i < b - w; i++) arr[i] = 1;
+    }
+  };
+  wrap(/\*\*(?=\S)(.+?)\*\*/g, 2, bold);
+  wrap(/__(?=\S)(.+?)__/g, 2, bold);
+  wrap(/(?<![*\w])\*(?![\s*])([^*]+?)(?<![\s*])\*(?![*\w])/g, 1, ital);
+  wrap(/(?<![_\w])_(?![\s_])([^_]+?)(?<![\s_])_(?![_\w])/g, 1, ital);
+  for (let i = 0; i < n; i++) if (line[i] === "`" || (isTable && line[i] === "|")) hide[i] = 1;
+  return {hide, bold, ital};
+}
+
+function renderAiMarkdown(text, sentences) {
+  const owner = new Int32Array(text.length).fill(-1);
+  sentences.forEach((sn, k) => { for (let p = sn.span.start; p < sn.span.end; p++) owner[p] = k; });
+  const lastVis = new Map(), seen = new Set();
+  const badge = k => {
+    const sn = sentences[k];
+    const inPassage = sn.passage_id && sn.passage_size > 1;
+    if (sn.label === "NEUTRAL" || (inPassage && sn.passage_id !== sn.id)) return "";   // one badge per passage
+    const label = inPassage ? `⛔ ${sn.passage_size} lines: interpretation` : VLABEL[sn.label];
+    return `<span class="vbadge vb-${sn.label}">${label}</span>`;
+  };
+  const piece = (k, b, it, s) => {
+    let inner = esc(s);
+    if (it) inner = `<em>${inner}</em>`;
+    if (b) inner = `<strong>${inner}</strong>`;
+    if (k < 0) return inner;
+    const sn = sentences[k], firstPiece = !seen.has(k);
+    seen.add(k);
+    const a11y = firstPiece ? ` tabindex="0" role="button" aria-label="${esc(VLABEL[sn.label] || "Not judged")}: ${esc(sn.text)}"` : "";
+    return `<span class="vs v-${sn.label}" data-sid="${sn.id}" data-pid="${sn.passage_id || ""}"${a11y}>${inner}</span>`;
+  };
+  // characters [a, b) of a line, grouped into runs of the same sentence and style; badge after a sentence's last char
+  const range = (start, a, b, f) => {
+    let out = "", run = null;
+    const flush = () => { if (run) out += piece(run.k, run.b, run.it, run.s); run = null; };
+    for (let i = a; i < b; i++) {
+      if (f.hide[i]) continue;
+      const p = start + i, k = owner[p];
+      if (!run || run.k !== k || run.b !== f.bold[i] || run.it !== f.ital[i]) { flush(); run = {k, b: f.bold[i], it: f.ital[i], s: ""}; }
+      run.s += text[p];
+      if (k >= 0 && lastVis.get(k) === p) { flush(); out += badge(k); }
+    }
+    flush();
+    return out;
+  };
+  let html = "", pos = 0, inTable = false, headerRow = false;
+  for (const line of text.split("\n")) {
+    const start = pos;
+    pos += line.length + 1;
+    const isTable = /^\s*\|/.test(line);
+    const f = mdLineFlags(line, isTable);
+    for (let i = 0; i < line.length; i++) if (!f.hide[i] && owner[start + i] >= 0) lastVis.set(owner[start + i], start + i);
+    if (isTable) {
+      if (/^\s*\|?[\s:|-]*-{2,}[\s:|-]*$/.test(line)) continue;           // separator row
+      if (!inTable) { html += `<table class="vtable">`; inTable = true; headerRow = true; }
+      const bars = [...line].map((c, i) => (c === "|" ? i : -1)).filter(i => i >= 0);
+      const tag = headerRow ? "th" : "td";
+      html += "<tr>" + bars.slice(0, -1).map((x, j) => `<${tag}>${range(start, x + 1, bars[j + 1], f)}</${tag}>`).join("") + "</tr>";
+      headerRow = false;
+      continue;
+    }
+    if (inTable) { html += "</table>"; inTable = false; }
+    const body = range(start, 0, line.length, f);
+    const h = line.match(/^\s*(#{1,6})\s/);
+    if (!line.trim()) html += `<div class="vgap"></div>`;
+    else if (/^\s*-{3,}\s*$/.test(line)) html += "<hr>";
+    else if (h) html += `<div class="vh vh${Math.min(h[1].length, 3)}">${body}</div>`;
+    else if (/^\s*[-*+•]\s/.test(line)) html += `<div class="vli"><span class="vbul">•</span>${body}</div>`;
+    else if (/^\s*\d+[.)]\s/.test(line)) html += `<div class="vli">${body}</div>`;
+    else html += `<div class="vp">${body}</div>`;
+  }
+  if (inTable) html += "</table>";
+  return html;
 }
 
 function outlineReport(ranges) {

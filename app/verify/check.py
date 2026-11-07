@@ -29,7 +29,9 @@ OVERSTEP_KIND = {"diagnosis": "It names a condition ('{p}'), which is a diagnosi
                  "link": "This links your results to a condition or cause ('{p}'). That is an interpretation only your "
                          "doctor can make.",
                  "condition": "This links your results to a condition, cause or health judgement ('{p}'), which only "
-                              "a doctor can interpret."}
+                              "a doctor can interpret.",
+                 "cause_list": "This list gives possible causes of your results ('{p}'). Linking results to causes is "
+                               "an interpretation only your doctor can make."}
 
 # An AI may name a test more generally (or by a sibling name) than the report does.
 RELATED_TESTS = {

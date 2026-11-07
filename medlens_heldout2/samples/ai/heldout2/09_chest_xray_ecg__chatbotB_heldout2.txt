@@ -1,0 +1,19 @@
+The X-ray indicates an enlarged heart and a possible mild infection in the right lung, while the ECG shows that the electrical activity of the heart is completely healthy.
+
+Chest X-Ray Breakdown
+
+* Cardiomegaly: The X-ray measures the heart's width compared to the inner width of the rib cage (the cardiothoracic ratio). A standard ratio is under 0.50; this report shows 0.55, meaning the heart's silhouette appears slightly larger than normal.
+
+* Right lower zone opacity / Infiltrate: There is a hazy patch in the lower part of the right lung. The radiologist notes this could be "early consolidation," which is a medical term for airspaces in the lung filling with fluid or pus, commonly pointing to a lung infection like pneumonia.
+
+* Clear structures: The windpipe (trachea) is perfectly centered, and there is no abnormal fluid (pleural effusion) or trapped air (pneumothorax) around the outside of the lungs. The collarbones, ribs, and diaphragm all look normal.
+
+ECG (Electrocardiogram) Breakdown
+
+* Normal Sinus Rhythm (88 bpm): The heart is beating steadily at a healthy pace. A normal resting heart rate is between 60 and 100 beats per minute.
+
+* Normal Intervals (PR, QRS, QTc): These numbers measure how fast electrical signals travel through different parts of the heart. All of these timings are within healthy, standard limits.
+
+* No ST-T changes: This confirms the heart muscle is receiving plenty of blood and oxygen. There are no signs of dangerous arrhythmias, blocked arteries, or past heart damage.
+
+Because the X-ray shows a possible lung infection, the standard next step is for a physician to review these results alongside any physical symptoms—such as a cough, fever, fatigue, or shortness of breath—to determine if treatments like antibiotics are needed.

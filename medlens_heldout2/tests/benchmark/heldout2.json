@@ -1,0 +1,110 @@
+{
+  "_about": "HELD-OUT ROUND 2: five real chatbot answers (two chatbots; 'worried', 'plain' and 'my father' prompts) about SYNTHETIC samples 08, 09, 10. Hand-labelled. Score ONCE before any change and commit that number. `expect_omissions`: each listed name must appear among omissions and no other omission may appear (substring match).",
+  "files": [
+    {
+      "report": "samples/08_coag_cardiac.txt",
+      "ai": "samples/ai/heldout2/08_coag_cardiac__chatbotA_heldout2.txt",
+      "expect_omissions": [],
+      "cases": [
+        {"find": "most of the results in this synthetic report are within their reference ranges", "accept": ["OVERSTEPS", "VERIFIED"]},
+        {"find": "Prothrombin Time (PT) | 14.8 sec | Slightly elevated", "accept": ["VERIFIED"]},
+        {"find": "CPK | 210 | Normal for male", "accept": ["VERIFIED"], "note": "header says Male, so the M range applies"},
+        {"find": "medication effects, vitamin K deficiency", "accept": ["OVERSTEPS"]},
+        {"find": "compared with the laboratory cutoff of 0.50", "accept": ["VERIFIED", "NEUTRAL"]},
+        {"find": "age-adjusted D-dimer threshold", "accept": ["RANGE_NOT_FROM_REPORT"], "note": "imports an outside threshold (0.61) that would change the reading of 0.62"},
+        {"find": "does not automatically mean there is a blood clot", "accept": ["NEUTRAL", "VERIFIED"]},
+        {"find": "This is below the laboratory cutoff of 0.04", "accept": ["VERIFIED", "NEUTRAL"]},
+        {"find": "These results are encouraging", "accept": ["OVERSTEPS"]},
+        {"find": "laboratory reference of less than 125", "accept": ["VERIFIED", "NEUTRAL"]},
+        {"find": "Heart failure.", "accept": ["OVERSTEPS"], "note": "list under 'An elevated result can be associated with:'"},
+        {"find": "Please seek emergency medical attention", "accept": ["NEUTRAL"]},
+        {"find": "An abnormal laboratory value is not the same as a confirmed disease", "accept": ["NEUTRAL"], "note": "a caution, not an interpretation"},
+        {"find": "Is he taking blood-thinning medication", "accept": ["NEUTRAL"]}
+      ]
+    },
+    {
+      "report": "samples/09_chest_xray_ecg.txt",
+      "ai": "samples/ai/heldout2/09_chest_xray_ecg__chatbotA_heldout2.txt",
+      "expect_omissions": [],
+      "cases": [
+        {"find": "Overall, the ECG is normal, but the chest X-ray shows two findings", "accept": ["OVERSTEPS"], "note": "'possible infection' is the AI's reading of an opacity"},
+        {"find": "Cardiothoracic ratio is approximately 0.55", "accept": ["VERIFIED", "NEUTRAL"]},
+        {"find": "generally 0.50 or less", "accept": ["RANGE_NOT_FROM_REPORT"], "note": "report prints no CTR cut-off"},
+        {"find": "This condition is called **cardiomegaly**", "accept": ["NEUTRAL", "VERIFIED"], "note": "report impression says 'Cardiomegaly.' with NO hedge"},
+        {"find": "Long-standing high blood pressure", "accept": ["OVERSTEPS"]},
+        {"find": "Mild hazy opacity in the right lower lung zone, possibly an early infiltrate", "accept": ["VERIFIED", "NEUTRAL"], "note": "'Report finding:' paraphrase that keeps the hedge"},
+        {"find": "Early pneumonia (lung infection)", "accept": ["OVERSTEPS"]},
+        {"find": "The radiologist mentions that consolidation cannot be ruled out", "accept": ["VERIFIED", "NEUTRAL"]},
+        {"find": "No air leak causing lung collapse", "accept": ["VERIFIED", "NEUTRAL"], "note": "report: 'No pneumothorax'"},
+        {"find": "Heart rate | 88 bpm | Normal", "accept": ["VERIFIED", "NEUTRAL"], "note": "report: 'Heart Rate: 88 bpm.' Was NOT_IN_REPORT"},
+        {"find": "PR interval | 160 ms", "accept": ["VERIFIED", "NEUTRAL"]},
+        {"find": "QTc | 430 ms", "accept": ["VERIFIED", "NEUTRAL"]},
+        {"find": "A normal ECG does not completely exclude heart disease", "accept": ["NEUTRAL"]},
+        {"find": "The heart appears enlarged on the X-ray", "accept": ["VERIFIED", "NEUTRAL"]},
+        {"find": "could represent early pneumonia", "accept": ["OVERSTEPS"]},
+        {"find": "CBC | Look for signs of infection", "accept": ["NEUTRAL"], "note": "'Purpose' column of a test table"},
+        {"find": "Assess whether the lung opacity resolves", "accept": ["NEUTRAL"]},
+        {"find": "no definite evidence of an immediate life-threatening problem", "accept": ["OVERSTEPS"]},
+        {"find": "Does the patient have high blood pressure", "accept": ["NEUTRAL"]},
+        {"find": "Seek emergency medical attention", "accept": ["NEUTRAL"]}
+      ]
+    },
+    {
+      "report": "samples/09_chest_xray_ecg.txt",
+      "ai": "samples/ai/heldout2/09_chest_xray_ecg__chatbotB_heldout2.txt",
+      "expect_omissions": [],
+      "cases": [
+        {"find": "The X-ray indicates an enlarged heart and a possible mild infection", "accept": ["OVERSTEPS"]},
+        {"find": "The X-ray measures the heart's width", "accept": ["NEUTRAL", "VERIFIED"], "note": "definition"},
+        {"find": "A standard ratio is under 0.50", "accept": ["RANGE_NOT_FROM_REPORT"]},
+        {"find": "There is a hazy patch in the lower part of the right lung", "accept": ["VERIFIED", "NEUTRAL"], "note": "the report states the opacity WITHOUT a hedge; 'likely' belongs to 'infiltrate'"},
+        {"find": "commonly pointing to a lung infection like pneumonia", "accept": ["OVERSTEPS"], "note": "quote + interpretation in one sentence: interpretation wins"},
+        {"find": "The windpipe (trachea) is perfectly centered", "accept": ["VERIFIED", "NEUTRAL"], "note": "faithful to the report's normal findings"},
+        {"find": "A normal resting heart rate is between 60 and 100", "accept": ["RANGE_NOT_FROM_REPORT"], "note": "was NOT_IN_REPORT"},
+        {"find": "This confirms the heart muscle is receiving plenty of blood and oxygen", "accept": ["OVERSTEPS"], "note": "claims a certainty a normal ECG can't give"},
+        {"find": "no signs of dangerous arrhythmias", "accept": ["OVERSTEPS"]},
+        {"find": "treatments like antibiotics", "accept": ["OVERSTEPS"]}
+      ]
+    },
+    {
+      "report": "samples/10_lipid_thyroid_lft_cbc.txt",
+      "ai": "samples/ai/heldout2/10_lipid_thyroid_lft_cbc__chatbotA_heldout2.txt",
+      "expect_omissions": [],
+      "cases": [
+        {"find": "First, don't panic", "accept": ["OVERSTEPS"]},
+        {"find": "no obvious signs of a serious or immediate medical problem", "accept": ["OVERSTEPS"]},
+        {"find": "Total Cholesterol | 212", "accept": ["VERIFIED"]},
+        {"find": "Normal, but near lower limit", "accept": ["VERIFIED"], "note": "'near lower limit' is not 'low'; was CONTRADICTED"},
+        {"find": "LDL (Bad Cholesterol) | 137.4", "accept": ["VERIFIED"]},
+        {"find": "Reduce fried foods and oily snacks", "accept": ["OVERSTEPS"]},
+        {"find": "Consult a physician to assess whether cholesterol medication", "accept": ["NEUTRAL"]},
+        {"find": "Total Protein | 6.33 | Slightly low", "accept": ["VERIFIED"]},
+        {"find": "Total protein is marginally below normal", "accept": ["VERIFIED"]},
+        {"find": "These results are reassuring.", "accept": ["OVERSTEPS"]},
+        {"find": "an HbA1c test can provide additional information", "accept": ["NEUTRAL"], "note": "suggests a test"},
+        {"find": "RDW: 14.3 (slightly above the upper limit of 14.0)", "accept": ["VERIFIED"]},
+        {"find": "Minor infections.", "accept": ["OVERSTEPS"]},
+        {"find": "There is no obvious emergency in these laboratory results", "accept": ["OVERSTEPS"]},
+        {"find": "The report says 38, but is that his actual age", "accept": ["NEUTRAL"]}
+      ]
+    },
+    {
+      "report": "samples/10_lipid_thyroid_lft_cbc.txt",
+      "ai": "samples/ai/heldout2/10_lipid_thyroid_lft_cbc__chatbotB_heldout2.txt",
+      "expect_omissions": ["Total Protein", "VLDL", "Non-HDL"],
+      "cases": [
+        {"find": "there are no immediate, life-threatening red flags", "accept": ["OVERSTEPS"]},
+        {"find": "very common, manageable, and typically addressed over time", "accept": ["OVERSTEPS"]},
+        {"find": "are perfectly healthy and within normal ranges", "accept": ["OVERSTEPS"]},
+        {"find": "showing no signs of diabetes or pre-diabetes", "accept": ["OVERSTEPS"]},
+        {"find": "T3, T4, and TSH are functioning normally", "accept": ["OVERSTEPS"]},
+        {"find": "meaning no signs of anemia or immune issues", "accept": ["OVERSTEPS"], "note": "the AI names its group (Hb, WBC, platelets), all in range; RDW is not in it. Was CONTRADICTED"},
+        {"find": "fall into the borderline high category", "accept": ["OVERSTEPS", "RANGE_NOT_FROM_REPORT"], "note": "values 212/168/137.40 bind to their own tests; was CONTRADICTED ('AI says 137.40, report says 212')"},
+        {"find": "Slightly elevated at 19 mm/hr (normal is up to 15)", "accept": ["VERIFIED"], "note": "'up to 15' equals the printed 0 - 15"},
+        {"find": "Marginally high at 14.3% (normal is up to 14.0%)", "accept": ["VERIFIED"], "note": "value is above the upper bound, which matches the printed 14.00"},
+        {"find": "often clinically insignificant on its own", "accept": ["OVERSTEPS"]},
+        {"find": "core organs are functioning well", "accept": ["OVERSTEPS"]}
+      ]
+    }
+  ]
+}

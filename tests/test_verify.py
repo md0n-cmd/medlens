@@ -860,9 +860,10 @@ def test_consecutive_overstep_bullets_merge_into_one_passage():
           "Your hemoglobin is 11.2 g/dL.")
     r = verify(REPORT, ai)
     over = [s for s in r.sentences if s.label == "OVERSTEPS"]
-    assert len(over) == 3 and len({s.passage_id for s in over}) == 1 and over[0].passage_size == 3
-    assert over[0].findings[0].kind == "passage" and "These 3 lines" in over[0].findings[0].message
-    assert r.counts["OVERSTEP_PASSAGES"] == 1 and r.counts["OVERSTEPS"] == 3
+    # a cause list: the lead-in "Possible causes include:" is part of the passage too
+    assert len(over) == 4 and len({s.passage_id for s in over}) == 1 and over[0].passage_size == 4
+    assert over[0].findings[0].kind == "passage" and "These 4 lines" in over[0].findings[0].message
+    assert r.counts["OVERSTEP_PASSAGES"] == 1 and r.counts["OVERSTEPS"] == 4
     assert r.sentences[-1].label == "VERIFIED"                        # labels of other sentences are untouched
 
 
@@ -877,3 +878,20 @@ def test_items_of_a_possibility_list_make_no_test_claims():
     r = verify(REPORT, ai)
     assert all(f.kind not in ("status", "value") for s in r.sentences[:-1] for f in s.findings)
     assert r.sentences[-1].label == "VERIFIED"
+
+
+# ---------------------------------------------------------------- cause lists are one passage
+def test_cause_list_lead_in_and_every_item_form_one_passage():
+    ai = ("Common contributing factors include:\n\n- Being overweight.\n- High cholesterol.\n- Diabetes.\n"
+          "- Certain medications.\n\nYour hemoglobin is 11.2 g/dL.")
+    r = verify(REPORT, ai)
+    lst = r.sentences[:5]
+    assert all(s.label == "OVERSTEPS" for s in lst) and len({s.passage_id for s in lst}) == 1
+    assert lst[0].passage_size == 5 and r.counts["OVERSTEP_PASSAGES"] == 1
+    assert "possible causes of your results" in next(f for f in lst[0].findings if f.kind == "overstep").message
+    assert r.sentences[-1].label == "VERIFIED"
+
+
+def test_symptom_lists_are_not_cause_lists():
+    r = verify(REPORT, "Possible symptoms include:\n\n- Tiredness.\n- Feeling cold.")
+    assert all(s.label == "NEUTRAL" for s in r.sentences)
