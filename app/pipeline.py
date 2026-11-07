@@ -11,7 +11,10 @@ from app.models import (OUT_OF_RANGE, AnalysisResult, ExplanationItem, LabValue,
 from app.parser.lines import Line, normalize_text, segment
 from app.parser.ranges import (compare_numeric, compare_qualitative, parse_range, select_alternative,
                                units_compatible)
+from app.parser.narrative import narrative_values
 from app.parser.values import RawRow, parse_line
+
+COLUMN_ROW = re.compile(r"\S(?:\t| {3,})\S")      # a table row the row parser rejected stays rejected
 from app.safety import DISCLAIMER, out_of_range_message, sanitize
 
 SEX_RE = re.compile(
@@ -189,6 +192,26 @@ def _line_span(ln: Line) -> Span:
 UnknownTermExplainer = Callable[[str, str], Optional[str]]
 
 
+OPINION_NORMAL = re.compile(r"\b(?:within\s+normal\s+limits|normal\s+(?:study|ecg|scan|tracing))\b", re.I)
+OPINION_EXCEPT = re.compile(r"\b(?:except|but|however|apart\s+from|other\s+than|borderline|abnormal)\b", re.I)
+
+
+def _opinion_normal(values: list[LabValue], lines: list[Line], sections) -> None:
+    """A value printed without a range in a study section, followed by the reporting doctor's opinion
+    on that study saying it is normal ("Opinion: ECG within normal limits."): the report settles NORMAL."""
+    for v in values:
+        if v.status != Status.NO_RANGE or v.section is None:
+            continue
+        k = next((i for i, sec in enumerate(sections) if sec.name == v.section and sec.start <= v.value_span.start <= sec.end), None)
+        if k is None or k + 1 >= len(sections) or not sections[k + 1].interpretive:
+            continue
+        nxt = sections[k + 1]
+        for ln in lines:
+            if nxt.start <= ln.start <= nxt.end and OPINION_NORMAL.search(ln.text) and not OPINION_EXCEPT.search(ln.text):
+                v.opinion_normal_span = _line_span(ln)
+                break
+
+
 def analyze(text: str, explain_unknown: Optional[UnknownTermExplainer] = None) -> AnalysisResult:
     text = normalize_text(text)
     lines, sections = segment(text)
@@ -240,9 +263,13 @@ def analyze(text: str, explain_unknown: Optional[UnknownTermExplainer] = None) -
         prev_was_value = bool(raw)
         if raw:
             values.append(_to_labvalue(len(values), ln, raw))
+        elif not COLUMN_ROW.search(ln.text):     # prose: "Heart Rate: 88 bpm. Normal sinus rhythm."
+            for nr in narrative_values(ln.text, ln.start):
+                values.append(_to_labvalue(len(values), ln, nr))
     for v in values:
         compute_status(v, sex, age)
         check_flag(v)
+    _opinion_normal(values, lines, sections)
     # same test printed twice, only one row has a range: never borrow it
     by_name: dict[str, list[LabValue]] = {}
     for v in values:

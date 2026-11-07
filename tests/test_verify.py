@@ -895,3 +895,40 @@ def test_cause_list_lead_in_and_every_item_form_one_passage():
 def test_symptom_lists_are_not_cause_lists():
     r = verify(REPORT, "Possible symptoms include:\n\n- Tiredness.\n- Feeling cold.")
     assert all(s.label == "NEUTRAL" for s in r.sentences)
+
+
+# ---------------------------------------------------------------- held-out round 2, step 1: narrative report values
+NARR = ("ECG REPORT\nHeart Rate: 72 bpm. Normal sinus rhythm.\nPR interval 150 ms. QTc 410 ms.\n\n"
+        "Opinion: ECG within normal limits.\n\nCHEST X-RAY\nFINDINGS:\nCardiothoracic ratio is about 0.52.\n")
+
+
+def test_values_written_in_report_sentences_are_parsed_without_a_range():
+    from app.pipeline import analyze
+    vals = {v.test_name.lower(): v for v in analyze(NARR).values}
+    assert vals["heart rate"].value_num == 72 and vals["heart rate"].unit == "bpm"
+    assert vals["pr interval"].value_num == 150 and vals["qtc"].value_num == 410
+    assert vals["cardiothoracic ratio"].value_num == 0.52
+    assert all(v.reference is None for v in vals.values())
+
+
+def test_unranged_value_is_normal_when_the_reports_opinion_says_so():
+    r = verify(NARR, "| Parameter | Value | Meaning |\n| --- | --- | --- |\n| Heart rate | 72 bpm | Normal |\n\n"
+                     "The CTR is 0.52, which is normal.")
+    row = next(s for s in r.sentences if "72" in s.text)
+    assert row.label == "VERIFIED"
+    assert "within normal limits" in next(f for f in row.findings if f.kind == "status").message
+    # no opinion covers the X-ray value: its status stays unsettled
+    assert r.sentences[-1].label == "UNVERIFIABLE"
+
+
+def test_general_range_for_an_unranged_value_and_or_less_form():
+    r = verify(NARR, "A normal resting heart rate is between 60 and 100 beats per minute.\n\n"
+                     "A normal cardiothoracic ratio is generally 0.50 or less.")
+    assert [s.label for s in r.sentences] == ["RANGE_NOT_FROM_REPORT", "RANGE_NOT_FROM_REPORT"]
+
+
+def test_head_noun_refers_back_to_the_bullets_test():
+    r = verify(NARR, "* Heart size: the cardiothoracic ratio compares heart and chest width. A standard ratio is "
+                     "under 0.50; this report shows 0.52.")
+    assert r.sentences[-1].label == "RANGE_NOT_FROM_REPORT"
+    assert any(f.kind == "value" and f.label == "VERIFIED" for f in r.sentences[-1].findings)

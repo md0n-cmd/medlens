@@ -101,6 +101,8 @@ class LabValue(BaseModel):
     missing_range_reason: Optional[str] = None
     notes: list[str] = Field(default_factory=list)
     glossary_term_id: Optional[str] = None
+    # no printed range, but the report's own opinion on this study says it is normal ("ECG within normal limits")
+    opinion_normal_span: Optional[Span] = None
 
 
 class TermMatch(BaseModel):

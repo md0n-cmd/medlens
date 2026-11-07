@@ -2271,11 +2271,10 @@
       "id": "cardiothoracic_ratio",
       "term": "Cardiothoracic Ratio",
       "aliases": [
-        "CTR",
-        "Cardiac Silhouette"
+        "CTR"
       ],
       "category": "Radiology / report language",
-      "kind": "report_word",
+      "kind": "test",
       "plain_explanation": "On a chest X-ray, a comparison of the width of the heart with the width of the chest.",
       "source_note": "General educational description written for MedLens (synthetic-data hackathon project), based on standard lab-medicine terminology. Not patient-specific."
     },

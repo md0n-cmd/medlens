@@ -225,7 +225,7 @@ add("Visualised", ["Visualized", "Not Visualised", "Not Visualized"], R, "A repo
 add("Lung Fields", ["Lung Field", "Both Lung Fields"], R, "The parts of a chest X-ray that show the lungs.", kind="report_word")
 add("Costophrenic Angles", ["Costophrenic Angle", "CP Angles", "CP Angle"], R, "The corners at the bottom of each lung on a chest X-ray, where the ribs meet the diaphragm.", kind="report_word")
 add("Hilum", ["Hila", "Hilar", "Hilar Shadows"], R, "The area in the middle of the chest where blood vessels and airways enter each lung.", kind="report_word")
-add("Cardiothoracic Ratio", ["CTR", "Cardiac Silhouette"], R, "On a chest X-ray, a comparison of the width of the heart with the width of the chest.", kind="report_word")
+add("Cardiothoracic Ratio", ["CTR"], R, "On a chest X-ray, a comparison of the width of the heart with the width of the chest.", kind="test")
 add("Diaphragm", ["Domes of Diaphragm", "Hemidiaphragm"], R, "The sheet of muscle under the lungs that helps with breathing.", kind="report_word")
 add("Mediastinum", ["Mediastinal"], R, "The central part of the chest between the lungs, which holds the heart and large blood vessels.", kind="report_word")
 add("Trachea", [], R, "The windpipe: the tube that carries air from the throat to the lungs.", kind="report_word")

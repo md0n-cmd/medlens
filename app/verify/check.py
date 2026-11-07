@@ -274,6 +274,11 @@ def _check_claim(c: Claim, text: str, rows: list[LabValue], value_row: Optional[
                        report_value_id=v.id,
                        message="The report doesn't settle this: it has several rows for this test with different results.")
     rs = _report_status(v)
+    if rs is None and v.opinion_normal_span is not None and c.status == "NORMAL":
+        return Finding(kind="status", label="VERIFIED", term=c.term, ai_span=span, report_span=v.opinion_normal_span,
+                       report_value_id=v.id,
+                       message=f"Your report prints no range for {v.test_name}, but its own opinion on this study "
+                               f"says '{v.opinion_normal_span.text}'.")
     if rs is None:
         if v.status == Status.DIFFERS and c.status == "NORMAL":
             return Finding(kind="status", label="CONTRADICTED", term=c.term, ai_span=span, report_span=rep_line(v),

@@ -160,6 +160,7 @@ THRESHOLD_BEFORE = re.compile(r"\b(?:limit|cut-?off|threshold|recommended|recomm
 NOT_A_VALUE_AFTER = re.compile(r"^(?:\s*(?:mg/dl|%|u/l)\s+)?\s*(?:limit|cut-?off|threshold|mark)\b"
                                r"|^(?:\s*[-–]\s*\d+(?:\.\d+)?)?[\s-]*(?:months?|weeks?|days?|hours?|hrs?|years?|yrs?|minutes?|mins?)\b"
                                r"|^\s+(?:different\s+)?(?:values?|markers?|tests?|readings?|results?|numbers?|times?)\b", re.I)
+OR_BELOW_TXT = re.compile(rf"(?P<n>{N})%?\s*(?:or\s+less|or\s+lower|or\s+below|or\s+under|and\s+below|and\s+under)\b", re.I)
 AND_ABOVE_TXT = re.compile(rf"(?P<n>{N})%?\s*(?:or\s+higher|or\s+more|or\s+above|and\s+above|and\s+higher)\b", re.I)
 # "using standard clinical reference ranges", "standard ranges usually prefer ...": ranges imported from elsewhere
 OUTSIDE_RANGES = re.compile(
@@ -463,6 +464,17 @@ def _cutoff_re() -> re.Pattern:
 
 
 CUTOFF_RE = _cutoff_re()
+HEAD_NOUNS = {"ratio", "interval", "rate", "duration", "index", "count", "score"}
+
+
+def _head_noun_ref(sentence: str, term: str) -> bool:
+    """The sentence refers to the topic test by its head noun alone: "A standard ratio ..." after
+    "cardiothoracic ratio" (only for measurement nouns, never for a word like "level")."""
+    head = term.split()[-1].lower() if term.split() else ""
+    return head in HEAD_NOUNS and bool(re.search(
+        rf"\b(?:a|the|this|your|its|that|standard|normal|typical|usual|healthy)\s+(?:\w+\s+)?{head}\b", sentence, re.I))
+
+
 TOPIC_REF = re.compile(r"\b(?:your|this|the)\s+(?:level|result|value|reading|number)s?\b", re.I)
 
 
@@ -828,6 +840,11 @@ def _segment_claims(text: str, m: Mention, a: int, b: int, sent_start: int) -> l
             r = ReferenceRange(raw=am.group(0), kind="lower", low=parse_number(am["n"]), low_inclusive=True)
             used.append((am.start(), am.end()))
             claims.append(Claim(kind="range", span=_sp(text, a + am.start(), a + am.end()), range=r, **base))
+    for om in OR_BELOW_TXT.finditer(seg):            # "generally 0.50 or less"
+        if free(om.start(), om.end()):
+            r = ReferenceRange(raw=om.group(0), kind="upper", high=parse_number(om["n"]), high_inclusive=True)
+            used.append((om.start(), om.end()))
+            claims.append(Claim(kind="range", span=_sp(text, a + om.start(), a + om.end()), range=r, **base))
     for rx, kind in ((UPPER_RE, "upper"), (LOWER_RE, "lower")):
         for rm in rx.finditer(seg):
             if not free(rm.start(), rm.end()):
@@ -1125,6 +1142,8 @@ def _extract(text: str, original: str) -> list[SentenceClaims]:
                     ra, rb = sp.start + cm2.start("range"), sp.start + cm2.end("range")
                     sc.claims.append(Claim(kind="range", span=_sp(text, ra, rb), range=r, category=cat,
                                            term_id=topic.term_id, term=topic.term, mention=topic.span))
+            elif _head_noun_ref(stext0, topic.term):       # "A standard ratio is under 0.50" after "cardiothoracic ratio"
+                sc.claims.extend(_segment_claims(text, topic, sp.start, sp.end, sp.start))
             elif TOPIC_REF.search(stext0) and not lead_mentions:   # e.g. "Your result is on the high side."
                 found = _find_statuses(text, sp.start, sp.end)
                 if found:
