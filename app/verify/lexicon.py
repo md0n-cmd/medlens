@@ -16,6 +16,7 @@ CONDITIONS = [
     r"gout", r"kidney\s+stones?", r"gall\s*stones?", r"hepatitis(?:\s+[a-e])?", r"infections?", r"deficienc(?:y|ies)",
     r"illness(?:es)?", r"diseases?", r"disorders?", r"hypothyroidism", r"hyperthyroidism", r"cancer", r"tumou?rs?",
     # inflammation as a state of the body (not "an inflammation marker")
+    r"uti", r"urinary\s+tract\s+infections?", r"hypothyroid", r"hyperthyroid", r"thyrotoxicosis",
     r"(?:systemic|chronic|mild|low-grade|joint|underlying)\s+inflammation", r"inflammation\s+in\s+the\s+body",
     r"level\s+of\s+(?:systemic\s+)?inflammation", r"inflamed",
 ]
@@ -68,6 +69,8 @@ DEFINITIONS = [
     r"\b(?:used|ordered|done|performed|requested)\s+(?:\w+\s+){0,3}?to\s+(?:screen|check|test|look|detect|monitor|rule\s+out)"
     r"(?:\s+for)?\b",
     r"\bto\s+(?:screen|check|test)\s+for\b",
+    r"\b(?:looks?|checks?|screens?|tests?)\s+for\b", r"\bhelps?\s+(?:to\s+)?(?:assess|detect|check|measure|find|investigate)\b",
+    r"\bto\s+(?:investigate|assess|evaluate|look\s+for|detect)\b",
     # defining a condition word itself: "Anemia means ...", "Gout is a ...", "Fatty liver refers to ..."
     r"^\W*(?:[A-Za-z'-]+\s+){0,2}?(?:means|refers\s+to|describes|is\s+(?:a|an|the)\s+(?:term|word|name|condition))\b",
 ]
@@ -114,3 +117,30 @@ DEFINITION_SENTENCE = (r"^(?!\W*(?:there|it|this|that|these|those|which|here)\b)
                        r"\W*(?:an?\s+|the\s+)?[\w'() -]{1,40}?\s+(?:means|refers\s+to|is\s+another\s+(?:word|name|term)\s+for|"
                        r"is\s+(?:a|an)\s)")
 PATIENT_RESULT = r"\b(?:you|your|yours|this\s+(?:result|value|level|pattern)|these\s+(?:results|values|levels))\b"
+
+# ---------------------------------------------------------------- recall by class (held-out round 1)
+# REASSURANCE: telling the patient how serious (or not) things are, e.g. "Good news: this is easily manageable."
+REASSURANCE = [
+    r"reassuring", r"encouraging", r"don'?t\s+(?:worry|panic)", r"do\s+not\s+(?:worry|panic)", r"no\s+need\s+to\s+(?:worry|panic)",
+    r"nothing\s+(?:here\s+)?(?:\w+\s+){0,3}?(?:serious|dangerous|alarming|worrying)", r"nothing\s+to\s+worry\s+about",
+    r"(?:generally\s+|usually\s+|very\s+|easily\s+|highly\s+)?treatable", r"(?:generally\s+|usually\s+|easily\s+)?manageable",
+    r"good\s+news",
+]
+# LIFESTYLE IMPERATIVES: an imperative verb + a lifestyle object, e.g. "Cut down on salty snacks."
+LIFESTYLE_VERBS = ["reduce", "avoid", "limit", "eat", "drink", "exercise", "maintain", "lose", "cut", "increase", "stop",
+                   "quit", "follow", "include", "choose", "walk", "add", "swap", "try"]
+LIFESTYLE_OBJECTS = [r"diet", r"sugar", r"sugary", r"sweets?", r"alcohol", r"fried", r"processed", r"foods?", r"weight",
+                     r"activity", r"exercise", r"fibre", r"fiber", r"water", r"salt", r"salty", r"smoking", r"sleep", r"meals?",
+                     r"minutes", r"fats?", r"vegetables", r"fruits?", r"caffeine", r"snacks?", r"drinks?", r"oily"]
+# ORGAN FUNCTION: what an organ is doing, e.g. "Your liver may be producing less albumin than usual."
+ORGAN_FUNCTION = [
+    rf"(?:over|under)active\s+{ORGANS}", rf"{ORGANS}\s+(?:over|under)activity",
+    rf"{ORGANS}(?:\s+gland)?\s+(?:may\s+be|might\s+be|could\s+be|is|seems)\s+(?:\w+\s+){{0,2}}?(?:over|under)active",
+    rf"{ORGANS}(?:\s+gland)?\s+(?:may\s+be\s+|might\s+be\s+|is\s+)?(?:producing|making|releasing)\s+(?:more|less|too\s+much|"
+    r"too\s+little|excess|extra)",
+    r"(?:producing|making)\s+more\s+[\w\s]{0,30}?than\s+(?:your|the)\s+body\s+needs",
+    r"function(?:ing)?\s+less\s+(?:efficiently|well)",
+]
+# OUTSIDE CUT-OFF LISTS: bullets of "<number or range>: <category>", e.g. "- Under 12: Deficient"
+CUTOFF_CATEGORIES = (r"very\s+low|very\s+high|low|normal|adequate|insufficient|insufficiency|deficient|deficiency|desirable|"
+                     r"borderline(?:\s+high|\s+low)?|high|optimal|sufficient|toxic|elevated|ideal")

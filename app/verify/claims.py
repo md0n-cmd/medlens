@@ -171,7 +171,7 @@ CATEGORY_RE = re.compile(
     r"^\W*(?P<cat>normal|healthy|optimal|near[\s-]optimal|desirable|borderline(?:[\s-]high|[\s-]low)?|high|very\s+high|"
     r"low|pre-?diabetes|pre-?diabetic|diabetes|diabetic|impaired\s+fasting\s+glucose|insufficien(?:t|cy)|"
     r"deficien(?:t|cy)|sufficient|stage\s+\w+)\s+(?:is|are|range\s+is|=|:|\()", re.I)
-NORMAL_CATEGORIES = {"normal", "healthy", "optimal", "desirable"}
+NORMAL_CATEGORIES = {"normal", "healthy", "optimal", "desirable", "adequate", "sufficient", "ideal"}
 BOLD_VALUE = re.compile(rf"\*\*\s*(?P<num>{N})\s*(?P<unit>[A-Za-zµμ%/]+(?:/[A-Za-z]+)?)?\s*\*\*")
 COMPARISON_BEFORE = re.compile(r"\b(?:similar\s+to|like|unlike|as\s+with|as\s+for|compared\s+(?:to|with)|same\s+as)\s+$",
                                re.I)
@@ -291,7 +291,11 @@ def _lexicon_res() -> dict:
             "not_word": re.compile(rf"^(?:{'|'.join(L.NOT_CONDITION_WORDS)})$", re.I),
             "not_after": re.compile(L.NOT_CONDITION_AFTER, re.I),
             "not_before": re.compile(L.NOT_CONDITION_BEFORE, re.I),
-            "state": re.compile(rf"\b(?:{'|'.join(L.ORGAN_STATES + L.HEALTH_JUDGEMENTS + L.CAUSES)})", re.I),
+            "state": re.compile(rf"\b(?:{'|'.join(L.ORGAN_STATES + L.ORGAN_FUNCTION + L.HEALTH_JUDGEMENTS + L.CAUSES)})",
+                                re.I),
+            "reassurance": re.compile(rf"\b(?:{'|'.join(L.REASSURANCE)})\b", re.I),
+            "lifestyle": re.compile(rf"^\W*(?:{'|'.join(L.LIFESTYLE_VERBS)})\b(?=.*\b(?:{'|'.join(L.LIFESTYLE_OBJECTS)})\b)",
+                                    re.I),
             "advice": re.compile(rf"\b(?:{'|'.join(L.ADVICE)})\b", re.I),
             "definition": re.compile("|".join(L.DEFINITIONS), re.I),
             "def_after_test": re.compile(L.DEFINITION_AFTER_TEST, re.I),
@@ -325,7 +329,7 @@ def _default_interpretation(sentence: str, mention_spans: list[tuple[int, int]])
         if lx["not_after"].match(sentence[m.end():]) or lx["not_before"].search(sentence[:m.start()]):
             continue
         return word
-    m = lx["state"].search(sentence)
+    m = lx["state"].search(sentence) or lx["reassurance"].search(sentence) or lx["lifestyle"].search(sentence)
     if m:
         return m.group(0)
     m = lx["advice"].search(sentence)
@@ -447,6 +451,17 @@ def _heading_group(line: str) -> Optional[str]:
     if re.search(r"\bblood\s+sugar\b|\bglucose\b|\bdiabetes\b", h, re.I):
         return "sugar"
     return "_other"                       # a heading for something else ends the previous group's context
+
+
+def _cutoff_re() -> re.Pattern:
+    from app.verify import lexicon as L
+    rng = (rf"(?:(?:below|under|less\s+than|above|over|more\s+than|<=|>=|≤|≥|<|>)\s*{N}|{N}\s*(?:[-–]|to)\s*{N}|"
+           rf"{N}\s*(?:or\s+(?:above|more|higher|below|less|lower)|\+|and\s+(?:above|over)))")
+    return re.compile(rf"^\W*(?P<range>{rng})\s*%?\s*[a-zA-Z/]*\s*[:=–]\s*(?P<cat>{L.CUTOFF_CATEGORIES})\b", re.I)
+
+
+CUTOFF_RE = _cutoff_re()
+TOPIC_REF = re.compile(r"\b(?:your|this|the)\s+(?:level|result|value|reading|number)s?\b", re.I)
 
 
 QUANTIFIER = re.compile(r"\b(?:most|many|some|a\s+few|several|(?:the\s+)?(?:vast\s+)?majority|nearly\s+all|almost\s+all)\b", re.I)
@@ -668,8 +683,13 @@ def never_claim_type(sentence: str, line: str) -> Optional[str]:
         return "deferral"
     if NEGATED_CERTAINTY.search(st):
         return "negated"
-    if re.match(L.DEFINITION_SENTENCE, st, re.I) and not re.search(L.PATIENT_RESULT, st, re.I):
-        return "definition"
+    dm = re.match(L.DEFINITION_SENTENCE, st, re.I)
+    if dm and not re.search(L.PATIENT_RESULT, st, re.I):
+        # the subject must be a medical term ("Hepatomegaly means ..."), not "The main finding is a ..."
+        gl = load_glossary()
+        subject = st[:dm.end()]
+        if any(gl.get(t.term_id, {}).get("kind") in ("test", "finding", "abbreviation") for t in find_terms(subject)):
+            return "definition"
     return None
 
 
@@ -903,6 +923,7 @@ def _extract(text: str, original: str) -> list[SentenceClaims]:
     bullet_line, lead_mentions, lead_done, lead_word = -1, [], False, None
     prev_lead: list[Mention] = []            # the last bullet lead, for follow-on bullets that name no test
     quote_mode = False                       # after "Your report says:", the following bullets are quotes
+    topic: Optional[Mention] = None          # the test a heading or bullet is about
     tables = parse_tables(text)
     for sp in split_sentences(text):
         sc = SentenceClaims(span=sp)
@@ -916,8 +937,12 @@ def _extract(text: str, original: str) -> list[SentenceClaims]:
         if trow:                                   # markdown table: header/separator rows are not claims
             if trow["kind"] == "row":
                 sc.mentions, sc.claims = _table_row_claims(text, trow)
-                for cat, why in find_oversteps(text[sp.start:sp.end],
-                                               [(m.span.start - sp.start, m.span.end - sp.start) for m in sc.mentions]):
+                # the name column is a label ("| Ascites | Absent |"); interpretation is judged in the other cells
+                name_cells = trow["roles"].get("test", [])[:1]
+                rest = text[sp.start:sp.end]
+                for a, b in name_cells:
+                    rest = rest[:a - sp.start] + " " * (b - a) + rest[b - sp.start:]
+                for cat, why in find_oversteps(rest, []):
                     sc.claims.append(Claim(kind="overstep", span=sp, overstep=cat, detail=why))
             out.append(sc)
             continue
@@ -1047,6 +1072,29 @@ def _extract(text: str, original: str) -> list[SentenceClaims]:
         named = [m for m in ms if m.span.text.lower() not in GENERIC_MENTIONS] or compounds
         if lead_mentions:
             prev_lead = lead_mentions
+        # topic: the one test a heading or a bullet names; later sentences that name no test may refer to it
+        is_heading_line = bool(re.match(r"^\s*#{1,6}\s", whole_line))
+        tests_here = {m.term_id: m for m in named}
+        if (is_heading_line or BULLET_RE.match(whole_line)) and len(tests_here) == 1:
+            topic = next(iter(tests_here.values()))
+        elif is_heading_line:
+            topic = None
+        if not named and topic is not None:
+            stext0 = text[sp.start:sp.end]
+            cm2 = CUTOFF_RE.match(stext0)
+            if cm2:                                    # "- Below 20: Low." under a "Vitamin D" heading
+                cat = re.sub(r"\s+", " ", cm2["cat"].lower())
+                r = parse_range(cm2["range"])          # the bullet's shape already says this is a range
+                if r.kind in ("interval", "upper", "lower"):
+                    ra, rb = sp.start + cm2.start("range"), sp.start + cm2.end("range")
+                    sc.claims.append(Claim(kind="range", span=_sp(text, ra, rb), range=r, category=cat,
+                                           term_id=topic.term_id, term=topic.term, mention=topic.span))
+            elif TOPIC_REF.search(stext0) and not lead_mentions:   # "Your level is low and worth addressing."
+                found = _find_statuses(text, sp.start, sp.end)
+                if found:
+                    st, fa, fb = min(found, key=lambda x: x[1])
+                    sc.claims.append(Claim(kind="status", span=_sp(text, fa, fb), status=st, term_id=topic.term_id,
+                                           term=topic.term, mention=topic.span, weak=True))
         # "* Borderline high is 200 to 239." under a "**High Total Cholesterol (224)**" bullet
         cm = CATEGORY_RE.match(text[sp.start:sp.end]) if not named else None
         if cm:

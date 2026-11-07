@@ -818,3 +818,36 @@ def test_quantifiers_are_not_group_all_claims(q):
 @pytest.mark.parametrize("t", ["after 2–3 months", "in 6-8 weeks", "over 3 to 4 days"])
 def test_time_ranges_are_never_values(t):
     assert not [f for f in claims_of(f"Repeat the hemoglobin test {t}.") if f.kind == "value"]
+
+
+# ---------------------------------------------------------------- held-out round 1, step 6: recall by class
+@pytest.mark.parametrize("ai", [
+    "Good news: this is easily manageable.",                          # reassurance
+    "Nothing here looks serious.",
+    "Please don't panic about these numbers.",
+    "Cut down on salty snacks and sugary drinks.",                    # lifestyle imperative
+    "Drink more water every day.",
+    "Your liver may be producing less albumin than usual.",           # organ function
+    "This suggests an underactive thyroid.",
+    "Your kidneys seem to be functioning less efficiently.",
+    "This could be a urinary tract infection.",                       # added conditions
+])
+def test_recall_classes_are_oversteps(ai):
+    assert verify(REPORT, ai).sentences[0].label == "OVERSTEPS"
+
+
+def test_outside_cutoff_list_and_carried_subject():
+    report = (SAMPLES / "04_thyroid_urine.txt").read_text()          # Vitamin D 18, no printed range
+    ai = "## Vitamin D\n\n- Vitamin D: **18 ng/mL**\n- Under 12: Deficient.\n- 12–30: Insufficient.\n\nYour level is low."
+    labels_ = {s.text: s.label for s in verify(report, ai).sentences}
+    assert labels_["Under 12: Deficient."] == labels_["12–30: Insufficient."] == "RANGE_NOT_FROM_REPORT"
+    assert labels_["Your level is low."] == "UNVERIFIABLE"
+
+
+@pytest.mark.parametrize("ai", ["Get a repeat lipid profile next year.",                    # imperative, no lifestyle object
+                                "| Ascites | Absent | No fluid seen |",                      # condition only as a row label
+                                "| CRP | Helps assess inflammation |",                        # test purpose
+                                "Your doctor may suggest you reduce sugar."])               # deferral
+def test_recall_classes_do_not_fire_on_neutral_sentences(ai):
+    rows = "| Test | Meaning |\n|---|---|\n" + ai if ai.startswith("|") else ai
+    assert verify(REPORT, rows).sentences[-1].label != "OVERSTEPS"
