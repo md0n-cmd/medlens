@@ -1045,3 +1045,25 @@ def test_near_a_limit_is_not_low_or_high():
 def test_placing_results_in_a_category_oversteps():
     r = verify(LABS, "His cholesterol and triglycerides fall into the borderline high category.")
     assert r.sentences[0].label == "OVERSTEPS"
+
+
+# ---------------------------------------------------------------- round 2, step 7: recall
+def test_reassurance_organ_function_and_certainty_overclaims_overstep():
+    for ai in ("There are no obvious signs of a serious medical problem.",
+               "There is no obvious emergency in these results.",
+               "There are no immediate, life-threatening red flags here.",
+               "There is no definite evidence of a life-threatening problem.",
+               "A slightly high RDW is often clinically insignificant.",
+               "Your kidneys are functioning normally.",
+               "Overall, your core organs look fine.",
+               "This confirms the heart muscle is getting enough oxygen."):
+        assert verify(LABS, ai).sentences[0].label == "OVERSTEPS", ai
+    assert verify(LABS, "A normal result does not rule out heart disease.").sentences[0].label == "NEUTRAL"
+
+
+def test_link_lists_are_one_passage():
+    for intro in ("A raised D-dimer can be associated with:", "**What can cause an enlarged heart?**",
+                  "High LDL can cause:"):
+        r = verify(LABS, f"{intro}\n\n- Heart failure.\n- Long-standing high blood pressure.\n- Certain medicines.")
+        items = [s for s in r.sentences if s.text.startswith(("Heart", "Long", "Certain"))]
+        assert all(s.label == "OVERSTEPS" for s in items) and len({s.passage_id for s in items}) == 1, intro

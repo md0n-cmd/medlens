@@ -127,6 +127,14 @@ REASSURANCE = [
     r"nothing\s+(?:here\s+)?(?:\w+\s+){0,3}?(?:serious|dangerous|alarming|worrying)", r"nothing\s+to\s+worry\s+about",
     r"(?:generally\s+|usually\s+|very\s+|easily\s+|highly\s+)?treatable", r"(?:generally\s+|usually\s+|easily\s+)?manageable",
     r"good\s+news",
+    # "no obvious signs of a serious or immediate medical problem", "no obvious emergency", "no immediate,
+    # life-threatening red flags", "no definite evidence of an immediate life-threatening problem"
+    r"no\s+(?:obvious\s+|immediate\s+|clear\s+)?(?:signs?\s+of\s+(?:an?\s+)?)?(?:serious|immediate|urgent)\s+(?:or\s+(?:serious|immediate|urgent)\s+)?"
+    r"(?:medical\s+|health\s+)?(?:problems?|concerns?|issues?|danger)",
+    r"no\s+(?:obvious\s+|immediate\s+)?emergenc(?:y|ies)",
+    r"no\s+(?:[\w-]+,?\s+){0,3}?life-threatening\s+(?:red\s+flags?|problems?|conditions?|issues?|findings?)",
+    r"no\s+(?:definite\s+|clear\s+|obvious\s+)?evidence\s+of\s+(?:an?\s+)?(?:[\w-]+\s+){0,2}?life-threatening",
+    r"clinically\s+insignificant",
 ]
 # LIFESTYLE IMPERATIVES: an imperative verb + a lifestyle object, e.g. "Cut down on salty snacks."
 LIFESTYLE_VERBS = ["reduce", "avoid", "limit", "eat", "drink", "exercise", "maintain", "lose", "cut", "increase", "stop",
@@ -142,6 +150,11 @@ ORGAN_FUNCTION = [
     r"too\s+little|excess|extra)",
     r"(?:producing|making)\s+more\s+[\w\s]{0,30}?than\s+(?:your|the)\s+body\s+needs",
     r"function(?:ing)?\s+less\s+(?:efficiently|well)",
+    r"(?:is|are)\s+(?:all\s+)?(?:functioning|working)\s+(?:normally|well|properly|fine|correctly)",
+    r"core\s+organs?",
+    # certainty a normal test can't give: "This confirms the heart muscle is ...", "rules out ..."
+    rf"confirms?\s+(?:that\s+)?(?:the\s+|your\s+)?(?:\w+\s+){{0,2}}?(?:{ORGANS}|heart|lungs?|organs?|muscle)\b",
+    r"(?<!not\s)(?<!n't\s)\brules\s+out\b",
 ]
 # OUTSIDE CUT-OFF LISTS: bullets of "<number or range>: <category>", e.g. "- Under 12: Deficient"
 CUTOFF_CATEGORIES = (r"very\s+low|very\s+high|low|normal|adequate|insufficient|insufficiency|deficient|deficiency|desirable|"

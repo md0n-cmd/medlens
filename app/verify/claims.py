@@ -490,9 +490,14 @@ TOPIC_REF = re.compile(r"\b(?:your|this|the)\s+(?:level|result|value|reading|num
 
 # a list of possible causes of the results: "Common contributing factors include:", "It can be caused by:"
 CAUSE_LIST_INTRO = re.compile(r"\b(?:factors?|causes?|reasons?)\s+(?:include|includes|can\s+include|are|may\s+be)\b|"
-                              r"\bcan\s+be\s+caused\s+by\b|\bpossible\s+causes?\b|\bcontributing\s+factors?\b", re.I)
-POSSIBILITY_INTRO = re.compile(r"\b(?:include|includes|including|such\s+as|causes?|factors?|symptoms?|reasons?|"
-                               r"conditions?|possibilities|experience|could\s+be|might\s+be|can\s+be)\b[^:]*:\s*$", re.I)
+                              r"\bcan\s+be\s+caused\s+by\b|\bpossible\s+causes?\b|\bcontributing\s+factors?\b|"
+                              # what the result is linked to: "can be associated with:", "can cause:", "risk of:"
+                              r"\b(?:can|could|may|might)\s+(?:be\s+)?(?:cause[ds]?|associated\s+with|linked\s+to|lead\s+to)\b|"
+                              r"\bassociated\s+with\s*:|\brisks?\s+of\s*:|\bwhat\s+(?:can|could|might|may)\s+cause\b|"
+                              r"\bcauses\s+of\b", re.I)
+POSSIBILITY_INTRO = re.compile(r"\b(?:include|includes|including|such\s+as|causes?|cause[ds]|factors?|symptoms?|reasons?|"
+                               r"conditions?|possibilities|experience|could\s+be|might\s+be|can\s+be|associated\s+with|"
+                               r"linked\s+to|lead\s+to|risks?\s+of)\b[^:?]*[:?](?:\*\*)?\s*$", re.I)
 
 
 QUANTIFIER = re.compile(r"\b(?:most|many|some|a\s+few|several|(?:the\s+)?(?:vast\s+)?majority|nearly\s+all|almost\s+all)\b", re.I)
