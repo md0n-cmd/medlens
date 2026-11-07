@@ -48,7 +48,7 @@ rootdir: /home/d0n/medlens
 configfile: pytest.ini
 testpaths: tests
 plugins: anyio-4.16.0
-collecting ... collected 373 items
+collecting ... collected 434 items
 
 tests/test_age_bands.py::test_age_band_cell_parses_as_multi PASSED
 tests/test_age_bands.py::test_label_bands PASSED
@@ -64,6 +64,12 @@ tests/test_api.py::test_analyze_endpoint PASSED
 tests/test_api.py::test_analyze_rejects_empty PASSED
 tests/test_api.py::test_frontend_served PASSED
 tests/test_api.py::test_head_root_for_uptime_checks PASSED
+tests/test_benchmark.py::test_no_false_alarms PASSED
+tests/test_benchmark.py::test_score_never_drops_below_best_recorded PASSED
+tests/test_benchmark.py::test_every_case_finds_its_sentence PASSED
+tests/test_benchmark.py::test_gold_files_are_synthetic_samples PASSED
+tests/test_benchmark.py::test_rules_do_not_special_case_benchmark_sentences PASSED
+tests/test_benchmark.py::test_heldout_answers_never_gate_the_build PASSED
 tests/test_classify_safety.py::test_hedged_language_needs_professional[Findings suggestive of cholelithiasis.] PASSED
 tests/test_classify_safety.py::test_hedged_language_needs_professional[Appearance consistent with fatty liver.] PASSED
 tests/test_classify_safety.py::test_hedged_language_needs_professional[Malignancy cannot be ruled out.] PASSED
@@ -342,15 +348,21 @@ tests/test_verify.py::test_status_judged_against_the_row_whose_value_matched PAS
 tests/test_verify.py::test_spans_valid_in_both_texts[01_cbc__chatbot_real] PASSED
 tests/test_verify.py::test_spans_valid_in_both_texts[01_cbc__correct] PASSED
 tests/test_verify.py::test_spans_valid_in_both_texts[01_cbc__errors] PASSED
+tests/test_verify.py::test_spans_valid_in_both_texts[02_lipid_diabetes__chatbot_real] PASSED
+tests/test_verify.py::test_spans_valid_in_both_texts[03_lft_kft__chatbot_real] PASSED
 tests/test_verify.py::test_spans_valid_in_both_texts[03_lft_kft__errors] PASSED
 tests/test_verify.py::test_spans_valid_in_both_texts[06_age_bands__errors] PASSED
+tests/test_verify.py::test_spans_valid_in_both_texts[07_missing_ranges__chatbot_real] PASSED
 tests/test_verify.py::test_spans_valid_in_both_texts[07_missing_ranges__errors] PASSED
 tests/test_verify.py::test_spans_valid_in_both_texts[10__realistic] PASSED
 tests/test_verify.py::test_medlens_own_messages_pass_safety[01_cbc__chatbot_real] PASSED
 tests/test_verify.py::test_medlens_own_messages_pass_safety[01_cbc__correct] PASSED
 tests/test_verify.py::test_medlens_own_messages_pass_safety[01_cbc__errors] PASSED
+tests/test_verify.py::test_medlens_own_messages_pass_safety[02_lipid_diabetes__chatbot_real] PASSED
+tests/test_verify.py::test_medlens_own_messages_pass_safety[03_lft_kft__chatbot_real] PASSED
 tests/test_verify.py::test_medlens_own_messages_pass_safety[03_lft_kft__errors] PASSED
 tests/test_verify.py::test_medlens_own_messages_pass_safety[06_age_bands__errors] PASSED
+tests/test_verify.py::test_medlens_own_messages_pass_safety[07_missing_ranges__chatbot_real] PASSED
 tests/test_verify.py::test_medlens_own_messages_pass_safety[07_missing_ranges__errors] PASSED
 tests/test_verify.py::test_medlens_own_messages_pass_safety[10__realistic] PASSED
 tests/test_verify.py::test_api_verify PASSED
@@ -423,6 +435,55 @@ tests/test_verify.py::test_definitions_and_doctor_deferrals_are_not_oversteps[A 
 tests/test_verify.py::test_definitions_and_doctor_deferrals_are_not_oversteps[Here is what they generally indicate:] PASSED
 tests/test_verify.py::test_definitions_and_doctor_deferrals_are_not_oversteps[Your ESR aligns with the mildly elevated white blood cell count.] PASSED
 tests/test_verify.py::test_direct_supplement_instruction_is_still_an_overstep PASSED
+tests/test_verify.py::test_thresholds_time_spans_and_counts_are_never_values[Your hemoglobin should ideally be at least 13 limit.] PASSED
+tests/test_verify.py::test_thresholds_time_spans_and_counts_are_never_values[Hemoglobin is tracked over the last 3 months.] PASSED
+tests/test_verify.py::test_thresholds_time_spans_and_counts_are_never_values[Hemoglobin was checked in a 3-month follow-up.] PASSED
+tests/test_verify.py::test_thresholds_time_spans_and_counts_are_never_values[The report lists two different hemoglobin values.] PASSED
+tests/test_verify.py::test_thresholds_time_spans_and_counts_are_never_values[Your hemoglobin exceeds the recommended 15 limit.] PASSED
+tests/test_verify.py::test_normal_is_a_status_only_when_it_predicates_the_test[Bilirubin is made during the normal breakdown of red blood cells.-False] PASSED
+tests/test_verify.py::test_normal_is_a_status_only_when_it_predicates_the_test[MCV is a normal part of the blood count.-False] PASSED
+tests/test_verify.py::test_normal_is_a_status_only_when_it_predicates_the_test[Your MCV is normal.-True] PASSED
+tests/test_verify.py::test_normal_is_a_status_only_when_it_predicates_the_test[Your MCV of 89.0 is perfectly normal.-True] PASSED
+tests/test_verify.py::test_normal_is_a_status_only_when_it_predicates_the_test[Your MCV is within normal limits.-True] PASSED
+tests/test_verify.py::test_normal_is_a_status_only_when_it_predicates_the_test[Your MCV and MCH are both normal.-True] PASSED
+tests/test_verify.py::test_bold_lead_test_wins_over_a_test_named_in_comparison PASSED
+tests/test_verify.py::test_compound_lead_names_each_test PASSED
+tests/test_verify.py::test_suggesting_a_test_is_not_a_claim[A doctor would likely look at a vitamin D test to get a clearer picture.] PASSED
+tests/test_verify.py::test_suggesting_a_test_is_not_a_claim[You could consider an HbA1c test (a 3-month average).] PASSED
+tests/test_verify.py::test_reference_population_is_not_a_health_judgement PASSED
+tests/test_verify.py::test_announcing_outside_ranges_is_range_not_from_report[Here are your results using standard reference ranges where none are printed.] PASSED
+tests/test_verify.py::test_announcing_outside_ranges_is_range_not_from_report[Standard ranges usually put this below 3.0.] PASSED
+tests/test_verify.py::test_announcing_outside_ranges_is_range_not_from_report[I explained these based on typical clinical cut-offs.] PASSED
+tests/test_verify.py::test_category_thresholds_bind_to_the_previous_bullet_lead PASSED
+tests/test_verify.py::test_category_printed_on_the_report_is_verified PASSED
+tests/test_verify.py::test_value_outside_every_printed_range_settles_the_status PASSED
+tests/test_verify.py::test_bold_value_anchors_a_status_on_a_row_without_a_range PASSED
+tests/test_verify.py::test_within_every_printed_range_is_not_treated_as_settled PASSED
+tests/test_verify.py::test_condition_or_state_terms_are_oversteps_by_default[Your numbers fit insulin resistance.-insulin resistance] PASSED
+tests/test_verify.py::test_condition_or_state_terms_are_oversteps_by_default[This looks like early gout.-gout] PASSED
+tests/test_verify.py::test_condition_or_state_terms_are_oversteps_by_default[Your values suggest thrombocytopenia.-thrombocytopenia] PASSED
+tests/test_verify.py::test_condition_or_state_terms_are_oversteps_by_default[Your kidney filtration seems slightly impaired kidney function overall.-impaired kidney function] PASSED
+tests/test_verify.py::test_condition_or_state_terms_are_oversteps_by_default[There is some stress on the liver.-stress on the liver] PASSED
+tests/test_verify.py::test_condition_or_state_terms_are_oversteps_by_default[Your markers are perfectly healthy.-perfectly healthy] PASSED
+tests/test_verify.py::test_condition_or_state_terms_are_oversteps_by_default[This can lead to heart problems.-lead to] PASSED
+tests/test_verify.py::test_condition_or_state_terms_are_oversteps_by_default[Exercise and diet changes would help here.-exercise] PASSED
+tests/test_verify.py::test_exempt_sentences_are_not_oversteps[CRP is a protein produced by the liver in response to inflammation.] PASSED
+tests/test_verify.py::test_exempt_sentences_are_not_oversteps[The HbA1c measures your average blood sugar, used to screen for diabetes.] PASSED
+tests/test_verify.py::test_exempt_sentences_are_not_oversteps[ESR is a general marker for inflammation.] PASSED
+tests/test_verify.py::test_exempt_sentences_are_not_oversteps[White blood cells fight infection.] PASSED
+tests/test_verify.py::test_exempt_sentences_are_not_oversteps[This is the most important number in the diabetes panel.] PASSED
+tests/test_verify.py::test_exempt_sentences_are_not_oversteps[There is a slight rise in an inflammation marker.] PASSED
+tests/test_verify.py::test_exempt_sentences_are_not_oversteps[A doctor would decide whether diet changes or supplements are needed.] PASSED
+tests/test_verify.py::test_exempt_sentences_are_not_oversteps[The report notes findings suggestive of fatty liver.] PASSED
+tests/test_verify.py::test_exempt_sentences_are_not_oversteps[Prediabetes is between 5.7% and 6.4%.] PASSED
+tests/test_verify.py::test_exempt_sentences_are_not_oversteps[A healthy level is above 40.] PASSED
+tests/test_verify.py::test_exempt_sentences_are_not_oversteps[The flag appears to be due to a typo.] PASSED
+tests/test_verify.py::test_condition_inside_a_test_name_is_not_a_condition PASSED
+tests/test_verify.py::test_test_purpose_and_condition_word_definitions_are_not_oversteps[Your doctor ordered this test to check for anemia.] PASSED
+tests/test_verify.py::test_test_purpose_and_condition_word_definitions_are_not_oversteps[This test is often used to screen for diabetes.] PASSED
+tests/test_verify.py::test_test_purpose_and_condition_word_definitions_are_not_oversteps[Anemia means a low red cell count in general terms.] PASSED
+tests/test_verify.py::test_interpretations_with_a_trailing_definition_are_still_oversteps[Your results point to anemia.] PASSED
+tests/test_verify.py::test_interpretations_with_a_trailing_definition_are_still_oversteps[These results suggest mild anemia, which means fewer red cells.] PASSED
 
-======================= 373 passed in 127.58s (0:02:07) ========================
+======================= 434 passed in 161.77s (0:02:41) ========================
 ```

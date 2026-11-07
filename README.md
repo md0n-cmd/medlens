@@ -36,7 +36,7 @@ To open it on your phone (same Wi-Fi), run `./run.sh --lan`. It prints the lapto
 
 Open http://localhost:8000. Pick a sample from the dropdown, or open `http://localhost:8000/?sample=01_cbc` directly.
 
-Run the tests with `pytest -v` (373 tests; see [docs/TEST_RESULTS.md](docs/TEST_RESULTS.md)).
+Run the tests with `pytest -v` (434 tests; see [docs/TEST_RESULTS.md](docs/TEST_RESULTS.md)).
 
 ## MedLens Verify: check an AI's explanation against your report
 
@@ -54,7 +54,9 @@ Paste the report and the AI's text in the **Check an AI explanation** tab (or `P
 | ∅ **NOT_IN_REPORT** | The AI talks about a test that isn't on the report. |
 | *(no label)* NEUTRAL | No checkable claim; shown, not judged. |
 
-Group claims are checked too: "Liver enzymes and proteins are all within normal ranges" is **CONTRADICTED** if any liver test is outside its printed range, and every exception is named. It also lists **omissions**: results outside the printed range that the AI never mentions. A real-world test (a real report plus a real chatbot explanation, replaced in the repo by a synthetic replica for privacy) drove these rules; see [docs/ALGORITHM.md §9.4](docs/ALGORITHM.md#94-real-world-test-findings). A second real-world test, a real chatbot's answer about synthetic sample 01 (committed verbatim as "Real chatbot answer"), went from 3 false contradictions and 1 of 6 interpretations flagged to 0 and 6; see [§9.5](docs/ALGORITHM.md#95-real-world-test-2). For CONTRADICTED, precision beats recall: when unsure, MedLens says UNVERIFIABLE. Every finding links both ways: click an AI sentence to outline the report line it's about; click a report line to highlight what the AI said about it. Try `/?ai=01_cbc__errors` (planted errors) or `/?ai=01_cbc__correct`.
+Group claims are checked too: "Liver enzymes and proteins are all within normal ranges" is **CONTRADICTED** if any liver test is outside its printed range, and every exception is named. It also lists **omissions**: results outside the printed range that the AI never mentions. A real-world test (a real report plus a real chatbot explanation, replaced in the repo by a synthetic replica for privacy) drove these rules; see [docs/ALGORITHM.md §9.4](docs/ALGORITHM.md#94-real-world-test-findings). A second real-world test, a real chatbot's answer about synthetic sample 01 (committed verbatim as "Real chatbot answer"), went from 3 false contradictions and 1 of 6 interpretations flagged to 0 and 6; see [§9.5](docs/ALGORITHM.md#95-real-world-test-2). For CONTRADICTED, precision beats recall: when unsure, MedLens says UNVERIFIABLE.
+
+**Benchmark:** 60/60 correct with 0 false alarms on 4 real chatbot answers about synthetic samples (`python scripts/benchmark.py`). The rules were developed on this set, so the score measures fit, not generalisation; held-out answers are scored separately. History and limits: [§9.6](docs/ALGORITHM.md#96-benchmark-driven-rules). Every finding links both ways: click an AI sentence to outline the report line it's about; click a report line to highlight what the AI said about it. Try `/?ai=01_cbc__errors` (planted errors) or `/?ai=01_cbc__correct`.
 
 *MedLens checks what the AI said against your report. It does not judge medical meaning. Only your doctor can.* Known limits are listed in [docs/ALGORITHM.md](docs/ALGORITHM.md#9-medlens-verify-checking-ai-explanations).
 

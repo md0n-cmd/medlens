@@ -21,7 +21,7 @@
 * **No hallucinated diagnoses.** The core requirement is to *avoid unsupported diagnoses*. A deterministic system can only output sentences we wrote and reviewed.
 * **Reference ranges must come from the report.** An LLM tends to "helpfully" fill in population ranges it has memorised. Our parser has no ranges to fall back on.
 * **Exact provenance.** Every output carries character offsets into the input, which the UI uses for two-way linking. Generative output does not give that reliably.
-* **Testable.** 373 unit and end-to-end tests pin the behaviour, and the same input always gives the same output.
+* **Testable.** 434 unit and end-to-end tests pin the behaviour, and the same input always gives the same output.
 * **Offline, free, fast.** No API key is needed, and a report takes a few milliseconds.
 * An LLM is used only as an **optional, clearly labelled fallback** for glossary misses. It is off by default and goes through the same safety filter.
 
@@ -179,3 +179,52 @@ A real general-purpose chatbot was asked to explain **synthetic** sample 01. Its
 | "Normal Differentials" checked only test by test | No group for differential counts. | A `dlc` group whose members are the differential tests themselves. ESR, printed under the same heading in sample 01, is not counted. |
 
 Result on the chatbot answer, before → after: **CONTRADICTED 3 → 0**, OVERSTEPS 1 → 6, VERIFIED 13 → 26, omissions 1 → 1 (MCHC, correct). All six other AI samples kept exactly the same counts through every change in this round. The Verify summary bar now leads with "The AI made 6 interpretations only a doctor can make."
+
+### 9.6 Benchmark-driven rules
+
+**The benchmark.** Real chatbot answers about *synthetic* samples (`samples/ai/*__chatbot_real.txt`) with hand-checked labels in `tests/benchmark/gold.json`: 58 sentence cases plus 2 omission checks. `python scripts/benchmark.py` prints the per-case table. `tests/test_benchmark.py` fails on **any** false alarm, or if `correct` drops below the best score in `tests/benchmark/score.json` (a ratchet). A *false alarm* is MedLens accusing the AI wrongly: a CONTRADICTED, RANGE_NOT_FROM_REPORT, NOT_IN_REPORT or OVERSTEPS label the gold set doesn't accept, or a forbidden omission.
+
+**Score history**
+
+| Step | Correct | False alarms | Misses | What changed |
+|---|---|---|---|---|
+| baseline | 34/60 | 7 | 19 | The build before these rules. The user's harness reported 33/60 with 8 false alarms; one case is scored differently because this harness also finds a case's sentence after stripping markdown. |
+| 1 | 42/60 | **0** | 18 | Numbers that aren't values; predicative "normal"; lead beats comparison; compound leads; suggested tests; reference population |
+| 2 | 47/60 | 0 | 13 | Outside-range announcements; category thresholds; settled multi-ranges; bold-value anchors |
+| 3 | 60/60 | 0 | 0 | Interpretation by default, from a data lexicon |
+| 5a | 60/60 | 0 | 0 | Precision fixes found by probing sentences *outside* the benchmark |
+
+**Every rule, with a general example** (none of the examples is a benchmark sentence; `test_rules_do_not_special_case_benchmark_sentences` fails if a gold sentence appears in the rule code)
+
+| Rule | Example → result |
+|---|---|
+| 1a. Thresholds, time spans and counts are never VALUE claims | "keep it under the recommended 150 limit", "over the past 6 weeks", "two readings" → no value claim. "90 or higher" is a range claim. |
+| 1b. "normal" is a status only when it predicates the test | "Your TSH is normal", "within normal limits" → status. "the normal turnover of cells", "a normal part of" → no claim. |
+| 1c. A test named only in a comparison is not the subject | "**Note on ALP:** Like ALT, this value is within range (40–129)" → the range binds to ALP. |
+| 1d. Compound leads name one test per label | "Cholesterol (HDL: 45, LDL: 130)" → two tests, each checked, each counted as mentioned, and the group for "Both are…". |
+| 1e. Suggested tests and doctor deferrals make no test claims | "your doctor may order a TSH test" → NEUTRAL. |
+| 1f. A reference population is not a judgement | "a healthy adult usually has 90 or higher" → range check, not OVERSTEPS. |
+| 2a. Announcing outside ranges | "based on typical lab cut-offs", "standard ranges usually say…" → RANGE_NOT_FROM_REPORT. |
+| 2b. Category thresholds | "Borderline high is 200 to 239" → RANGE_NOT_FROM_REPORT unless the report prints that category. "Normal is under 200" is checked against the printed range. The subject carries over from the previous bullet lead. |
+| 2c. Several printed ranges | A value outside **all** of them on the same side is settled and checked. Within all of them, or mixed, is UNVERIFIABLE. |
+| 2d. Bold-value anchor | "The **72 U/L** value is fine" → the one report row with value 72; no printed range → UNVERIFIABLE. |
+| 3. Interpretation by default | A sentence with a CONDITION/STATE term that is not EXEMPT → OVERSTEPS: "This links your results to a condition, cause or health judgement ('…'), which only a doctor can interpret." |
+| 3-exempt | Definitions ("CRP is a protein made…", "the test measures…", "used to screen for…", "Anemia means…"), doctor deferrals ("a doctor would…", "ask your doctor"), quoting the report, defining a category threshold. |
+| 3-not-a-condition | Panel or test names ("diabetes panel", "inflammation marker"), what something protects against ("fights infection"), words inside a test name, causes about the data ("due to a typo"). |
+
+**The lexicon approach.** Instead of hunting for interpretive *phrases*, `app/verify/lexicon.py` lists condition and state *terms* as data:
+- glossary findings and condition suffixes;
+- diseases and categories;
+- organ states;
+- health judgements;
+- causes and prognosis;
+- lifestyle and treatment advice;
+- plus the exemptions.
+
+The rule in `claims.py` stays the same as the lists grow. One judgement call differs from the original list: "well-balanced" counts as a judgement only when said about the person or the body. The gold set expects "Calcium and Phosphorus are well-balanced and normal" to be UNVERIFIABLE, and a statement about test values isn't a statement about the person.
+
+**Known limits**
+* **60/60 measures fit, not generalisation.** The rules were written while looking at these answers. The overfitting guards (no benchmark sentence in the rule code; general examples; probing sentences outside the set, which found three precision bugs fixed in 5a) reduce the risk but don't measure it. The held-out answers will: they are scored separately with `scripts/benchmark.py --heldout` and never tuned on (`tests/benchmark/README.md`).
+* **Recall is bounded by the lexicon.** Interpretation without a listed term is missed ("your results look mostly typical", "drink plenty of water before the next test").
+* **Sentence-level exemption.** A definition exempts its whole sentence, so "X is a protein; yours suggests liver disease" in one sentence is missed. A condition word in a sentence that isn't exempt is flagged even when the AI only mentions it in passing.
+* **The benchmark is small:** 4 answers from one chatbot, about 4 synthetic reports.

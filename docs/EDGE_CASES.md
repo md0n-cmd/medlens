@@ -108,3 +108,12 @@
 | 104 | Results linked to a condition or cause ("points to mild anemia", "reacting to a recent mild infection", "recovery from a minor illness") | OVERSTEPS: "This links your results to a condition or cause…" | `test_linking_results_to_a_condition_is_an_overstep`, `test_realworld_chatbot.py` |
 | 105 | Definitions ("ESR is a general marker for inflammation") and doctor deferrals ("a doctor would … determine if an iron supplement is necessary") | Not oversteps; a direct "take iron supplements" still is | `test_definitions_and_doctor_deferrals_are_not_oversteps`, `test_direct_supplement_instruction_is_still_an_overstep` |
 | 106 | "Normal Differentials" group claim | Group = differential tests only (ESR under the same heading excluded) | `test_realworld_chatbot.py::test_normal_differentials_group_claim_verified` |
+| 107 | Threshold, time span or count next to a test ("recommended 200 limit", "3 months", "two values") | Never a value claim | `test_thresholds_time_spans_and_counts_are_never_values` |
+| 108 | Attributive "normal" ("normal breakdown of") | Not a status claim | `test_normal_is_a_status_only_when_it_predicates_the_test` |
+| 109 | Test named in a comparison inside another test's bullet | Claims bind to the lead test | `test_bold_lead_test_wins_over_a_test_named_in_comparison` |
+| 110 | Compound lead "Bilirubin (Total: 1.6, Direct: 0.4, Indirect: 1.2)" | Three tests, each checked and counted as mentioned | `test_compound_lead_names_each_test` |
+| 111 | AI announces or uses ranges/categories the report doesn't print | RANGE_NOT_FROM_REPORT | `test_announcing_outside_ranges_is_range_not_from_report`, `test_category_thresholds_bind_to_the_previous_bullet_lead` |
+| 112 | Value outside every printed sex/age range on the same side | Status settled and checked; within all / mixed stays UNVERIFIABLE | `test_value_outside_every_printed_range_settles_the_status`, `test_within_every_printed_range_is_not_treated_as_settled` |
+| 113 | Condition/state term in a non-exempt sentence | OVERSTEPS by default (lexicon) | `test_condition_or_state_terms_are_oversteps_by_default` |
+| 114 | Definitions, test purpose, deferrals, quotes, category thresholds, panel names | Exempt from the default rule | `test_exempt_sentences_are_not_oversteps`, `test_test_purpose_and_condition_word_definitions_are_not_oversteps` |
+| 115 | Benchmark overfitting | No gold sentence may appear in the rule code; held-out answers are scored separately, never tuned on | `test_benchmark.py::test_rules_do_not_special_case_benchmark_sentences` |
