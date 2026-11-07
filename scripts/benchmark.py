@@ -125,15 +125,23 @@ def summary(score: Score) -> str:
 SCORE = ROOT / "tests" / "benchmark" / "score.json"
 
 
-def record(score: Score, note: str) -> bool:
-    """Ratchet: store the score if it is the best so far. Returns True if it improved."""
+# sets that are training data (ratcheted). A set stops being held-out once rules are tuned on it.
+TRAINING_SETS = {"main": "gold.json", "heldout_round1": "heldout.json"}
+
+
+def record(score: Score, note: str, name: str = "main") -> bool:
+    """Ratchet: store the score if it is the best so far for that set. Returns True if it improved."""
     data = json.loads(SCORE.read_text()) if SCORE.exists() else {"best_correct": 0, "total": score.total, "history": []}
-    improved = score.correct > data["best_correct"]
-    if improved or not data["history"]:
-        data["best_correct"] = max(data["best_correct"], score.correct)
-        data["total"] = score.total
-        data["history"].append({"correct": score.correct, "false_alarms": score.false_alarms,
-                                "misses": score.misses, "total": score.total, "note": note})
+    if name == "main":
+        entry = data
+    else:
+        entry = data.setdefault("sets", {}).setdefault(name, {"best_correct": 0, "total": score.total, "history": []})
+    improved = score.correct > entry["best_correct"]
+    if improved or not entry["history"]:
+        entry["best_correct"] = max(entry["best_correct"], score.correct)
+        entry["total"] = score.total
+        entry["history"].append({"correct": score.correct, "false_alarms": score.false_alarms,
+                                 "misses": score.misses, "total": score.total, "note": note})
         SCORE.write_text(json.dumps(data, indent=2) + "\n")
     return improved
 
@@ -163,4 +171,7 @@ if __name__ == "__main__":
     print(summary(sc) if "--brief" in sys.argv else table(sc))
     if "--record" in sys.argv:
         note = sys.argv[sys.argv.index("--record") + 1] if len(sys.argv) > sys.argv.index("--record") + 1 else ""
-        print("recorded new best" if record(sc, note) else "not a new best; score.json unchanged")
+        print("main:", "recorded new best" if record(sc, note) else "not a new best")
+        hs = run(HELDOUT)
+        print("heldout_round1:", summary(hs), "|",
+              "recorded new best" if record(hs, note, "heldout_round1") else "not a new best")

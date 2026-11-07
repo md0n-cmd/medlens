@@ -21,7 +21,7 @@
 * **No hallucinated diagnoses.** The core requirement is to *avoid unsupported diagnoses*. A deterministic system can only output sentences we wrote and reviewed.
 * **Reference ranges must come from the report.** An LLM tends to "helpfully" fill in population ranges it has memorised. Our parser has no ranges to fall back on.
 * **Exact provenance.** Every output carries character offsets into the input, which the UI uses for two-way linking. Generative output does not give that reliably.
-* **Testable.** 434 unit and end-to-end tests pin the behaviour, and the same input always gives the same output.
+* **Testable.** 494 unit and end-to-end tests pin the behaviour, and the same input always gives the same output.
 * **Offline, free, fast.** No API key is needed, and a report takes a few milliseconds.
 * An LLM is used only as an **optional, clearly labelled fallback** for glossary misses. It is off by default and goes through the same safety filter.
 
@@ -228,3 +228,39 @@ The rule in `claims.py` stays the same as the lists grow. One judgement call dif
 * **Recall is bounded by the lexicon.** Interpretation without a listed term is missed ("your results look mostly typical", "drink plenty of water before the next test").
 * **Sentence-level exemption.** A definition exempts its whole sentence, so "X is a protein; yours suggests liver disease" in one sentence is missed. A condition word in a sentence that isn't exempt is flagged even when the AI only mentions it in passing.
 * **The benchmark is small:** 4 answers from one chatbot, about 4 synthetic reports.
+
+### 9.7 Held-out round 1
+
+**What it was.** Three real chatbot answers about synthetic samples 04, 05 and 06, written in a different "worried patient" style: markdown tables, symptom and cause lists, follow-up questions, quoted report text. They were hand-labelled by the user (`tests/benchmark/heldout.json`, `samples/ai/heldout/`). They were scored **once on the unchanged build**, and that number was committed before any change (commit `aa1567d`, logged in `tests/benchmark/heldout_score.json`).
+
+| Step | Held-out | False alarms | Misses | Main set | What changed |
+|---|---|---|---|---|---|
+| first run, unchanged build | **26/63** | **18** | 19 | 60/60, 0 FA | the honest generalisation number for the rules up to §9.6 |
+| 1 | 30/63 | 16 | 17 | 60/60, 0 FA | markdown tables as structured rows |
+| 2 | 31/63 | 16 | 16 | 60/60, 0 FA | multi-range tests: claims relying on one range |
+| 3 | 36/63 | 11 | 16 | 60/60, 0 FA | quotes and certainty |
+| 4 | 41/63 | 5 | 17 | 60/60, 0 FA | sentence types that are never claims |
+| 5 | 45/63 | **0** | 18 | 60/60, 0 FA | binding fixes |
+| 6 | **63/63** | 0 | 0 | 60/60, 0 FA | recall by class (lexicon) |
+| 7 | 63/63 | 0 | 0 | 60/60, 0 FA | noise control (passages) |
+
+(Step 1's commit message shows "before 29/63", a mid-step snapshot; the true pre-step score was 26/63, as corrected in step 2's message.)
+
+**The rules, each with a non-benchmark example.** These are structural rules, not phrases from the answers; a test fails if any benchmark sentence appears in the rule code.
+
+| Rule | Example → result |
+|---|---|
+| Markdown tables | Columns are mapped by header words (test/parameter/investigation; result/value; reference/range/normal; interpretation/finding/assessment), not position. "\| Interpretation \| Reference \| Parameter \| Value \|" works. Each row is one claim set; header and separator rows are NEUTRAL; a row's name cell is a label, not interpretation. |
+| Multi-range assumption | Report prints "Men >40 \| Women >50", no sex; AI: "Your HDL of 45 is acceptable for men (above 40)" → UNVERIFIABLE: "The AI used the Men range (> 40). Your report doesn't state sex; for women it prints > 50." Quoting one range without applying it, or quoting all of them, is fine. |
+| Quotes | "The report says 'A 9 mm focus …'" when the report says 6 mm → CONTRADICTED "Misquotes your report". An exact quote → VERIFIED "Quotes your report accurately"; never OVERSTEPS. |
+| Certainty | Report: "likely a calculus"; AI: "There is a stone in your gallbladder" → OVERSTEPS "Your report says 'likely a calculus'; the AI states it as certain." Synonym families: `FINDING_SYNONYMS` in the lexicon. |
+| Never claims | Questions ("Do you eat much fried food?"), doctor deferrals, safety advice ("Do not stop your tablets without asking your doctor", "seek urgent care if …"), negated certainty ("does not confirm hepatitis"), definitions whose subject is a medical term ("Anaemia means …"). Headings keep status checks but never OVERSTEPS. |
+| Binding | "very low TSH and elevated Free T4": each adjective binds to the next test. "LDL (bad cholesterol)": a gloss, not a test. "thyroid hormones" = T3/T4 only. "Most/many/some …" is never an all-claim. "after 2–3 months" is never a value. |
+| Reassurance | "Good news: this is easily manageable." → OVERSTEPS |
+| Lifestyle imperatives | "Cut down on salty snacks." → OVERSTEPS (an imperative verb plus a lifestyle object; a deferral like "your doctor may suggest you reduce sugar" is not) |
+| Organ function | "Your liver may be producing less albumin than usual." → OVERSTEPS |
+| Outside cut-off lists | Under a "Vitamin B12" heading: "- Under 12: Deficient." → RANGE_NOT_FROM_REPORT unless the report prints that table. Then "Your result is on the low side." binds to the topic test → UNVERIFIABLE when the report prints no range. |
+| Possibility lists | Items under "Common causes include:" or "You might experience:" make no test claims (they still count as interpretation). |
+| Noise control | Consecutive interpretation lines in one section (a list, or prose separated only by framing lines) are one *passage*. The summary bar counts passages. Worst answer: 28 flagged sentences → 13 passages. |
+
+**This set is no longer held-out.** The rules above were tuned while looking at these answers, so 63/63 measures fit, not generalisation. Both sets are now training data, ratcheted in `tests/test_benchmark.py` (`score.json` → `sets.heldout_round1`). **A new held-out set, scored once on arrival before any change, is required for the next honest number.** The protocol is in `tests/benchmark/README.md`.

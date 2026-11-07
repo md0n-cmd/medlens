@@ -30,5 +30,20 @@
       "total": 60,
       "note": "step 3: interpretation by default (lexicon in app/verify/lexicon.py; exemptions: definitions, deferrals, quoting the report, category thresholds)"
     }
-  ]
+  ],
+  "sets": {
+    "heldout_round1": {
+      "best_correct": 63,
+      "total": 63,
+      "history": [
+        {
+          "correct": 63,
+          "false_alarms": 0,
+          "misses": 0,
+          "total": 63,
+          "note": "held-out round 1 tuned in: tables, multi-range assumptions, quotes/certainty, never-claims, binding, recall classes, noise control"
+        }
+      ]
+    }
+  }
 }

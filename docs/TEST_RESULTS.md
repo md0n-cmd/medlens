@@ -48,7 +48,7 @@ rootdir: /home/d0n/medlens
 configfile: pytest.ini
 testpaths: tests
 plugins: anyio-4.16.0
-collecting ... collected 434 items
+collecting ... collected 494 items
 
 tests/test_age_bands.py::test_age_band_cell_parses_as_multi PASSED
 tests/test_age_bands.py::test_label_bands PASSED
@@ -69,7 +69,8 @@ tests/test_benchmark.py::test_score_never_drops_below_best_recorded PASSED
 tests/test_benchmark.py::test_every_case_finds_its_sentence PASSED
 tests/test_benchmark.py::test_gold_files_are_synthetic_samples PASSED
 tests/test_benchmark.py::test_rules_do_not_special_case_benchmark_sentences PASSED
-tests/test_benchmark.py::test_heldout_answers_never_gate_the_build PASSED
+tests/test_benchmark.py::test_heldout_round1_is_now_training_no_false_alarms PASSED
+tests/test_benchmark.py::test_heldout_round1_score_never_drops_below_best_recorded PASSED
 tests/test_classify_safety.py::test_hedged_language_needs_professional[Findings suggestive of cholelithiasis.] PASSED
 tests/test_classify_safety.py::test_hedged_language_needs_professional[Appearance consistent with fatty liver.] PASSED
 tests/test_classify_safety.py::test_hedged_language_needs_professional[Malignancy cannot be ruled out.] PASSED
@@ -134,6 +135,7 @@ tests/test_frontend_text.py::test_plain_words_phrases_exist PASSED
 tests/test_frontend_text.py::test_plain_words_phrases_pass_safety_filter PASSED
 tests/test_frontend_text.py::test_doctor_questions_are_questions PASSED
 tests/test_frontend_text.py::test_verify_summary_leads_with_oversteps PASSED
+tests/test_frontend_text.py::test_verify_summary_counts_passages PASSED
 tests/test_glossary.py::test_glossary_size_and_schema PASSED
 tests/test_glossary.py::test_longest_match_first PASSED
 tests/test_glossary.py::test_aliases_map_to_canonical PASSED
@@ -484,6 +486,64 @@ tests/test_verify.py::test_test_purpose_and_condition_word_definitions_are_not_o
 tests/test_verify.py::test_test_purpose_and_condition_word_definitions_are_not_oversteps[Anemia means a low red cell count in general terms.] PASSED
 tests/test_verify.py::test_interpretations_with_a_trailing_definition_are_still_oversteps[Your results point to anemia.] PASSED
 tests/test_verify.py::test_interpretations_with_a_trailing_definition_are_still_oversteps[These results suggest mild anemia, which means fewer red cells.] PASSED
+tests/test_verify.py::test_markdown_table_rows_are_structured_claims PASSED
+tests/test_verify.py::test_columns_are_mapped_by_header_words_not_position PASSED
+tests/test_verify.py::test_censored_value_after_the_test_name_is_a_value_not_a_range PASSED
+tests/test_verify.py::test_applying_one_sex_range_names_the_assumption PASSED
+tests/test_verify.py::test_applying_one_age_band_names_both_bands PASSED
+tests/test_verify.py::test_quoting_one_printed_range_without_applying_it_is_fine PASSED
+tests/test_verify.py::test_quoting_every_printed_range_is_fine PASSED
+tests/test_verify.py::test_status_word_relying_on_one_range_is_unverifiable PASSED
+tests/test_verify.py::test_accurate_quote_is_verified_and_never_an_overstep PASSED
+tests/test_verify.py::test_lines_after_report_says_are_quotes PASSED
+tests/test_verify.py::test_misquote_with_changed_meaning_is_contradicted PASSED
+tests/test_verify.py::test_dropping_the_reports_hedge_is_an_overstep[There is a 6 mm stone in your gallbladder.] PASSED
+tests/test_verify.py::test_dropping_the_reports_hedge_is_an_overstep[This condition is called cholelithiasis.] PASSED
+tests/test_verify.py::test_keeping_the_hedge_is_not_a_certainty_overstep[There may be a small stone in your gallbladder.] PASSED
+tests/test_verify.py::test_keeping_the_hedge_is_not_a_certainty_overstep[The scan alone does not confirm cholecystitis.] PASSED
+tests/test_verify.py::test_keeping_the_hedge_is_not_a_certainty_overstep[A calculus is another word for a stone.] PASSED
+tests/test_verify.py::test_keeping_the_hedge_is_not_a_certainty_overstep[There is also a mention of possible gallbladder inflammation.] PASSED
+tests/test_verify.py::test_sentence_types_that_are_never_claims[Have you noticed any tiredness or anemia symptoms lately?] PASSED
+tests/test_verify.py::test_sentence_types_that_are_never_claims[2. **Diet:** Do you eat much fried food?] PASSED
+tests/test_verify.py::test_sentence_types_that_are_never_claims[Do not stop your iron tablets without asking your doctor.] PASSED
+tests/test_verify.py::test_sentence_types_that_are_never_claims[If you get chest pain, seek urgent medical care.] PASSED
+tests/test_verify.py::test_sentence_types_that_are_never_claims[Avoid taking high doses of vitamin D on your own.] PASSED
+tests/test_verify.py::test_sentence_types_that_are_never_claims[Your doctor may recommend an iron supplement depending on your diet.] PASSED
+tests/test_verify.py::test_sentence_types_that_are_never_claims[This scan alone does not confirm hepatitis.] PASSED
+tests/test_verify.py::test_sentence_types_that_are_never_claims[Anaemia means having fewer red cells than usual.] PASSED
+tests/test_verify.py::test_sentence_types_that_are_never_claims[Leukocytosis is another word for a raised white cell count.] PASSED
+tests/test_verify.py::test_a_definition_that_links_the_result_to_a_condition_still_oversteps PASSED
+tests/test_verify.py::test_headings_keep_status_checks_but_never_overstep PASSED
+tests/test_verify.py::test_there_is_is_not_a_definition PASSED
+tests/test_verify.py::test_adjective_binds_to_the_test_right_after_it PASSED
+tests/test_verify.py::test_parenthetical_gloss_is_not_a_test_mention PASSED
+tests/test_verify.py::test_a_bracket_listing_tests_is_not_a_gloss PASSED
+tests/test_verify.py::test_thyroid_hormones_exclude_tsh PASSED
+tests/test_verify.py::test_quantifiers_are_not_group_all_claims[Most] PASSED
+tests/test_verify.py::test_quantifiers_are_not_group_all_claims[Many] PASSED
+tests/test_verify.py::test_quantifiers_are_not_group_all_claims[Some] PASSED
+tests/test_verify.py::test_quantifiers_are_not_group_all_claims[A few] PASSED
+tests/test_verify.py::test_quantifiers_are_not_group_all_claims[Several] PASSED
+tests/test_verify.py::test_time_ranges_are_never_values[after 2\u20133 months] PASSED
+tests/test_verify.py::test_time_ranges_are_never_values[in 6-8 weeks] PASSED
+tests/test_verify.py::test_time_ranges_are_never_values[over 3 to 4 days] PASSED
+tests/test_verify.py::test_recall_classes_are_oversteps[Good news: this is easily manageable.] PASSED
+tests/test_verify.py::test_recall_classes_are_oversteps[Nothing here looks serious.] PASSED
+tests/test_verify.py::test_recall_classes_are_oversteps[Please don't panic about these numbers.] PASSED
+tests/test_verify.py::test_recall_classes_are_oversteps[Cut down on salty snacks and sugary drinks.] PASSED
+tests/test_verify.py::test_recall_classes_are_oversteps[Drink more water every day.] PASSED
+tests/test_verify.py::test_recall_classes_are_oversteps[Your liver may be producing less albumin than usual.] PASSED
+tests/test_verify.py::test_recall_classes_are_oversteps[This suggests an underactive thyroid.] PASSED
+tests/test_verify.py::test_recall_classes_are_oversteps[Your kidneys seem to be functioning less efficiently.] PASSED
+tests/test_verify.py::test_recall_classes_are_oversteps[This could be a urinary tract infection.] PASSED
+tests/test_verify.py::test_outside_cutoff_list_and_carried_subject PASSED
+tests/test_verify.py::test_recall_classes_do_not_fire_on_neutral_sentences[Get a repeat lipid profile next year.] PASSED
+tests/test_verify.py::test_recall_classes_do_not_fire_on_neutral_sentences[| Ascites | Absent | No fluid seen |] PASSED
+tests/test_verify.py::test_recall_classes_do_not_fire_on_neutral_sentences[| CRP | Helps assess inflammation |] PASSED
+tests/test_verify.py::test_recall_classes_do_not_fire_on_neutral_sentences[Your doctor may suggest you reduce sugar.] PASSED
+tests/test_verify.py::test_consecutive_overstep_bullets_merge_into_one_passage PASSED
+tests/test_verify.py::test_a_checked_fact_breaks_a_passage PASSED
+tests/test_verify.py::test_items_of_a_possibility_list_make_no_test_claims PASSED
 
-======================= 434 passed in 161.77s (0:02:41) ========================
+======================= 494 passed in 196.93s (0:03:16) ========================
 ```

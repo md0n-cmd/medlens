@@ -478,7 +478,7 @@ def _group_claim(sentence: str, heading: Optional[str], mention_spans: list[tupl
     if not nm or GROUP_NEGATION.search(sentence[:nm.start()]):
         return None
     if QUANTIFIER.search(sentence[:nm.start()]):
-        return None                               # "Most of your urine results look normal" is not an 'all' claim
+        return None                               # "Most of your liver tests are fine" is not an 'all' claim
     for key, rx in GROUP_RES.items():
         for gm in rx.finditer(sentence):
             # "fasting blood sugar" is one test, not the blood-sugar group
@@ -1109,14 +1109,14 @@ def _extract(text: str, original: str) -> list[SentenceClaims]:
         if not named and topic is not None:
             stext0 = text[sp.start:sp.end]
             cm2 = CUTOFF_RE.match(stext0)
-            if cm2:                                    # "- Below 20: Low." under a "Vitamin D" heading
+            if cm2:                                    # "- Under 12: Deficient." under a "Vitamin B12" heading
                 cat = re.sub(r"\s+", " ", cm2["cat"].lower())
                 r = parse_range(cm2["range"])          # the bullet's shape already says this is a range
                 if r.kind in ("interval", "upper", "lower"):
                     ra, rb = sp.start + cm2.start("range"), sp.start + cm2.end("range")
                     sc.claims.append(Claim(kind="range", span=_sp(text, ra, rb), range=r, category=cat,
                                            term_id=topic.term_id, term=topic.term, mention=topic.span))
-            elif TOPIC_REF.search(stext0) and not lead_mentions:   # "Your level is low and worth addressing."
+            elif TOPIC_REF.search(stext0) and not lead_mentions:   # e.g. "Your result is on the high side."
                 found = _find_statuses(text, sp.start, sp.end)
                 if found:
                     st, fa, fb = min(found, key=lambda x: x[1])
