@@ -636,3 +636,16 @@ def test_condition_inside_a_test_name_is_not_a_condition():
     report = (SAMPLES / "04_thyroid_urine.txt").read_text()
     s = verify(report, "Your Hepatitis B Surface Antigen test is non-reactive.").sentences[0]
     assert all(f.kind != "overstep" for f in s.findings)
+
+
+@pytest.mark.parametrize("ai", ["Your doctor ordered this test to check for anemia.",
+                                "This test is often used to screen for diabetes.",
+                                "Anemia means a low red cell count in general terms."])
+def test_test_purpose_and_condition_word_definitions_are_not_oversteps(ai):
+    assert verify(REPORT, ai).sentences[0].label == "NEUTRAL"
+
+
+@pytest.mark.parametrize("ai", ["Your results point to anemia.",
+                                "These results suggest mild anemia, which means fewer red cells."])
+def test_interpretations_with_a_trailing_definition_are_still_oversteps(ai):
+    assert verify(REPORT, ai).sentences[0].label == "OVERSTEPS"

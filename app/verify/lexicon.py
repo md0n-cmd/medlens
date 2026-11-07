@@ -63,6 +63,12 @@ DEFINITIONS = [
     r"\b(?:is|are)\s+(?:a|an)\s+(?:\w+\s+){0,3}?(?:marker|measure|indicator)\s+(?:for|of)\b",
     r"\b(?:is|are)\s+(?:produced|made|found|formed|released|stored)\b",
     r"\b(?:this|it|which)\s+measures?\b",
+    # the purpose of a test: "used to screen for diabetes", "ordered this test to check for anemia"
+    r"\b(?:used|ordered|done|performed|requested)\s+(?:\w+\s+){0,3}?to\s+(?:screen|check|test|look|detect|monitor|rule\s+out)"
+    r"(?:\s+for)?\b",
+    r"\bto\s+(?:screen|check|test)\s+for\b",
+    # defining a condition word itself: "Anemia means ...", "Gout is a ...", "Fatty liver refers to ..."
+    r"^\W*(?:[A-Za-z'-]+\s+){0,2}?(?:means|refers\s+to|describes|is\s+(?:a|an|the)\s+(?:term|word|name|condition))\b",
 ]
 # a test mention followed by one of these is being defined ("ALT is an enzyme", "the HbA1c measures ...")
 DEFINITION_AFTER_TEST = r"^\s*(?:\([^)]*\)\s*)?(?:is\s+(?:a|an)\s|are\s+(?:a|an)\s|measures?\b)"
