@@ -85,3 +85,16 @@
 | 81 | Range written in lakh (`1.5–4.1 lakh`) | Multiplied before comparing; matches `1,50,000 - 4,10,000` | `test_range_in_lakh_matches_report_range` |
 | 82 | Paraphrase / number before test name / pronoun / qualitative claim | NEUTRAL (shown, not judged): documented limits | `test_known_limits_are_neutral_not_verified`, `test_paraphrase_without_test_name_is_neutral` |
 | 83 | Empty input, oversized input, rate limit | 400 / 422 / 429 (same limits as `/api/analyze`) | `test_api_verify_empty_inputs_400`, `test_api_verify_size_limit`, `test_api_verify_is_rate_limited` |
+| 84 | AI says a whole group is normal ("liver enzymes and proteins are all within normal ranges") but one member is outside its printed range | Group claim → CONTRADICTED naming every exception with value and printed range | `test_realworld_replica.py::test_lft_group_claim_contradicted_naming_total_protein`, `test_verify.py::test_group_claim_contradicted_lists_every_exception` |
+| 85 | Group claim where every member is in range / some have unsettled ranges | VERIFIED / UNVERIFIABLE | `test_group_claim_verified_when_every_member_is_in_range`, `test_group_claim_unverifiable_when_a_member_has_no_settled_range` |
+| 86 | Mixed report panel ("LIVER & KIDNEY PANEL") | Glossary category beats section heading: Creatinine is not a liver test | `test_category_beats_section_heading` |
+| 87 | Generic summary under an AI heading ("They are all within normal ranges.") | The tests the AI listed as bullets under that heading define the group | `test_heading_bullets_define_the_group_for_a_generic_summary` |
+| 88 | Panel name used as if it were one test ("Your CBC is normal") | Treated as a group, never NOT_IN_REPORT | `test_panel_names_are_groups_not_single_tests` |
+| 89 | "indicates / suggests / consistent with <finding>" ("indicates dyslipidemia") | OVERSTEPS with the phrase quoted, never NOT_IN_REPORT | `test_finding_words_after_indicate_suggest_are_oversteps` |
+| 90 | Health interpretation ("normal thyroid function", "your liver is healthy") | OVERSTEPS (interpretation) | `test_health_interpretations_are_oversteps` |
+| 91 | AI quotes the report's own hedge ("the report's impression says findings suggestive of…") | Not an overstep | `test_quoting_the_report_is_not_an_overstep` |
+| 92 | Report test names in lab order ("Cholesterol, Total", "GLUCOSE FASTING (F), PLASMA", "T3, Total", "E.S.R") | Order-independent normalised match with the AI's wording | `test_report_and_ai_test_names_normalise_to_the_same_test` |
+| 93 | A heading line ending in "SERUM" above "Bilirubin Total" | Aliases never match across a line break | `test_glossary.py::test_aliases_never_match_across_a_line_break` |
+| 94 | Dots in "E.S.R.", "Dr.", "i.e.", "A.", decimals, parentheses | Not sentence ends; "U/L." still is | `test_sentence_splitting_respects_abbreviations_decimals_parentheses` |
+| 95 | Interpretation/risk-category tables and pregnancy-trimester ranges under a result | Reference material: not results, still visible as text | `test_end_to_end.py::test_risk_and_trimester_tables_are_not_results`, `test_realworld_replica.py::test_no_result_rows_from_risk_or_trimester_tables` |
+| 96 | Real result row right after a bare "Note" heading | Still parsed; the reference section ends there | `test_real_result_after_a_bare_note_heading_is_still_parsed` |

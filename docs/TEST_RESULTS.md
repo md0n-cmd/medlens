@@ -48,7 +48,7 @@ rootdir: /home/d0n/medlens
 configfile: pytest.ini
 testpaths: tests
 plugins: anyio-4.16.0
-collecting ... collected 269 items
+collecting ... collected 325 items
 
 tests/test_age_bands.py::test_age_band_cell_parses_as_multi PASSED
 tests/test_age_bands.py::test_label_bands PASSED
@@ -105,6 +105,7 @@ tests/test_end_to_end.py::test_all_spans_and_text_safe[06_age_bands.txt] PASSED
 tests/test_end_to_end.py::test_all_spans_and_text_safe[07_missing_ranges.txt] PASSED
 tests/test_end_to_end.py::test_all_spans_and_text_safe[08_coag_cardiac.txt] PASSED
 tests/test_end_to_end.py::test_all_spans_and_text_safe[09_chest_xray_ecg.txt] PASSED
+tests/test_end_to_end.py::test_all_spans_and_text_safe[10_lipid_thyroid_lft_cbc.txt] PASSED
 tests/test_end_to_end.py::test_empty_and_garbage_input PASSED
 tests/test_end_to_end.py::test_crlf_input_normalised PASSED
 tests/test_end_to_end.py::test_banner_line_produces_no_glossary_card[01_cbc.txt] PASSED
@@ -116,8 +117,13 @@ tests/test_end_to_end.py::test_banner_line_produces_no_glossary_card[06_age_band
 tests/test_end_to_end.py::test_banner_line_produces_no_glossary_card[07_missing_ranges.txt] PASSED
 tests/test_end_to_end.py::test_banner_line_produces_no_glossary_card[08_coag_cardiac.txt] PASSED
 tests/test_end_to_end.py::test_banner_line_produces_no_glossary_card[09_chest_xray_ecg.txt] PASSED
+tests/test_end_to_end.py::test_banner_line_produces_no_glossary_card[10_lipid_thyroid_lft_cbc.txt] PASSED
 tests/test_end_to_end.py::test_coag_cardiac_sample PASSED
 tests/test_end_to_end.py::test_chest_xray_ecg_sample PASSED
+tests/test_end_to_end.py::test_risk_and_trimester_tables_are_not_results PASSED
+tests/test_end_to_end.py::test_value_that_is_itself_a_range_without_unit_is_reference_material PASSED
+tests/test_end_to_end.py::test_real_result_after_a_bare_note_heading_is_still_parsed PASSED
+tests/test_end_to_end.py::test_label_words_only_match_whole_names PASSED
 tests/test_frontend_text.py::test_plain_words_phrases_exist PASSED
 tests/test_frontend_text.py::test_plain_words_phrases_pass_safety_filter PASSED
 tests/test_frontend_text.py::test_doctor_questions_are_questions PASSED
@@ -138,6 +144,8 @@ tests/test_glossary.py::test_longest_match_still_first_with_abbreviations PASSED
 tests/test_glossary.py::test_no_duplicate_aliases_across_entries PASSED
 tests/test_glossary.py::test_no_forbidden_phrases_in_entries PASSED
 tests/test_glossary.py::test_kinds_and_finding_note PASSED
+tests/test_glossary.py::test_aliases_never_match_across_a_line_break PASSED
+tests/test_glossary.py::test_dotted_esr_alias PASSED
 tests/test_ingest.py::test_text_pdf_matches_txt_exactly PASSED
 tests/test_ingest.py::test_clean_png_ocr_recovers_names_and_values PASSED
 tests/test_ingest.py::test_phone_photo_reports_low_confidence_tokens PASSED
@@ -170,6 +178,7 @@ tests/test_passages.py::test_every_explanation_has_valid_passage_containing_its_
 tests/test_passages.py::test_every_explanation_has_valid_passage_containing_its_span[07_missing_ranges.txt] PASSED
 tests/test_passages.py::test_every_explanation_has_valid_passage_containing_its_span[08_coag_cardiac.txt] PASSED
 tests/test_passages.py::test_every_explanation_has_valid_passage_containing_its_span[09_chest_xray_ecg.txt] PASSED
+tests/test_passages.py::test_every_explanation_has_valid_passage_containing_its_span[10_lipid_thyroid_lft_cbc.txt] PASSED
 tests/test_passages.py::test_impression_passage_is_whole_section_block PASSED
 tests/test_ranges.py::test_interval_formats[70-110-70-110] PASSED
 tests/test_ranges.py::test_interval_formats[70 - 110-70-110] PASSED
@@ -218,6 +227,16 @@ tests/test_ranges.py::test_select_alternative_requires_header_sex PASSED
 tests/test_ratelimit.py::test_limiter_window PASSED
 tests/test_ratelimit.py::test_api_returns_429_with_friendly_message PASSED
 tests/test_ratelimit.py::test_llm_fallback_off_by_default PASSED
+tests/test_realworld_replica.py::test_lft_group_claim_contradicted_naming_total_protein PASSED
+tests/test_realworld_replica.py::test_cbc_group_claim_contradicted_naming_rdw PASSED
+tests/test_realworld_replica.py::test_dyslipidemia_is_an_overstep_not_missing_from_report PASSED
+tests/test_realworld_replica.py::test_normal_thyroid_function_is_an_overstep PASSED
+tests/test_realworld_replica.py::test_total_cholesterol_verified_and_not_omitted PASSED
+tests/test_realworld_replica.py::test_esr_is_one_sentence_and_verified PASSED
+tests/test_realworld_replica.py::test_no_result_rows_from_risk_or_trimester_tables PASSED
+tests/test_realworld_replica.py::test_zero_not_in_report_findings PASSED
+tests/test_realworld_replica.py::test_only_true_omission_is_reported PASSED
+tests/test_realworld_replica.py::test_replica_is_synthetic PASSED
 tests/test_search.py::test_exact_first PASSED
 tests/test_search.py::test_alias_sgpt_to_alt PASSED
 tests/test_search.py::test_prefix_and_substring_ranked_after_exact PASSED
@@ -236,6 +255,7 @@ tests/test_summary.py::test_summary_matches_extracted_values[06_age_bands.txt] P
 tests/test_summary.py::test_summary_matches_extracted_values[07_missing_ranges.txt] PASSED
 tests/test_summary.py::test_summary_matches_extracted_values[08_coag_cardiac.txt] PASSED
 tests/test_summary.py::test_summary_matches_extracted_values[09_chest_xray_ecg.txt] PASSED
+tests/test_summary.py::test_summary_matches_extracted_values[10_lipid_thyroid_lft_cbc.txt] PASSED
 tests/test_summary.py::test_summary_never_contains_patient_name[01_cbc.txt] PASSED
 tests/test_summary.py::test_summary_never_contains_patient_name[02_lipid_diabetes.txt] PASSED
 tests/test_summary.py::test_summary_never_contains_patient_name[03_lft_kft.txt] PASSED
@@ -245,6 +265,7 @@ tests/test_summary.py::test_summary_never_contains_patient_name[06_age_bands.txt
 tests/test_summary.py::test_summary_never_contains_patient_name[07_missing_ranges.txt] PASSED
 tests/test_summary.py::test_summary_never_contains_patient_name[08_coag_cardiac.txt] PASSED
 tests/test_summary.py::test_summary_never_contains_patient_name[09_chest_xray_ecg.txt] PASSED
+tests/test_summary.py::test_summary_never_contains_patient_name[10_lipid_thyroid_lft_cbc.txt] PASSED
 tests/test_summary.py::test_summary_passage_spans_slice_original[01_cbc.txt] PASSED
 tests/test_summary.py::test_summary_passage_spans_slice_original[02_lipid_diabetes.txt] PASSED
 tests/test_summary.py::test_summary_passage_spans_slice_original[03_lft_kft.txt] PASSED
@@ -254,6 +275,7 @@ tests/test_summary.py::test_summary_passage_spans_slice_original[06_age_bands.tx
 tests/test_summary.py::test_summary_passage_spans_slice_original[07_missing_ranges.txt] PASSED
 tests/test_summary.py::test_summary_passage_spans_slice_original[08_coag_cardiac.txt] PASSED
 tests/test_summary.py::test_summary_passage_spans_slice_original[09_chest_xray_ecg.txt] PASSED
+tests/test_summary.py::test_summary_passage_spans_slice_original[10_lipid_thyroid_lft_cbc.txt] PASSED
 tests/test_summary.py::test_narrative_report_summary PASSED
 tests/test_summary.py::test_cbc_header_and_directions PASSED
 tests/test_values.py::test_columnar_row_with_flag_column PASSED
@@ -305,11 +327,13 @@ tests/test_verify.py::test_spans_valid_in_both_texts[01_cbc__errors] PASSED
 tests/test_verify.py::test_spans_valid_in_both_texts[03_lft_kft__errors] PASSED
 tests/test_verify.py::test_spans_valid_in_both_texts[06_age_bands__errors] PASSED
 tests/test_verify.py::test_spans_valid_in_both_texts[07_missing_ranges__errors] PASSED
+tests/test_verify.py::test_spans_valid_in_both_texts[10__realistic] PASSED
 tests/test_verify.py::test_medlens_own_messages_pass_safety[01_cbc__correct] PASSED
 tests/test_verify.py::test_medlens_own_messages_pass_safety[01_cbc__errors] PASSED
 tests/test_verify.py::test_medlens_own_messages_pass_safety[03_lft_kft__errors] PASSED
 tests/test_verify.py::test_medlens_own_messages_pass_safety[06_age_bands__errors] PASSED
 tests/test_verify.py::test_medlens_own_messages_pass_safety[07_missing_ranges__errors] PASSED
+tests/test_verify.py::test_medlens_own_messages_pass_safety[10__realistic] PASSED
 tests/test_verify.py::test_api_verify PASSED
 tests/test_verify.py::test_api_verify_empty_inputs_400[payload0] PASSED
 tests/test_verify.py::test_api_verify_empty_inputs_400[payload1] PASSED
@@ -319,6 +343,38 @@ tests/test_verify.py::test_api_ai_samples_listed PASSED
 tests/test_verify.py::test_range_in_lakh_matches_report_range PASSED
 tests/test_verify.py::test_different_unit_is_unverifiable_not_contradicted PASSED
 tests/test_verify.py::test_known_limits_are_neutral_not_verified PASSED
+tests/test_verify.py::test_report_and_ai_test_names_normalise_to_the_same_test[Cholesterol, Total-Total Cholesterol] PASSED
+tests/test_verify.py::test_report_and_ai_test_names_normalise_to_the_same_test[GLUCOSE FASTING (F), PLASMA-Fasting Glucose] PASSED
+tests/test_verify.py::test_report_and_ai_test_names_normalise_to_the_same_test[VLDL Cholesterol,Calculated-VLDL Cholesterol] PASSED
+tests/test_verify.py::test_report_and_ai_test_names_normalise_to_the_same_test[T3, Total-Total T3] PASSED
+tests/test_verify.py::test_report_and_ai_test_names_normalise_to_the_same_test[Bilirubin Total-Total Bilirubin] PASSED
+tests/test_verify.py::test_report_and_ai_test_names_normalise_to_the_same_test[E.S.R-ESR] PASSED
+tests/test_verify.py::test_report_and_ai_test_names_normalise_to_the_same_test[Packed Cell Volume (PCV)-PCV] PASSED
+tests/test_verify.py::test_different_tests_do_not_normalise_together PASSED
+tests/test_verify.py::test_sentence_splitting_respects_abbreviations_decimals_parentheses[text0-1] PASSED
+tests/test_verify.py::test_sentence_splitting_respects_abbreviations_decimals_parentheses[See Dr. Rao and Mrs. Iyer. Your Hb is 11.2 g/dL. It is low.-3] PASSED
+tests/test_verify.py::test_sentence_splitting_respects_abbreviations_decimals_parentheses[Some tests (e.g. TSH. T3) are fine. Grade A. Next one.-2] PASSED
+tests/test_verify.py::test_sentence_splitting_respects_abbreviations_decimals_parentheses[Values i.e. the numbers are listed. No. 5 is here.-2] PASSED
+tests/test_verify.py::test_sentence_splitting_respects_abbreviations_decimals_parentheses[Your eGFR is 78. Drink water! Really? Yes.-4] PASSED
+tests/test_verify.py::test_dotted_esr_stays_one_sentence_and_matches_report PASSED
+tests/test_verify.py::test_finding_words_after_indicate_suggest_are_oversteps[These results indicate dyslipidemia.-indicate dyslipidemia] PASSED
+tests/test_verify.py::test_finding_words_after_indicate_suggest_are_oversteps[Your lipid profile indicates dyslipidemia.-indicates dyslipidemia] PASSED
+tests/test_verify.py::test_finding_words_after_indicate_suggest_are_oversteps[Findings point to hepatomegaly.-point to hepatomegaly] PASSED
+tests/test_verify.py::test_finding_words_after_indicate_suggest_are_oversteps[The pattern is consistent with fatty liver.-consistent with fatty liver] PASSED
+tests/test_verify.py::test_health_interpretations_are_oversteps[Your thyroid hormones are fine, indicating normal thyroid function.] PASSED
+tests/test_verify.py::test_health_interpretations_are_oversteps[Your liver is healthy.] PASSED
+tests/test_verify.py::test_health_interpretations_are_oversteps[This shows healthy liver function.] PASSED
+tests/test_verify.py::test_health_interpretations_are_oversteps[You are in good health.] PASSED
+tests/test_verify.py::test_quoting_the_report_is_not_an_overstep PASSED
+tests/test_verify.py::test_overstep_messages_never_repeat_unsafe_phrases PASSED
+tests/test_verify.py::test_group_claim_contradicted_lists_every_exception PASSED
+tests/test_verify.py::test_group_claim_verified_when_every_member_is_in_range PASSED
+tests/test_verify.py::test_group_claim_unverifiable_when_a_member_has_no_settled_range PASSED
+tests/test_verify.py::test_category_beats_section_heading PASSED
+tests/test_verify.py::test_all_results_normal_covers_the_whole_report PASSED
+tests/test_verify.py::test_negated_group_claim_is_not_a_claim PASSED
+tests/test_verify.py::test_panel_names_are_groups_not_single_tests PASSED
+tests/test_verify.py::test_heading_bullets_define_the_group_for_a_generic_summary PASSED
 
-======================== 269 passed in 85.88s (0:01:25) ========================
+======================= 325 passed in 109.49s (0:01:49) ========================
 ```

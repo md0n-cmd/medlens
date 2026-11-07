@@ -21,7 +21,7 @@
 * **No hallucinated diagnoses.** The core requirement is to *avoid unsupported diagnoses*. A deterministic system can only output sentences we wrote and reviewed.
 * **Reference ranges must come from the report.** An LLM tends to "helpfully" fill in population ranges it has memorised. Our parser has no ranges to fall back on.
 * **Exact provenance.** Every output carries character offsets into the input, which the UI uses for two-way linking. Generative output does not give that reliably.
-* **Testable.** 269 unit and end-to-end tests pin the behaviour, and the same input always gives the same output.
+* **Testable.** 325 unit and end-to-end tests pin the behaviour, and the same input always gives the same output.
 * **Offline, free, fast.** No API key is needed, and a report takes a few milliseconds.
 * An LLM is used only as an **optional, clearly labelled fallback** for glossary misses. It is off by default and goes through the same safety filter.
 
@@ -131,6 +131,10 @@ Report rows are indexed by every glossary term inside their test name. A few rel
 | Status | equals MedLens's computed status (ABOVE→HIGH, BELOW→LOW, WITHIN→NORMAL), judged against the row whose value matched in the same sentence when there is one | **CONTRADICTED**. Ambiguous, missing or unreadable range, or several rows that disagree: **UNVERIFIABLE** "the report doesn't settle this" |
 | Overstep | – | always **OVERSTEPS** "This goes beyond what a report explanation should say; ask your doctor." |
 
+| Group ("liver enzymes and proteins are all within normal ranges", "blood counts are healthy", "all results are normal") | every report row in the group is within its printed range | **CONTRADICTED** naming every exception ("Total Protein (6.33) is below the range printed on your report (6.40–8.30)"); unsettled members → **UNVERIFIABLE**; no rows → **NOT_IN_REPORT** |
+
+**Group membership** combines three sources: report section headings (`/liver|lft|hepatic/`, `/blood count|cbc|hemogram|differential/`, …), the glossary category of the row's test, and the tests the AI itself listed as bullets under its own heading ("**Liver Function Tests (LFT)**" followed by bullets). The category wins over the section: Creatinine under "LIVER & KIDNEY PANEL" is not a liver test. ESR is a blood count only under a CBC heading. Panel names (CBC, lipid profile, LFT) are treated as groups, never as single tests. A group phrase inside a specific test name ("fasting blood sugar") is not a group.
+
 * **Sentence label.** The most severe finding wins: CONTRADICTED > OVERSTEPS > RANGE_NOT_FROM_REPORT > NOT_IN_REPORT > UNVERIFIABLE > VERIFIED > NEUTRAL.
 * **Omissions.** Every report value outside its printed range whose test (or a related name) is never mentioned anywhere in the AI text.
 * **Provenance.** Every finding carries `ai_span` (inside its sentence) and `report_span` (the whole report line). Tests check both slice their source texts exactly. MedLens's own messages pass `safety.py`; a test caught an early message that used the word "dosage".
@@ -142,4 +146,19 @@ Report rows are indexed by every glossary term inside their test name. A few rel
 * **Qualitative claims** ("Your HBsAg is negative") aren't checked yet: NEUTRAL.
 * **No unit conversion.** "5.8 mmol/L" against a report value of "104 mg/dL" is UNVERIFIABLE, never CONTRADICTED.
 * **Status words are lexical.** Unusual wording ("a touch under par") isn't recognised. Negation is handled only within three words.
-* **Overstep detection is pattern-based.** Novel phrasing of a diagnosis or advice can slip through. Every pattern errs towards flagging.
+* **Overstep detection is pattern-based.** Novel phrasing of a diagnosis or advice can slip through. Every pattern errs towards flagging. A sentence that explicitly quotes the report ("the report's impression says…") is exempt from the finding-word rule.
+* **Group claims cover "normal" only.** "Your lipids are all high" is not checked as a group.
+
+### 9.4 Real-world test findings
+
+MedLens Verify was run on a **real** multi-page lab report from a large Indian diagnostic chain, together with an explanation of it written by a general-purpose AI chatbot. The output was compared by hand with the report. **For privacy, neither real text is in this repository.** Both were replaced by synthetic replicas with a fictional patient, doctor and lab, changed values, and the same layout and chatbot style: `samples/10_lipid_thyroid_lft_cbc.txt` and `samples/ai/10__realistic.txt`. `tests/test_realworld_replica.py` pins every fix below.
+
+| What failed on the real texts | Cause | What changed |
+|---|---|---|
+| The chatbot's most important error went **unflagged**: "Liver enzymes and proteins are all within normal ranges" while Total Protein was below its printed range. "Blood counts are healthy" while RDW-CV was above. | Only single-test claims were extracted. | **Group claims** (§9.2): the group is mapped to report rows and every exception is named. |
+| "indicates dyslipidemia" came out **NOT_IN_REPORT** instead of OVERSTEPS, and "normal thyroid function" wasn't flagged. | The diagnosis pattern required a particular subject ("this/these…"). Panel names ("lipid profile") were treated as missing single tests. Health interpretations weren't covered. | Subject-free "indicates/suggests/confirms/consistent with/points to <finding>", where a finding is a glossary entry of kind *finding* or an *-emia/-itis/-osis/-pathy/-megaly/-lipidemia* word. New *interpretation* rules ("normal thyroid function", "your liver is healthy"). Panels are groups. Messages quote the phrase and say why. |
+| "Total Cholesterol: 212" → NOT_IN_REPORT, **and** Cholesterol, Total listed as omitted. "Bilirubin Total" → NOT_IN_REPORT. | A heading ending in "…, SERUM" plus the next line's "Bilirubin Total" matched the alias "Serum Bilirubin" **across the line break**, hiding the real test name. This bug also affected the main analyzer. | Alias separators no longer cross a newline. An order-independent normalised-name fallback ("Cholesterol, Total" = "Total Cholesterol", "GLUCOSE FASTING (F), PLASMA" = "Fasting Glucose", "E.S.R" = "ESR"). New `E.S.R` aliases. |
+| "E.S.R. (Erythrocyte Sedimentation Rate): 19 mm/hr" was split after "E.S.R." and the value lost its test. | The splitter broke on any `.` followed by a space. | Splitting ignores dotted abbreviations, Dr./Mrs./No./i.e./e.g., standalone single capitals, decimals and parentheses. "U/L." still ends a sentence. |
+| Rows like "Optimal < 200", "Very high risk group LDL-C < 70" and "1st Trimester 0.100 - 2.500" became **result rows**. CBC rows fell into the thyroid section. | Interpretation tables look like result rows. The heading "COMPLETE BLOOD COUNT;CBC" (with `;`) wasn't recognised. | Reference rows (risk/trimester labels, or a value that is itself a range/comparator with no unit) are skipped but stay visible as plain text. Bare "Interpretation / Risk Category / Note / Comments" headings start reference sections that end at the next real result row. Headings may contain `;`. |
+
+On the replica, before → after (measured with the code before and after these changes): NOT_IN_REPORT findings 8 → 0, false result rows 12 → 0, group claims checked 0 → 3 (2 CONTRADICTED, 1 VERIFIED), overstep sentences 1 → 3, omissions 3 (two false) → 1 (true: Non-HDL Cholesterol). One honest caveat: the replica's "These results indicate dyslipidemia" was already flagged before the change, because its subject happened to match the old pattern. The NOT_IN_REPORT failure came from the real chatbot's different wording ("Your lipid profile indicates…"), which is now covered by `test_finding_words_after_indicate_suggest_are_oversteps`.
