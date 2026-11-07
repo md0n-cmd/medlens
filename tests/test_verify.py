@@ -596,3 +596,43 @@ def test_bold_value_anchors_a_status_on_a_row_without_a_range():
 def test_within_every_printed_range_is_not_treated_as_settled():
     report = (SAMPLES / "06_age_bands.txt").read_text()       # Free T4 1.1: Adults 0.9-1.7, Pregnancy 0.8-1.5
     assert verify(report, "Your Free T4 is normal.").sentences[0].label == "UNVERIFIABLE"
+
+
+# ---------------------------------------------------------------- benchmark step 3: interpretation by default (lexicon)
+@pytest.mark.parametrize("ai,phrase", [
+    ("Your numbers fit insulin resistance.", "insulin resistance"),                  # condition
+    ("This looks like early gout.", "gout"),
+    ("Your values suggest thrombocytopenia.", "thrombocytopenia"),                   # suffix
+    ("Your kidney filtration seems slightly impaired kidney function overall.", "impaired kidney function"),
+    ("There is some stress on the liver.", "stress on the liver"),                   # organ state
+    ("Your markers are perfectly healthy.", "perfectly healthy"),                    # health judgement
+    ("This can lead to heart problems.", "lead to"),                                 # cause / prognosis
+    ("Exercise and diet changes would help here.", "exercise"),                      # lifestyle advice
+])
+def test_condition_or_state_terms_are_oversteps_by_default(ai, phrase):
+    s = verify(REPORT, ai).sentences[0]
+    f = next(f for f in s.findings if f.kind == "overstep")
+    assert s.label == "OVERSTEPS" and phrase.lower() in f.message.lower()
+
+
+@pytest.mark.parametrize("ai", [
+    "CRP is a protein produced by the liver in response to inflammation.",           # definition
+    "The HbA1c measures your average blood sugar, used to screen for diabetes.",     # definition
+    "ESR is a general marker for inflammation.",                                      # definition
+    "White blood cells fight infection.",                                             # protects against
+    "This is the most important number in the diabetes panel.",                      # panel name
+    "There is a slight rise in an inflammation marker.",                              # marker, not a state
+    "A doctor would decide whether diet changes or supplements are needed.",          # deferral
+    "The report notes findings suggestive of fatty liver.",                           # quoting the report
+    "Prediabetes is between 5.7% and 6.4%.",                                          # category threshold
+    "A healthy level is above 40.",                                                   # attributive, a range
+    "The flag appears to be due to a typo.",                                          # cause about the data
+])
+def test_exempt_sentences_are_not_oversteps(ai):
+    assert all(f.kind != "overstep" for s in verify(REPORT, ai).sentences for f in s.findings)
+
+
+def test_condition_inside_a_test_name_is_not_a_condition():
+    report = (SAMPLES / "04_thyroid_urine.txt").read_text()
+    s = verify(report, "Your Hepatitis B Surface Antigen test is non-reactive.").sentences[0]
+    assert all(f.kind != "overstep" for f in s.findings)

@@ -267,7 +267,59 @@ def _link_re() -> re.Pattern:
     return _LINK_RE
 
 
-def find_oversteps(sentence: str) -> list[tuple[str, str]]:
+def _lexicon_res() -> dict:
+    global _LEX
+    if _LEX is None:
+        from app.verify import lexicon as L
+        cond = [rf"[a-z]+(?:{'|'.join(L.CONDITION_SUFFIXES)})", *L.CONDITIONS]
+        fw = _finding_words()
+        if fw:
+            cond.append(fw)
+        _LEX = {
+            "condition": re.compile(rf"\b(?:{'|'.join(cond)})\b", re.I),
+            "not_word": re.compile(rf"^(?:{'|'.join(L.NOT_CONDITION_WORDS)})$", re.I),
+            "not_after": re.compile(L.NOT_CONDITION_AFTER, re.I),
+            "not_before": re.compile(L.NOT_CONDITION_BEFORE, re.I),
+            "state": re.compile(rf"\b(?:{'|'.join(L.ORGAN_STATES + L.HEALTH_JUDGEMENTS + L.CAUSES)})", re.I),
+            "advice": re.compile(rf"\b(?:{'|'.join(L.ADVICE)})\b", re.I),
+            "definition": re.compile("|".join(L.DEFINITIONS), re.I),
+            "def_after_test": re.compile(L.DEFINITION_AFTER_TEST, re.I),
+            "deferral": re.compile("|".join(L.DEFERRALS), re.I),
+        }
+    return _LEX
+
+
+_LEX: Optional[dict] = None
+
+
+def _default_interpretation(sentence: str, mention_spans: list[tuple[int, int]]) -> Optional[str]:
+    """The default rule: a CONDITION/STATE term from the lexicon, in a sentence that is not EXEMPT
+    (a definition, a doctor deferral, quoting the report, or defining a category threshold)."""
+    lx = _lexicon_res()
+    if lx["deferral"].search(sentence) or QUOTING_REPORT.search(sentence):
+        return None
+    if lx["definition"].search(sentence) or any(lx["def_after_test"].match(sentence[e:]) for _, e in mention_spans):
+        return None
+    if CATEGORY_RE.match(sentence) and re.search(r"\d", sentence):
+        return None                               # "Prediabetes is between 5.7% and 6.4%": a range statement
+    inside = lambda a, b: any(s <= a and b <= e for s, e in mention_spans)  # noqa: E731
+    for m in lx["condition"].finditer(sentence):
+        word = m.group(0)
+        if lx["not_word"].match(word) or inside(m.start(), m.end()):
+            continue
+        if lx["not_after"].match(sentence[m.end():]) or lx["not_before"].search(sentence[:m.start()]):
+            continue
+        return word
+    m = lx["state"].search(sentence)
+    if m:
+        return m.group(0)
+    m = lx["advice"].search(sentence)
+    if m:
+        return m.group(0)
+    return None
+
+
+def find_oversteps(sentence: str, mention_spans: list[tuple[int, int]] = ()) -> list[tuple[str, str]]:
     """[(category, the exact phrase)] for diagnosis / treatment / reassurance / interpretation in one sentence."""
     out: list[tuple[str, str]] = []
     deferred = bool(DEFERRAL.search(sentence))      # "a doctor would review/determine ...": deferring, not advising
@@ -304,6 +356,10 @@ def find_oversteps(sentence: str) -> list[tuple[str, str]]:
         m = rx.search(sentence)
         if m:
             out.append(("reassurance", m.group(0).strip()))
+    if not out:                                   # the default rule (lexicon), when nothing more specific fired
+        phrase = _default_interpretation(sentence, list(mention_spans))
+        if phrase:
+            out.append(("condition", phrase))
     seen, uniq = set(), []
     for cat, why in out:
         key = "diagnosis" if cat == "link" else cat       # a condition named via 'sign of' / 'points to': count once
@@ -780,7 +836,8 @@ def _extract(text: str, original: str) -> list[SentenceClaims]:
                 if m.term_id not in seen_t:
                     seen_t.add(m.term_id)
                     sc.claims.append(Claim(kind="flag", span=sp, term_id=m.term_id, term=m.term, mention=m.span))
-        for cat, why in find_oversteps(sp.text):
+        for cat, why in find_oversteps(text[sp.start:sp.end],
+                                       [(m.span.start - sp.start, m.span.end - sp.start) for m in sc.mentions]):
             sc.claims.append(Claim(kind="overstep", span=sp, overstep=cat, detail=why))
         out.append(sc)
     return out

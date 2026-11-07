@@ -1,5 +1,5 @@
 {
-  "best_correct": 47,
+  "best_correct": 60,
   "total": 60,
   "history": [
     {
@@ -22,6 +22,13 @@
       "misses": 13,
       "total": 60,
       "note": "step 2: outside-range announcements, category thresholds (carried subject), multi-range settled when outside all, bold-value anchors"
+    },
+    {
+      "correct": 60,
+      "false_alarms": 0,
+      "misses": 0,
+      "total": 60,
+      "note": "step 3: interpretation by default (lexicon in app/verify/lexicon.py; exemptions: definitions, deferrals, quoting the report, category thresholds)"
     }
   ]
 }
