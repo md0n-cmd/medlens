@@ -12,7 +12,7 @@ from app.parser.ranges import units_compatible
 from app.safety import is_safe
 from app.pipeline import analyze
 from app.glossary.matcher import load_glossary
-from app.verify.claims import GROUPS, Claim, extract, strip_markdown
+from app.verify.claims import GROUP_TERMS, GROUPS, Claim, extract, strip_markdown
 from app.verify.names import names_match
 
 Label = Literal["VERIFIED", "CONTRADICTED", "RANGE_NOT_FROM_REPORT", "OVERSTEPS", "NOT_IN_REPORT",
@@ -256,7 +256,8 @@ CATEGORY_EXCEPTIONS = {"cbc": {"erythrocyte_sedimentation_rate"}}
 UNSETTLED = {Status.AMBIGUOUS, Status.NO_RANGE, Status.UNPARSEABLE, Status.UNIT_MISMATCH, Status.INDETERMINATE}
 SIDE = {Status.ABOVE: "above", Status.BELOW: "below", Status.DIFFERS: "different from"}
 GROUP_NAME = {"liver": "liver tests", "kidney": "kidney tests", "cbc": "blood counts", "thyroid": "thyroid tests",
-              "lipid": "lipid tests", "sugar": "blood sugar tests", "urine": "urine tests", "all": "results"}
+              "lipid": "lipid tests", "sugar": "blood sugar tests", "urine": "urine tests", "dlc": "differential counts",
+              "all": "results"}
 
 
 def _row_categories(v: LabValue, r: AnalysisResult) -> set[str]:
@@ -270,6 +271,8 @@ def group_rows(group: str, heading_tests: set, r: AnalysisResult, idx: dict[str,
     Creatinine under 'LIVER & KIDNEY PANEL' is not a liver test, and ESR in its own section is not a blood count."""
     if group == "all":
         return list(r.values)
+    if group in GROUP_TERMS:                       # e.g. differentials: only the differential tests themselves
+        return [v for v in r.values if {t for t, vs in idx.items() if v in vs} & GROUP_TERMS[group]]
     _, section_re, cats = GROUPS[group]
     sec_rx = re.compile(section_re, re.I)
     any_group_section = re.compile("|".join(f"(?:{sr})" for _, sr, _ in GROUPS.values()), re.I)

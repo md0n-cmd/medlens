@@ -305,6 +305,10 @@ GROUPS = {
     "urine": (r"urine\s+(?:tests?|results?|report|examination|routine|analysis|findings)|urinalysis",
               r"urine", {"Urine routine"}),
 }
+GROUPS["dlc"] = (r"differentials?|differential\s+(?:leu[ck]ocyte\s+)?counts?|DLC", r"differential|\bdlc\b", set())
+# groups defined by their member tests rather than by section or category
+GROUP_TERMS = {"dlc": {"neutrophils", "lymphocytes", "eosinophils", "monocytes", "basophils", "absolute_neutrophil_count",
+                       "absolute_lymphocyte_count", "band_forms"}}
 GROUP_RES = {k: re.compile(rf"\b(?:{v[0]})\b", re.I) for k, v in GROUPS.items()}
 ALL_RE = re.compile(r"\b(?:all\s+(?:of\s+)?(?:your\s+|the\s+|these\s+)?(?:results|values|tests|parameters|numbers|levels|"
                     r"markers|readings)|everything|every\s+(?:result|value|test))\b", re.I)
