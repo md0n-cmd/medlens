@@ -40,7 +40,7 @@ add("Lymphocytes", ["Lymphocyte", "Lymphs", "Lymphocyte Count"], H, "A type of w
 add("Eosinophils", ["Eosinophil", "Eosinophil Count", "Absolute Eosinophil Count", "AEC"], H, "A type of white blood cell. The report shows their share of all white cells or their count.")
 add("Monocytes", ["Monocyte", "Monocyte Count"], H, "A type of white blood cell that can move into tissues. The report shows their share or count.")
 add("Basophils", ["Basophil", "Basophil Count"], H, "The least common type of white blood cell. The report shows their share or count.")
-add("Erythrocyte Sedimentation Rate", ["ESR", "Sed Rate", "Sedimentation Rate"], H, "Measures how fast red blood cells settle to the bottom of a thin tube in one hour.", "It is a general measurement and does not point to any one specific condition.")
+add("Erythrocyte Sedimentation Rate", ["ESR", "Sed Rate", "Sedimentation Rate", "E.S.R", "E.S.R."], H, "Measures how fast red blood cells settle to the bottom of a thin tube in one hour.", "It is a general measurement and does not point to any one specific condition.")
 add("Mean Platelet Volume", ["MPV"], H, "The average size of your platelets.")
 add("Reticulocyte Count", ["Reticulocytes", "Retic Count"], H, "Counts young, newly made red blood cells.")
 add("Peripheral Smear", ["Peripheral Blood Smear", "PBS", "Blood Smear"], H, "A drop of blood spread on a glass slide and looked at under a microscope to describe the shape and look of blood cells.")

@@ -10,7 +10,9 @@ from pydantic import BaseModel, Field
 from app.models import OUT_OF_RANGE, AnalysisResult, LabValue, ReferenceRange, Span, Status
 from app.parser.ranges import units_compatible
 from app.pipeline import analyze
+from app.glossary.matcher import load_glossary
 from app.verify.claims import Claim, extract
+from app.verify.names import names_match
 
 Label = Literal["VERIFIED", "CONTRADICTED", "RANGE_NOT_FROM_REPORT", "OVERSTEPS", "NOT_IN_REPORT",
                 "UNVERIFIABLE", "NEUTRAL"]
@@ -94,10 +96,16 @@ def _index(r: AnalysisResult) -> dict[str, list[LabValue]]:
     return idx
 
 
-def _rows_for(term_id: str, idx: dict[str, list[LabValue]]) -> list[LabValue]:
+def _rows_for(term_id: str, idx: dict[str, list[LabValue]], values: list[LabValue] = (),
+              mention_text: str = "") -> list[LabValue]:
     rows = list(idx.get(term_id, []))
     for other in RELATED_TESTS.get(term_id, ()):
         rows += [v for v in idx.get(other, []) if v not in rows]
+    if not rows and values:
+        # fallback: order-independent normalised names ("Cholesterol, Total" == "Total Cholesterol")
+        e = load_glossary().get(term_id, {})
+        candidates = [mention_text, e.get("term", ""), *e.get("aliases", [])]
+        rows = [v for v in values if any(c and names_match(c, v.test_name) for c in candidates)]
     return rows
 
 
@@ -228,7 +236,7 @@ def verify(report_text: str, ai_text: str) -> VerifyResult:
         # value claims first: a status in the same segment is judged against the row whose value matched
         matched_row: dict[tuple[int, int], LabValue] = {}
         for c in sorted(sc.claims, key=lambda c: c.kind != "value"):
-            rows = _rows_for(c.term_id, idx) if c.term_id else []
+            rows = _rows_for(c.term_id, idx, analysis.values, c.mention.text if c.mention else "") if c.term_id else []
             key = (c.mention.start, c.mention.end) if c.mention else (-1, -1)
             f = _check_claim(c, rtext, rows, matched_row.get(key) if c.kind == "status" else None)
             if c.kind == "value" and f.label == "VERIFIED":
@@ -239,7 +247,7 @@ def verify(report_text: str, ai_text: str) -> VerifyResult:
             mentioned.add(m.term_id)
             mentioned.update(RELATED_TESTS.get(m.term_id, ()))
             if (m.span.start, m.span.end) not in claimed:
-                rows = _rows_for(m.term_id, idx)
+                rows = _rows_for(m.term_id, idx, analysis.values, m.span.text)
                 if rows:      # a bare mention still links the sentence to the report line (not judged)
                     findings.append(Finding(kind="mention", label="NEUTRAL", term=m.term, ai_span=m.span,
                                             report_span=_line_span(rtext, rows[0].value_span.start),

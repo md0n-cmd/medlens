@@ -273,7 +273,9 @@
       "aliases": [
         "ESR",
         "Sed Rate",
-        "Sedimentation Rate"
+        "Sedimentation Rate",
+        "E.S.R",
+        "E.S.R."
       ],
       "category": "Blood count (CBC)",
       "kind": "test",

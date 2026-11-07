@@ -37,7 +37,8 @@ def _alias_pattern(alias: str) -> str:
         return f"(?-i:{re.escape(a)})"
     parts = re.split(r"[\s,()\-]+", alias.strip())
     parts = [re.escape(p) for p in parts if p]
-    body = r"[\s,()\-]*".join(parts) if len(parts) > 1 else re.escape(alias.strip())
+    # separators between words never cross a line break ("...PANEL, SERUM\nBilirubin Total" is not "Serum Bilirubin")
+    body = r"(?:[^\S\n]|[,()\-])*".join(parts) if len(parts) > 1 else re.escape(alias.strip())
     if len(alias.strip()) <= 3:
         up = re.escape(alias.strip().upper())
         return f"(?:{re.escape(alias.strip())}|{up})" if up != re.escape(alias.strip()) else f"(?:{body})"

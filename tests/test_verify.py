@@ -221,3 +221,20 @@ def test_known_limits_are_neutral_not_verified():
     assert one("Your HBsAg is negative.", (SAMPLES / "04_thyroid_urine.txt").read_text())[1].label == "NEUTRAL"  # qualitative
     r = verify(REPORT, "Your hemoglobin is low. It is 11.2.")                   # pronoun across sentences
     assert r.sentences[1].label == "NEUTRAL"
+
+
+# ---------------------------------------------------------------- real-world fixes: test-name matching
+@pytest.mark.parametrize("report_name,ai_name", [
+    ("Cholesterol, Total", "Total Cholesterol"), ("GLUCOSE FASTING (F), PLASMA", "Fasting Glucose"),
+    ("VLDL Cholesterol,Calculated", "VLDL Cholesterol"), ("T3, Total", "Total T3"), ("Bilirubin Total", "Total Bilirubin"),
+    ("E.S.R", "ESR"), ("Packed Cell Volume (PCV)", "PCV"),
+])
+def test_report_and_ai_test_names_normalise_to_the_same_test(report_name, ai_name):
+    from app.verify.names import names_match
+    assert names_match(report_name, ai_name)
+
+
+def test_different_tests_do_not_normalise_together():
+    from app.verify.names import names_match
+    assert not names_match("Bilirubin Direct", "Total Bilirubin")
+    assert not names_match("HDL Cholesterol", "LDL Cholesterol")

@@ -121,3 +121,15 @@ def test_kinds_and_finding_note():
     assert all(FINDING_NOTE not in e.text for e in cards if gl[e.related_id]["kind"] != "finding")
     # the Impression line itself stays NEEDS_PROFESSIONAL_INTERPRETATION
     assert any(e.tag.value == "NEEDS_PROFESSIONAL_INTERPRETATION" and e.title.startswith("IMPRESSION") for e in r.explanations)
+
+
+def test_aliases_never_match_across_a_line_break():
+    """'...PANEL, SERUM' + newline + 'Bilirubin Total' must not become the alias 'Serum Bilirubin'."""
+    text = "LIVER PANEL, SERUM\nBilirubin Total   0.62   mg/dL   0.30 - 1.20"
+    found = [(m.matched_text, m.term_id) for m in find_terms(text)]
+    assert ("Bilirubin Total", "total_bilirubin") in found
+    assert all("\n" not in t for t, _ in found)
+
+
+def test_dotted_esr_alias():
+    assert ids("E.S.R   19   mm/hr") == ["erythrocyte_sedimentation_rate"]
