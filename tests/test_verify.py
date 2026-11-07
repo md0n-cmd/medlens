@@ -973,3 +973,26 @@ def test_quote_exemption_covers_only_the_quoted_words():
     # the quote alone, or the report's words without quote marks: still the report speaking
     assert verify(XRAY, 'The radiologist notes "possible early consolidation".').sentences[0].label == "VERIFIED"
     assert verify(XRAY, "The radiologist mentions that consolidation cannot be ruled out.").sentences[0].label != "OVERSTEPS"
+
+
+# ---------------------------------------------------------------- round 2, step 4: never-claims
+def test_cautions_are_not_claims():
+    for ai in ("A normal ECG does not completely exclude heart disease or valve problems.",
+               "An abnormal laboratory value is not the same as a confirmed diagnosis.",
+               "A clear X-ray does not rule out infection."):
+        assert verify(XRAY, ai).sentences[0].label == "NEUTRAL", ai
+
+
+def test_purpose_column_of_a_test_table_is_not_a_claim():
+    ai = ("| Investigation | Purpose |\n| --- | --- |\n| CBC | Look for signs of infection. |\n"
+          "| Repeat chest X-ray | Assess whether the lung opacity resolves. |")
+    assert {s.label for s in verify(XRAY, ai).sentences} == {"NEUTRAL"}
+    ai2 = "| Test | Why it is useful |\n| --- | --- |\n| CRP | Helps assess inflammation or infection |"
+    assert verify(XRAY, ai2).sentences[-1].label == "NEUTRAL"
+
+
+def test_suggesting_a_test_and_what_a_test_measures_are_not_claims():
+    for ai in ("If your doctor wants, an HbA1c test can provide additional information about infection risk.",
+               "A 2D Echo would help determine whether the heart is enlarged.",
+               "The ECG evaluates the electrical activity and rhythm of the heart."):
+        assert verify(XRAY, ai).sentences[0].label == "NEUTRAL", ai

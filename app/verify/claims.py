@@ -571,6 +571,9 @@ def _is_status_claim(text: str, s: int, e: int, before: str) -> bool:
 
 # ---------------------------------------------------------------- markdown tables
 TABLE_ROLES = [
+    # what a suggested test is for ("| CBC | Look for signs of infection |"): never a claim about the results
+    ("purpose", re.compile(r"^\W*(?:purpose|why\s+it(?:'s|\s+is)?\s+(?:useful|done|needed|helpful)|reasons?|use|used\s+for|"
+                           r"what\s+it\s+(?:checks|shows|does))\W*$", re.I)),
     ("reference", re.compile(r"\b(?:reference|range|normal|ref|interval|limits?)\b", re.I)),
     ("result", re.compile(r"\b(?:result|results|value|values|level|reading)\b", re.I)),
     ("test", re.compile(r"\b(?:test|tests|parameter|investigation|marker|analyte|name|organ)\b", re.I)),
@@ -683,7 +686,17 @@ QUOTE_INTRO = re.compile(r"\b(?:report|radiologist|doctor|lab|pathologist|impres
 IMPRESSION_LINE = re.compile(r"^\W*(?:impression|conclusion|opinion)\s*:\s*\S", re.I)
 NEGATED_CERTAINTY = re.compile(r"\b(?:does\s+not|doesn't|do\s+not|don't|cannot|can't|not\s+enough\s+to|unable\s+to|"
                                r"did\s+not)\s+(?:\w+\s+){0,2}?(?:confirm|establish|tell|rule\s+out|prove|show|determine|"
-                               r"diagnose|mean)\b", re.I)
+                               r"diagnose|mean|exclude)\b|\b(?:is|are)\s+not\s+(?:\w+\s+)?(?:the\s+same\s+as|equivalent\s+to|"
+                               r"equal\s+to)\b", re.I)
+# the AI suggests a test: "an HbA1c test can provide additional information", "A 2D Echo would help determine ..."
+SUGGESTS_TEST = re.compile(r"^\W*(?:\w+\W+){0,6}?(?:an?|the|your)\s+(?:[\w-]+\s+){0,3}?(?:tests?|scans?|echo(?:cardiogram)?|"
+                           r"ultrasound|x-?ray|panel|profile|study|measurement|assessment|evaluation)\s+(?:can|could|may|might|"
+                           r"would|will)\s+(?:also\s+)?(?:provide|help|assess|show|check|confirm|clarify|give|determine|tell|"
+                           r"evaluate|measure|look)\b", re.I)
+# what an investigation measures: "The ECG evaluates the electrical activity ...", "These numbers measure ..."
+MEASURES_SENTENCE = re.compile(r"^\W*(?:an?\s+|the\s+|these\s+|this\s+)?(?:[\w-]+\s+){0,2}?(?:ecg|electrocardiogram|x-?ray|"
+                               r"ultrasound|scan|test|numbers|intervals|timings|echo(?:cardiogram)?)\s+(?:evaluates|measures?|"
+                               r"assesses|records|checks|looks\s+at|detects|provides\s+information)\b", re.I)
 
 
 def _lex_alt(items) -> re.Pattern:
@@ -708,6 +721,10 @@ def never_claim_type(sentence: str, line: str) -> Optional[str]:
         return "deferral"
     if NEGATED_CERTAINTY.search(st):
         return "negated"
+    if SUGGESTS_TEST.search(st):
+        return "suggestion"
+    if MEASURES_SENTENCE.search(st):
+        return "definition"
     dm = re.match(L.DEFINITION_SENTENCE, st, re.I)
     if dm and not re.search(L.PATIENT_RESULT, st, re.I):
         # the subject must be a medical term ("Hepatomegaly means ..."), not "The main finding is a ..."
@@ -722,7 +739,7 @@ def _apply_never_claim(sc: "SentenceClaims", kind: Optional[str], stext: str, me
     if kind is None:
         return
     sc.never = kind
-    if kind in ("question", "deferral", "safety"):
+    if kind in ("question", "deferral", "safety", "suggestion"):
         sc.claims = []
         return
     if kind == "heading":
@@ -740,7 +757,7 @@ def _apply_never_claim(sc: "SentenceClaims", kind: Optional[str], stext: str, me
 
 
 NEGATED_CERTAINTY_CLAUSE = re.compile(r"(?:,?\s*(?:but|however|although|though)\s+)?[^.;,]*\b(?:does\s+not|doesn't|do\s+not|don't|cannot|"
-                                      r"can't|not\s+enough\s+to|unable\s+to|did\s+not)\s+[^.;]*", re.I)
+                                      r"can't|not\s+enough\s+to|unable\s+to|did\s+not|(?:is|are)\s+not)\s+[^.;]*", re.I)
 
 
 def _certainty_candidate(sentence: str, gl: dict) -> list[str]:
@@ -997,8 +1014,11 @@ def _extract(text: str, original: str) -> list[SentenceClaims]:
                 sc.mentions, sc.claims = _table_row_claims(text, trow)
                 # the name column is a label ("| Ascites | Absent |"); interpretation is judged in the other cells
                 name_cells = trow["roles"].get("test", [])[:1]
+                purpose = trow["roles"].get("purpose", [])
+                if purpose:
+                    sc.never = "purpose"
                 rest = text[sp.start:sp.end]
-                for a, b in name_cells:
+                for a, b in name_cells + purpose:
                     rest = rest[:a - sp.start] + " " * (b - a) + rest[b - sp.start:]
                 for cat, why in find_oversteps(rest, []):
                     sc.claims.append(Claim(kind="overstep", span=sp, overstep=cat, detail=why))
